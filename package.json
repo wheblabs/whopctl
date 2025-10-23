@@ -1,39 +1,40 @@
 {
   "name": "whopctl",
   "version": "1.0.1",
-  "description": "Deploy, host and observe your whop apps",
-  "homepage": "https://github.com/wheblabs/cli#readme",
-  "bugs": {
-    "url": "https://github.com/wheblabs/cli/issues"
-  },
+  "author": "Whop Labs",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/wheblabs/cli.git"
   },
+  "main": "index.js",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "chalk": "^5.6.2",
+    "yargs": "^18.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
   "bin": {
     "whopctl": "./dist/index.js"
   },
+  "bugs": {
+    "url": "https://github.com/wheblabs/cli/issues"
+  },
+  "description": "Deploy, host and observe your whop apps",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "homepage": "https://github.com/wheblabs/cli#readme",
   "license": "MIT",
-  "author": "Whop Labs",
-  "type": "module",
-  "main": "index.js",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "bun build ./src/index.ts --target node --outfile ./dist/index.js && chmod +x ./dist/index.js",
     "prepublishOnly": "bun run build",
     "lint": "biome check .",
     "format": "biome format --write ."
   },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "chalk": "^5.6.2"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "engines": {
-    "node": ">=22.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+  "type": "module"
 }
