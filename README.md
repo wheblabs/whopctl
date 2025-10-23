@@ -32,3 +32,4 @@ Account -> owned companies(just companies) -> companies have the apps installed
 
 # INITIAL V0
 list apps, deploy apps
+
