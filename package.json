@@ -16,7 +16,7 @@
     "typescript": "^5"
   },
   "bin": {
-    "whopctl": "./dist/index.js"
+    "whopctl": "dist/index.js"
   },
   "bugs": {
     "url": "https://github.com/wheblabs/cli/issues"
