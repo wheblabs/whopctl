@@ -1,0 +1,108 @@
+# Cursor Rules: Whop CLI Wrapper
+
+## Purpose
+- Provide Cursor with a shared mental model for projects that wrap `@whoplabs/whop-client` inside a CLI.
+- Preserve the SDK contracts: instantiate `Whop`, call resource methods, and let the SDK handle authentication token refresh and error types.
+- Favor composition over reimplementation: reuse the SDK helpers (`graphqlRequest`, session utilities, error classes) instead of rolling new network/auth code.
+
+## Key Architecture
+- Entry point: `src/client.ts` exports `Whop`, which wires resources (`auth`, `apps`, `companies`, `me`) and keeps auth tokens + session file path.
+- Low-level helpers in `src/lib`:
+  - `errors` defines typed errors (`WhopError` base + Auth/API/Network/Parse variants) that consumers should surface to users.
+  - `graphql.ts` builds Whop GraphQL requests, sends cookie-authenticated `fetch` calls, and invokes `_updateTokens` when the API rotates credentials.
+  - `session.ts` persists tokens on disk with `saveSession`/`loadSessionSync`.
+  - `server-actions.ts` scrapes Next.js bundles to extract server action IDs required for login; heavy network call but cached per process.
+  - `cookies.ts` parses `Set-Cookie` headers into the `AuthTokens` shape.
+  - `rsc.ts` posts multipart payloads to Next.js server actions and parses minimal RSC responses.
+- Resources in `src/resources` are thin facades that:
+  - assert authentication by calling `client.getTokens()` and throwing `WhopAuthError` if missing.
+  - declare the GraphQL document inline, call `graphqlRequest`, flatten `nodes` wrappers, and return typed data structures.
+  - `Auth` uses server actions instead of GraphQL, handles OTP login, extracts tokens, and optionally persists to disk.
+- `src/types` re-exports all DTOs used by the resources for CLI display, prompts, and validation.
+
+## Authentication Flow
+- `Whop` constructor accepts either a session path string or `{ sessionPath?, autoLoad? }`. Default path: `.whop-session.json` in the CWD.
+- On construction, if `autoLoad` is true and the session file exists, tokens are loaded synchronously (no I/O await) and stored in memory.
+- `auth.sendOTP(email)`:
+  - Pulls server action IDs from https://whop.com/login (cached per `Whop` instance).
+  - Posts the `login` action with email, returning a `ticket` string required for verification.
+- `auth.verify({ code, ticket, persist })`:
+  - Posts the `verifyTwoFactor` action, accepts HTTP 2xx/3xx as success, extracts auth cookies, and populates client tokens.
+  - `persist` defaults to `true`. Accepts `false` for in-memory sessions or a custom path string.
+  - Writes sessions to disk via `client.saveSession` (JSON with version/timestamps) and chmod 0600.
+- `Whop.fromTokens(tokens)` seeds an authenticated client without disk I/O—ideal for CI or environment-driven auth.
+- README examples include an `email` property in `auth.verify` calls, but the actual method only accepts `{ code, ticket, persist? }`. Ensure CLI prompts the email for `sendOTP`, not `verify`.
+
+## Token & Session Rules
+- Treat `Whop` as the single source of truth for tokens. Never stash tokens separately; call `getTokens()` when needed.
+- When GraphQL responses rotate tokens (via `Set-Cookie`), `graphqlRequest` invokes `onTokenRefresh`, which calls `client._updateTokens(newTokens)` and persists asynchronously.
+- CLI code should prefer letting the SDK refresh sessions silently. Only call `saveSession(path)` when offering explicit “save to” commands.
+- Warn users before writing session files to non-default locations; they contain bearer tokens.
+
+## Network & Environment Expectations
+- SDK assumes a `fetch` global compatible with the standard Request/Response API and supporting `response.headers.getSetCookie()`. In Node-based CLIs, run on Node ≥20 or polyfill with `undici`.
+- All HTTP requests go to `https://whop.com`. There is no configurable base URL; avoid hard-coding duplicates elsewhere in the CLI.
+- `extractServerActions` scrapes multiple Next.js bundles; cache or reuse a single `Whop` instance per CLI run to avoid repeated scraping.
+
+## Resource Capabilities (map to CLI commands)
+- `auth`:
+  - `sendOTP(email)` → `ticket`.
+  - `verify({ code, ticket, persist? })` → populates tokens, optional session persistence.
+  - `refresh()` currently unimplemented; rely on automatic refresh instead.
+- `apps`:
+  - `get(appId)` returns rich public metadata, including nested access pass attachments.
+  - `getCredentials(appId, companyId)` exposes API keys, URLs, permissions, agent users, stats.
+  - `create(input)` builds a company app and flattens API keys/agent users from `nodes` wrappers.
+  - `update(appId, input)` mutates app metadata and returns the full `UpdatedApp` payload.
+  - `getUrl(appId, companyId)` derives the dashboard URL via `companies.listExperiences`.
+- `companies`:
+  - `list()` fetches owned companies.
+  - `listApps(companyId)` returns app summaries (includes DAU/WAU/MAU/time spent).
+  - `installApp(companyId, appId, options?)` installs an app, optionally attaching to experiences/access passes.
+  - `listExperiences(companyId, options?)` paginates experiences with optional filters.
+  - `listAccessPasses(companyId, options?)` and `createAccessPass`, `updateAccessPass` manage storefront products.
+  - `createPlan`, `updatePlan`, `listAccessPassPlans` manage pricing plans (renewals, one-time, expiration).
+- `me.get()` returns the authenticated user profile (email, username, avatar variants).
+
+## CLI Integration Guidelines
+- Instantiate `const whop = new Whop({ sessionPath, autoLoad })` at CLI startup. Reuse the instance across subcommands via dependency injection or a shared module.
+- Add a `--session-path` flag or environment variable to override the default location; default to a config dir like `~/.config/whop-cli/session.json`.
+- Before running resource commands, guard with `if (!whop.isAuthenticated())` to prompt login or exit with a helpful message.
+- Implement `whop login` command using:
+  1. `const email = prompt()` → `const ticket = await whop.auth.sendOTP(email)`.
+  2. Prompt for OTP code → `await whop.auth.verify({ code, ticket, persist: sessionPath })`.
+  3. Surface `WhopAuthError` codes clearly (e.g., `INVALID_OTP`, `AUTH_INIT_FAILED`).
+- For scripting contexts, allow loading from environment tokens: `Whop.fromTokens({ accessToken, csrfToken, refreshToken, uidToken?, ssk?, userId? })`.
+- When displaying lists, use the DTOs from `src/types` (`Company`, `App`, `AppCredentials`, etc.) to strongly type outputs.
+- Respect the SDK’s async patterns—every resource method is `async`, so CLI command handlers must be `async` and awaited.
+- Avoid parallel calls that might race `saveSession`; the SDK writes asynchronously but sequentially per `Whop` instance.
+
+## Error Handling Expectations
+- Catch `WhopError` (base class) at CLI boundaries and map to user-friendly messages while preserving `error.code`.
+  - `WhopAuthError` for auth issues (OTP invalid, missing session, inability to load session file).
+  - `WhopHTTPError` for non-OK HTTP responses (includes `statusCode` and optional `responseBody`).
+  - `WhopNetworkError` for fetch failures (includes `cause`).
+  - `WhopParseError` / `WhopServerActionError` when scraping fails—tell users Whop likely changed their frontend.
+  - `WhopAPIError` for GraphQL errors (exposes Whop server codes/messages if available).
+- When reporting errors, include actionable guidance (e.g., re-run login, report to GitHub) mirroring the SDK messaging.
+
+## Type Usage & Re-exports
+- Import types from the package root (`import type { Company, AppCredentials } from '@whoplabs/whop-client'`). Entry file `src/index.ts` re-exports the relevant interfaces.
+- DTOs correspond closely to GraphQL shapes; avoid mutating them in-place. If CLI needs view models, derive new objects without altering originals.
+
+## Implementation Tips & Caveats
+- `auth.verify` logs `✓ Session saved to ...`. If CLI needs cleaner output, consider intercepting `console.log` or contributing a `logger` option upstream.
+- `createAccessPass` auto-generates a slug when `route` is omitted and, if `planOptions` is provided but the API response lacks `defaultPlan`, it fetches plans immediately. Expect an extra API call.
+- `listApps` hardcodes `first: 500`; handle the possibility of more results by adding pagination if product requirements demand it.
+- `extractServerActions` and OTP flows depend on the current Whop frontend; be prepared to ship updates quickly if login breaks.
+- There are no built-in tests. When adding CLI features, author integration tests that stub network calls or use recorded fixtures.
+
+## Non-Goals / TODO Awareness
+- `Auth.refresh` is a TODO. Do not assume a dedicated refresh endpoint exists beyond automatic token rotation.
+- The SDK currently targets Bun (see `bun.lock`, `bunfig.toml`). For a Node CLI, ensure compatibility shims are present (e.g., global `File`, `FormData` already provided by Node 20+).
+- Network access is required. Provide clear messaging if the CLI runs offline.
+
+## Style & Contribution Reminders
+- Follow the SDK’s style when porting snippets: async/await, explicit return types, and concise error messages.
+- Keep CLI-side code modular—wrap each resource interaction in its own command handler/service; avoid embedding long GraphQL strings outside the SDK.
+- Before contributing upstream changes, run `bun run lint` and `bun run type-check` per `package.json` scripts.
