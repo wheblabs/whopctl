@@ -1,0 +1,39 @@
+{
+  "name": "cli",
+  "version": "1.0.0",
+  "description": "Deploy, host and observe your whop apps",
+  "homepage": "https://github.com/wheblabs/cli#readme",
+  "bugs": {
+    "url": "https://github.com/wheblabs/cli/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wheblabs/cli.git"
+  },
+  "bin": {
+    "whopctl": "./dist/index.js"
+  },
+  "license": "MIT",
+  "author": "Whop Labs",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "bun build ./src/index.ts --target node --outfile ./dist/index.js && chmod +x ./dist/index.js",
+    "prepublishOnly": "bun run build",
+    "lint": "biome check .",
+    "format": "biome format --write ."
+  },
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
