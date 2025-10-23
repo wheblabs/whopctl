@@ -1,6 +1,6 @@
 {
   "name": "whopctl",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Deploy, host and observe your whop apps",
   "homepage": "https://github.com/wheblabs/cli#readme",
   "bugs": {
@@ -23,9 +23,9 @@
     "lint": "biome check .",
     "format": "biome format --write ."
   },
-  "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "chalk": "^5.6.2"
   },
   "peerDependencies": {
     "typescript": "^5"
