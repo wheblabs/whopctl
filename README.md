@@ -26,3 +26,9 @@ Account -> owned companies(just companies) -> companies have the apps installed
 
 
 # ARGS
+
+
+
+
+# INITIAL V0
+list apps, deploy apps
