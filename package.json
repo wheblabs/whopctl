@@ -1,5 +1,5 @@
 {
-  "name": "cli",
+  "name": "whopctl",
   "version": "1.0.0",
   "description": "Deploy, host and observe your whop apps",
   "homepage": "https://github.com/wheblabs/cli#readme",
