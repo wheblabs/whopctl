@@ -33,3 +33,7 @@ Account -> owned companies(just companies) -> companies have the apps installed
 # INITIAL V0
 list apps, deploy apps
 
+
+#TODOS: 
+
+show which ones are managed by whopctl
