@@ -1,0 +1,1004 @@
+---
+alwaysApply: true
+---
+
+# Whop Platform Structure & API Guide
+
+## Overview
+
+Whop is a platform for creators to build and monetize digital communities. It provides infrastructure for paywalled communities, content delivery, messaging, and app integrations.
+
+## Core Platform Concepts
+
+### Companies (Communities)
+
+- **Companies** are the backend term for what users see as "communities"
+- Each company represents a creator's digital space
+- Companies can have:
+  - Multiple members
+  - Paywalls and subscription tiers
+  - Installed apps and features
+  - Custom branding and settings
+
+### Members & Access Levels
+
+- **Members** are users who have joined a company
+- Each member has an **access level** that determines their permissions
+- Members can be:
+  - **Admins** - Full administrative access to manage the company
+  - **Regular Members** - Standard access based on their membership tier
+- Access levels control what features, content, and apps members can use
+
+### Access Passes (Products)
+
+- **Access Passes** are products that creators sell
+- Also called "products" or "whops" in the UI
+- Represent what a customer is purchasing (e.g., "Premium Membership", "Course Access")
+- Can include:
+  - Access to specific apps/experiences
+  - Content and features
+  - Different permission levels
+- Types of access passes:
+  - `regular` - Standard store pages
+  - `app` - App-based products
+  - `api_only` - API-only access (what apps usually create)
+  - `experience_upsell` - Upsell products
+
+### Plans (Checkout Links)
+
+- **Plans** are the pricing/payment options for access passes
+- Called "checkout links" in the creator dashboard
+- Define how customers pay for an access pass:
+  - One-time payments (`one_time`)
+  - Recurring subscriptions (`renewal`)
+  - Expiring access (`expiration`)
+- Each plan has:
+  - A **directLink** - the checkout URL customers use to purchase
+  - Pricing configuration (price, currency, billing period)
+  - Payment method options (card, PayPal, ACH, etc.)
+  - Trial periods and discounts
+- Multiple plans can exist for a single access pass (e.g., monthly vs annual)
+
+### Apps & Experiences
+
+#### Apps
+- **Apps** are created by developers under a company
+- When submitted for review, apps can be published to the Whop App Store
+- Other creators can discover and install apps from the store
+- Apps provide additional functionality to communities (e.g., courses, polls, custom features)
+
+#### Experiences
+- When an app is **installed** on a company, it creates an **experience**
+- **Experience** = a specific instance of an app running on a company
+- An app can be installed multiple times on the same company (multiple experiences)
+- Each experience has a unique **experience ID**
+- Experiences can be paywalled independently from the company
+
+#### Relationship
+```
+App (template) 
+  → Installed on Company A → Experience 1 (exp_abc123)
+  → Installed on Company A → Experience 2 (exp_def456)
+  → Installed on Company B → Experience 3 (exp_ghi789)
+```
+
+## Platform Features
+
+### Paywalling Capabilities
+
+Creators can paywall:
+- **Entire company** - Require membership to access anything
+- **Specific apps/experiences** - Require certain access passes to use specific features
+- **Individual features** - Gate specific functionality within apps
+- **Content tiers** - Different access levels see different content
+
+### Built-in Apps (Special-Cased Features)
+
+#### Forums
+- Special-cased app for community discussions
+- Creators can create forum posts/announcements
+- Members can create topics and reply
+- Has extensive API for managing posts, topics, and permissions
+- Each forum experience has a `Feed::ForumFeed` containing `Feed::ForumPost` entries
+
+#### Courses
+- Special-cased app for educational content
+- Extensive API for managing:
+  - Lessons and modules
+  - Assessment questions
+  - Student progress
+  - Completion tracking
+
+#### Direct Messages (DMs)
+- Built-in messaging feature for 1-on-1 conversations
+- **Agent User**: Apps get `NEXT_PUBLIC_WHOP_AGENT_USER_ID` env variable
+  - This is a fake user ID that apps can use to automate DM interactions
+  - Useful for chatbots, notifications, and automated responses
+- Features:
+  - Message channels
+  - Reactions to messages
+  - Message history
+
+#### Support Channels
+- Special-cased feature for customer support
+- Each company can have a dedicated support channel
+- Members can create support tickets/conversations
+- Admins can respond and manage support requests
+
+### Additional Features
+
+- **Shipments** - Physical product fulfillment tracking
+- **Invoices** - Billing and payment records
+- **Ledger Accounts** - Financial tracking for companies and users
+- **Authorized Users** - Admin/team member management
+- **Memberships** - Active subscriptions/access for members
+- **Chat Channels** - Group messaging within communities
+- **Reactions** - Emoji reactions in messages and content
+
+## Whop SDKs & APIs
+
+### Current API: REST API (Recommended)
+
+**Package**: `@whop/api`  
+**Documentation**: https://docs.whop.com/apps/api/getting-started
+
+This is the **recommended API package** for building Whop apps with full functionality.
+
+#### Capabilities:
+- **App Configuration** - Set up URLs, permissions, settings
+- **Authentication** - User auth, OAuth flows, session management
+- **Products (Access Passes)** - Create, read, update, delete access passes
+- **Plans** - Manage pricing, checkout links, payment options
+- **Payments** - Handle checkouts, process transfers, track transactions
+- **Companies** - Manage company settings, metadata, configuration
+- **Members** - List members, manage access levels, permissions
+- **Memberships** - Track active subscriptions, access periods
+- **Experiences** - Manage app instances, configurations
+- **Forums** - Create posts, manage topics, moderate discussions
+- **Forum Messages** - Read, create, delete forum content
+- **Direct Messages** - Send/receive DMs, manage conversations
+- **Chat Channels** - Create and manage group chats
+- **Support Channels** - Handle support tickets and conversations
+- **Reactions** - Add/remove reactions to messages
+- **Courses** - Full course management (lessons, assessments, progress)
+- **Shipments** - Track physical product deliveries
+- **Invoices** - Billing records and payment history
+- **Ledger Accounts** - Financial accounts for companies and users
+- **Authorized Users** - Manage admins and team members
+- **Users** - User profiles, data, and settings
+
+### Alternative SDK (Limited Functionality)
+
+**Package**: `@whop/sdk`  
+**Status**: Newer but missing some functionality - use `@whop/api` instead
+
+### Deprecated APIs (Legacy)
+
+The following are truly deprecated:
+- **GraphQL SDK** - Original GraphQL-based API
+- **v2** - Second iteration
+- **v5** - Third iteration
+
+These are maintained for backward compatibility only.
+
+### Internal Frontend API (Not Public)
+
+The GraphQL API explored in this conversation is used by Whop's internal frontend but is **not publicly documented or supported** for third-party developers. It provides lower-level access to:
+- Access pass creation with advanced options
+- Plan configuration details
+- Company management internals
+- Direct database operations
+
+**For app development, always use the public REST API (`@whop/api`).**
+
+## Development Workflow
+
+### Creating a Whop App
+
+1. **Initialize the SDK** in your lib/whop.ts
+   ```typescript
+   import { WhopServerSdk } from '@whop/api';
+   import { env } from '~/env';
+   
+   export const whop = WhopServerSdk({
+     appId: env.NEXT_PUBLIC_WHOP_APP_ID,
+     appApiKey: env.WHOP_API_KEY,
+     onBehalfOfUserId: env.NEXT_PUBLIC_WHOP_AGENT_USER_ID,
+     companyId: env.NEXT_PUBLIC_WHOP_COMPANY_ID,
+   });
+   ```
+
+2. **Create API routes** to interact with Whop
+   ```typescript
+   // app/(whop-api)/api/experience/[experienceId]/route.ts
+   import { NextRequest, NextResponse } from 'next/server';
+   import { whop } from '~/lib/whop';
+   
+   export async function GET(
+     req: NextRequest,
+     { params }: { params: Promise<{ experienceId: string }> }
+   ) {
+     const { experienceId } = await params;
+     const experience = await whop.experiences.getExperience({ experienceId });
+     return NextResponse.json(experience);
+   }
+   ```
+
+3. **Authenticate users** in protected routes
+   ```typescript
+   import { verifyUserToken } from '@whop/api';
+   
+   const { userId } = await verifyUserToken(req.headers);
+   if (!userId) {
+     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+   }
+   ```
+
+4. **Handle user data safely**
+   - Always verify authentication first
+   - Filter company-wide data to current user only
+   - Use optional chaining for nested properties
+   - Return minimal data to avoid privacy leaks
+
+### Paywalling Your App
+
+1. **Create checkout endpoint** for your plans
+   ```typescript
+   // app/(whop-api)/api/checkout/subscription/route.ts
+   import { verifyUserToken } from '@whop/api';
+   
+   export async function POST(req: NextRequest) {
+     const { userId } = await verifyUserToken(req.headers);
+     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+     const checkoutSession = await whop.payments.createCheckoutSession({
+       planId: env.SUBSCRIPTION_PLAN_ID
+     });
+
+     return NextResponse.json({
+       planId: env.SUBSCRIPTION_PLAN_ID,
+       checkoutId: checkoutSession.id,
+     });
+   }
+   ```
+
+2. **Check user access** to experiences
+   ```typescript
+   const access = await whop.access.checkIfUserHasAccessToExperience({
+     experienceId,
+     userId
+   });
+   console.log(access.accessLevel); // "admin" | "member" | "no_access"
+   ```
+
+3. **List user's receipts** to check purchases
+   ```typescript
+   const receipts = await whop.payments.listReceiptsForCompany({
+     companyId,
+     filter: {
+       accessPassIds: [planId],
+       statuses: ['succeeded']
+     }
+   });
+   
+   const userReceipts = receipts?.receipts?.nodes?.filter(
+     (r) => r?.member?.user?.id === userId
+   );
+   ```
+
+4. **Gate features** based on subscription status
+   ```typescript
+   const hasActiveSubscription = userReceipts.some(
+     (r) => r.subscriptionStatus === "active"
+   );
+   ```
+
+### Using the Agent User
+
+The `WhopServerSdk` is initialized with `onBehalfOfUserId` for automated actions:
+- Set to `NEXT_PUBLIC_WHOP_AGENT_USER_ID` for bot actions
+- Used for sending automated messages
+- Enables chatbots and notification systems
+
+**Note:** The agent user is configured during SDK initialization, not per-request.
+
+## Key API Patterns
+
+### GraphQL (Internal)
+```graphql
+mutation createAccessPass($input: CreateAccessPassInput!) {
+  createAccessPass(input: $input) {
+    id
+    route
+    defaultPlan {
+      id
+      directLink
+    }
+  }
+}
+```
+
+### REST API (Public SDK)
+```typescript
+import { WhopServerSdk, verifyUserToken } from '@whop/api';
+
+export const whop = WhopServerSdk({
+  appId: process.env.NEXT_PUBLIC_WHOP_APP_ID,
+  appApiKey: process.env.WHOP_API_KEY,
+  onBehalfOfUserId: process.env.NEXT_PUBLIC_WHOP_AGENT_USER_ID,
+  companyId: process.env.NEXT_PUBLIC_WHOP_COMPANY_ID,
+});
+
+// Verify user authentication (import verifyUserToken separately)
+const { userId } = await verifyUserToken(req.headers);
+
+// Get user info
+const user = await whop.users.getUser({ userId });
+
+// Check access
+const access = await whop.access.checkIfUserHasAccessToExperience({ 
+  experienceId, 
+  userId 
+});
+
+// Create checkout session
+const checkout = await whop.payments.createCheckoutSession({ 
+  planId: "plan_xxx" 
+});
+
+// The checkout ID for iframe SDK
+console.log(checkout.id); // Use with iframeSdk.inAppPurchase()
+```
+
+## Terminology Reference
+
+| Backend Term | UI Term | Description |
+|--------------|---------|-------------|
+| Company | Community | A creator's digital space |
+| Access Pass | Product/Whop | What customers purchase |
+| Plan | Checkout Link | Pricing/payment option |
+| Experience | App Instance | Installed app on a company |
+| Authorized User | Admin | User with admin permissions |
+| Membership | Subscription | User's active access to a company |
+
+## Resources
+
+- **Official Documentation**: https://docs.whop.com/
+- **REST API Docs**: https://docs.whop.com/apps/api/getting-started
+- **App Development**: https://docs.whop.com/apps
+- **SDK Package**: `@whop/api` (npm)
+
+## Common API Examples
+
+### Authentication in API Routes
+```typescript
+import { verifyUserToken } from '@whop/api';
+
+export async function GET(req: NextRequest) {
+  const { userId } = await verifyUserToken(req.headers);
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  // Proceed with authenticated request
+}
+```
+
+### Get Experience Data
+```typescript
+const experience = await whop.experiences.getExperience({ 
+  experienceId: "exp_xxx" 
+});
+console.log(experience.name, experience.company.title);
+```
+
+### Get User Data
+```typescript
+const user = await whop.users.getUser({ userId });
+console.log(user.name, user.username, user.email);
+```
+
+### Check User Access
+```typescript
+const access = await whop.access.checkIfUserHasAccessToExperience({
+  experienceId: "exp_xxx",
+  userId: "user_xxx"
+});
+console.log(access.accessLevel); // "admin" | "member" | "no_access"
+```
+
+### Create Checkout Session
+```typescript
+const checkout = await whop.payments.createCheckoutSession({
+  planId: "plan_xxx"
+});
+
+// Use with iframe SDK
+iframeSdk.inAppPurchase({ planId, id: checkout.id });
+```
+
+### List Receipts (Filtered to User)
+```typescript
+const receipts = await whop.payments.listReceiptsForCompany({
+  companyId,
+  filter: {
+    accessPassIds: ["prod_xxx"],
+    statuses: ['succeeded']
+  }
+});
+
+// IMPORTANT: Filter to current user only
+const userReceipts = receipts?.receipts?.nodes?.filter(
+  (r) => r?.member?.user?.id === userId
+);
+```
+
+### List Members with Filters
+```typescript
+const members = await whop.companies.listMembers({
+  companyId,
+  filters: {
+    accessPassIds: ["prod_xxx"]
+  }
+});
+
+const nodes = members?.members?.nodes ?? [];
+```
+
+## Best Practices
+
+1. **Always use `WhopServerSdk`** from `@whop/api` package
+2. **Use object parameters with camelCase** - `{ companyId }`, `{ experienceId }`, `{ userId }`
+3. **Handle webhooks** to stay in sync with installations and payments
+4. **Implement proper error handling** for API calls
+5. **Cache user permissions** to avoid excessive API calls
+6. **Use the agent user** for automated messaging features
+7. **Test paywalling** thoroughly before launch
+8. **Follow OAuth best practices** for user authentication
+9. **Monitor API rate limits** and implement backoff strategies
+10. **Filter all company-wide API responses** to current user only - critical for privacy
+
+## Notes for LLM Agents
+
+### API Usage
+- Use `WhopServerSdk` from `@whop/api` package
+- Initialize with `appId`, `appApiKey`, `onBehalfOfUserId`, `companyId`
+- **Use camelCase for parameters**: `companyId`, `experienceId`, `userId`
+- **Use object-based params**: `{ experienceId }` not positional arguments
+- Always use optional chaining (`?.`) for nested API responses
+
+### Terminology
+- Access passes and products are the same thing
+- Plans and checkout links are the same thing
+- Companies and communities are the same thing
+- Experiences are instances of apps, not the apps themselves
+- The `direct_link` field on plans is the checkout URL customers use
+
+### Validation Rules
+- Routes must be lowercase, alphanumeric with hyphens only: `a-z`, `0-9`, `-`
+- Routes cannot start or end with hyphens
+- Routes must be at least 2 characters, max 100 characters
+- Routes must be unique across all access passes
+
+### SDK Initialization
+```typescript
+import { WhopServerSdk } from '@whop/api';
+
+export const whop = WhopServerSdk({
+  appId: process.env.NEXT_PUBLIC_WHOP_APP_ID,
+  appApiKey: process.env.WHOP_API_KEY,
+  onBehalfOfUserId: process.env.NEXT_PUBLIC_WHOP_AGENT_USER_ID,
+  companyId: process.env.NEXT_PUBLIC_WHOP_COMPANY_ID,
+});
+```
+
+### API Response Pattern
+API responses use nested structures - always check for null/undefined:
+```typescript
+// Safe property access
+const receipts = await whop.payments.listReceiptsForCompany({ companyId, filter });
+const nodes = receipts?.receipts?.nodes ?? [];
+
+// Filter and transform safely
+const userReceipts = nodes.filter((r) => r?.member?.user?.id === userId);
+```
+
+# Whop Platform Structure & API Guide
+
+## Overview
+
+Whop is a platform for creators to build and monetize digital communities. It provides infrastructure for paywalled communities, content delivery, messaging, and app integrations.
+
+## Core Platform Concepts
+
+### Companies (Communities)
+
+- **Companies** are the backend term for what users see as "communities"
+- Each company represents a creator's digital space
+- Companies can have:
+  - Multiple members
+  - Paywalls and subscription tiers
+  - Installed apps and features
+  - Custom branding and settings
+
+### Members & Access Levels
+
+- **Members** are users who have joined a company
+- Each member has an **access level** that determines their permissions
+- Members can be:
+  - **Admins** - Full administrative access to manage the company
+  - **Regular Members** - Standard access based on their membership tier
+- Access levels control what features, content, and apps members can use
+
+### Access Passes (Products)
+
+- **Access Passes** are products that creators sell
+- Also called "products" or "whops" in the UI
+- Represent what a customer is purchasing (e.g., "Premium Membership", "Course Access")
+- Can include:
+  - Access to specific apps/experiences
+  - Content and features
+  - Different permission levels
+- Types of access passes:
+  - `regular` - Standard store pages
+  - `app` - App-based products
+  - `api_only` - API-only access (what apps usually create)
+  - `experience_upsell` - Upsell products
+
+### Plans (Checkout Links)
+
+- **Plans** are the pricing/payment options for access passes
+- Called "checkout links" in the creator dashboard
+- Define how customers pay for an access pass:
+  - One-time payments (`one_time`)
+  - Recurring subscriptions (`renewal`)
+  - Expiring access (`expiration`)
+- Each plan has:
+  - A **directLink** - the checkout URL customers use to purchase
+  - Pricing configuration (price, currency, billing period)
+  - Payment method options (card, PayPal, ACH, etc.)
+  - Trial periods and discounts
+- Multiple plans can exist for a single access pass (e.g., monthly vs annual)
+
+### Apps & Experiences
+
+#### Apps
+- **Apps** are created by developers under a company
+- When submitted for review, apps can be published to the Whop App Store
+- Other creators can discover and install apps from the store
+- Apps provide additional functionality to communities (e.g., courses, polls, custom features)
+
+#### Experiences
+- When an app is **installed** on a company, it creates an **experience**
+- **Experience** = a specific instance of an app running on a company
+- An app can be installed multiple times on the same company (multiple experiences)
+- Each experience has a unique **experience ID**
+- Experiences can be paywalled independently from the company
+
+#### Relationship
+```
+App (template) 
+  → Installed on Company A → Experience 1 (exp_abc123)
+  → Installed on Company A → Experience 2 (exp_def456)
+  → Installed on Company B → Experience 3 (exp_ghi789)
+```
+
+## Platform Features
+
+### Paywalling Capabilities
+
+Creators can paywall:
+- **Entire company** - Require membership to access anything
+- **Specific apps/experiences** - Require certain access passes to use specific features
+- **Individual features** - Gate specific functionality within apps
+- **Content tiers** - Different access levels see different content
+
+### Built-in Apps (Special-Cased Features)
+
+#### Forums
+- Special-cased app for community discussions
+- Creators can create forum posts/announcements
+- Members can create topics and reply
+- Has extensive API for managing posts, topics, and permissions
+- Each forum experience has a `Feed::ForumFeed` containing `Feed::ForumPost` entries
+
+#### Courses
+- Special-cased app for educational content
+- Extensive API for managing:
+  - Lessons and modules
+  - Assessment questions
+  - Student progress
+  - Completion tracking
+
+#### Direct Messages (DMs)
+- Built-in messaging feature for 1-on-1 conversations
+- **Agent User**: Apps get `NEXT_PUBLIC_WHOP_AGENT_USER_ID` env variable
+  - This is a fake user ID that apps can use to automate DM interactions
+  - Useful for chatbots, notifications, and automated responses
+- Features:
+  - Message channels
+  - Reactions to messages
+  - Message history
+
+#### Support Channels
+- Special-cased feature for customer support
+- Each company can have a dedicated support channel
+- Members can create support tickets/conversations
+- Admins can respond and manage support requests
+
+### Additional Features
+
+- **Shipments** - Physical product fulfillment tracking
+- **Invoices** - Billing and payment records
+- **Ledger Accounts** - Financial tracking for companies and users
+- **Authorized Users** - Admin/team member management
+- **Memberships** - Active subscriptions/access for members
+- **Chat Channels** - Group messaging within communities
+- **Reactions** - Emoji reactions in messages and content
+
+## Whop SDKs & APIs
+
+### Current API: REST API (Recommended)
+
+**Package**: `@whop/api`  
+**Documentation**: https://docs.whop.com/apps/api/getting-started
+
+This is the **recommended API package** for building Whop apps with full functionality.
+
+#### Capabilities:
+- **App Configuration** - Set up URLs, permissions, settings
+- **Authentication** - User auth, OAuth flows, session management
+- **Products (Access Passes)** - Create, read, update, delete access passes
+- **Plans** - Manage pricing, checkout links, payment options
+- **Payments** - Handle checkouts, process transfers, track transactions
+- **Companies** - Manage company settings, metadata, configuration
+- **Members** - List members, manage access levels, permissions
+- **Memberships** - Track active subscriptions, access periods
+- **Experiences** - Manage app instances, configurations
+- **Forums** - Create posts, manage topics, moderate discussions
+- **Forum Messages** - Read, create, delete forum content
+- **Direct Messages** - Send/receive DMs, manage conversations
+- **Chat Channels** - Create and manage group chats
+- **Support Channels** - Handle support tickets and conversations
+- **Reactions** - Add/remove reactions to messages
+- **Courses** - Full course management (lessons, assessments, progress)
+- **Shipments** - Track physical product deliveries
+- **Invoices** - Billing records and payment history
+- **Ledger Accounts** - Financial accounts for companies and users
+- **Authorized Users** - Manage admins and team members
+- **Users** - User profiles, data, and settings
+
+### Alternative SDK (Limited Functionality)
+
+**Package**: `@whop/sdk`  
+**Status**: Newer but missing some functionality - use `@whop/api` instead
+
+### Deprecated APIs (Legacy)
+
+The following are truly deprecated:
+- **GraphQL SDK** - Original GraphQL-based API
+- **v2** - Second iteration
+- **v5** - Third iteration
+
+These are maintained for backward compatibility only.
+
+### Internal Frontend API (Not Public)
+
+The GraphQL API explored in this conversation is used by Whop's internal frontend but is **not publicly documented or supported** for third-party developers. It provides lower-level access to:
+- Access pass creation with advanced options
+- Plan configuration details
+- Company management internals
+- Direct database operations
+
+**For app development, always use the public REST API (`@whop/api`).**
+
+## Development Workflow
+
+### Creating a Whop App
+
+1. **Initialize the SDK** in your lib/whop.ts
+   ```typescript
+   import { WhopServerSdk } from '@whop/api';
+   import { env } from '~/env';
+   
+   export const whop = WhopServerSdk({
+     appId: env.NEXT_PUBLIC_WHOP_APP_ID,
+     appApiKey: env.WHOP_API_KEY,
+     onBehalfOfUserId: env.NEXT_PUBLIC_WHOP_AGENT_USER_ID,
+     companyId: env.NEXT_PUBLIC_WHOP_COMPANY_ID,
+   });
+   ```
+
+2. **Create API routes** to interact with Whop
+   ```typescript
+   // app/(whop-api)/api/experience/[experienceId]/route.ts
+   import { NextRequest, NextResponse } from 'next/server';
+   import { whop } from '~/lib/whop';
+   
+   export async function GET(
+     req: NextRequest,
+     { params }: { params: Promise<{ experienceId: string }> }
+   ) {
+     const { experienceId } = await params;
+     const experience = await whop.experiences.getExperience({ experienceId });
+     return NextResponse.json(experience);
+   }
+   ```
+
+3. **Authenticate users** in protected routes
+   ```typescript
+   import { verifyUserToken } from '@whop/api';
+   
+   const { userId } = await verifyUserToken(req.headers);
+   if (!userId) {
+     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+   }
+   ```
+
+4. **Handle user data safely**
+   - Always verify authentication first
+   - Filter company-wide data to current user only
+   - Use optional chaining for nested properties
+   - Return minimal data to avoid privacy leaks
+
+### Paywalling Your App
+
+1. **Create checkout endpoint** for your plans
+   ```typescript
+   // app/(whop-api)/api/checkout/subscription/route.ts
+   import { verifyUserToken } from '@whop/api';
+   
+   export async function POST(req: NextRequest) {
+     const { userId } = await verifyUserToken(req.headers);
+     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+     const checkoutSession = await whop.payments.createCheckoutSession({
+       planId: env.SUBSCRIPTION_PLAN_ID
+     });
+
+     return NextResponse.json({
+       planId: env.SUBSCRIPTION_PLAN_ID,
+       checkoutId: checkoutSession.id,
+     });
+   }
+   ```
+
+2. **Check user access** to experiences
+   ```typescript
+   const access = await whop.access.checkIfUserHasAccessToExperience({
+     experienceId,
+     userId
+   });
+   console.log(access.accessLevel); // "admin" | "member" | "no_access"
+   ```
+
+3. **List user's receipts** to check purchases
+   ```typescript
+   const receipts = await whop.payments.listReceiptsForCompany({
+     companyId,
+     filter: {
+       accessPassIds: [planId],
+       statuses: ['succeeded']
+     }
+   });
+   
+   const userReceipts = receipts?.receipts?.nodes?.filter(
+     (r) => r?.member?.user?.id === userId
+   );
+   ```
+
+4. **Gate features** based on subscription status
+   ```typescript
+   const hasActiveSubscription = userReceipts.some(
+     (r) => r.subscriptionStatus === "active"
+   );
+   ```
+
+### Using the Agent User
+
+The `WhopServerSdk` is initialized with `onBehalfOfUserId` for automated actions:
+- Set to `NEXT_PUBLIC_WHOP_AGENT_USER_ID` for bot actions
+- Used for sending automated messages
+- Enables chatbots and notification systems
+
+**Note:** The agent user is configured during SDK initialization, not per-request.
+
+## Key API Patterns
+
+### GraphQL (Internal)
+```graphql
+mutation createAccessPass($input: CreateAccessPassInput!) {
+  createAccessPass(input: $input) {
+    id
+    route
+    defaultPlan {
+      id
+      directLink
+    }
+  }
+}
+```
+
+### REST API (Public SDK)
+```typescript
+import { WhopServerSdk, verifyUserToken } from '@whop/api';
+
+export const whop = WhopServerSdk({
+  appId: process.env.NEXT_PUBLIC_WHOP_APP_ID,
+  appApiKey: process.env.WHOP_API_KEY,
+  onBehalfOfUserId: process.env.NEXT_PUBLIC_WHOP_AGENT_USER_ID,
+  companyId: process.env.NEXT_PUBLIC_WHOP_COMPANY_ID,
+});
+
+// Verify user authentication (import verifyUserToken separately)
+const { userId } = await verifyUserToken(req.headers);
+
+// Get user info
+const user = await whop.users.getUser({ userId });
+
+// Check access
+const access = await whop.access.checkIfUserHasAccessToExperience({ 
+  experienceId, 
+  userId 
+});
+
+// Create checkout session
+const checkout = await whop.payments.createCheckoutSession({ 
+  planId: "plan_xxx" 
+});
+
+// The checkout ID for iframe SDK
+console.log(checkout.id); // Use with iframeSdk.inAppPurchase()
+```
+
+## Terminology Reference
+
+| Backend Term | UI Term | Description |
+|--------------|---------|-------------|
+| Company | Community | A creator's digital space |
+| Access Pass | Product/Whop | What customers purchase |
+| Plan | Checkout Link | Pricing/payment option |
+| Experience | App Instance | Installed app on a company |
+| Authorized User | Admin | User with admin permissions |
+| Membership | Subscription | User's active access to a company |
+
+## Resources
+
+- **Official Documentation**: https://docs.whop.com/
+- **REST API Docs**: https://docs.whop.com/apps/api/getting-started
+- **App Development**: https://docs.whop.com/apps
+- **SDK Package**: `@whop/api` (npm)
+
+## Common API Examples
+
+### Authentication in API Routes
+```typescript
+import { verifyUserToken } from '@whop/api';
+
+export async function GET(req: NextRequest) {
+  const { userId } = await verifyUserToken(req.headers);
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  // Proceed with authenticated request
+}
+```
+
+### Get Experience Data
+```typescript
+const experience = await whop.experiences.getExperience({ 
+  experienceId: "exp_xxx" 
+});
+console.log(experience.name, experience.company.title);
+```
+
+### Get User Data
+```typescript
+const user = await whop.users.getUser({ userId });
+console.log(user.name, user.username, user.email);
+```
+
+### Check User Access
+```typescript
+const access = await whop.access.checkIfUserHasAccessToExperience({
+  experienceId: "exp_xxx",
+  userId: "user_xxx"
+});
+console.log(access.accessLevel); // "admin" | "member" | "no_access"
+```
+
+### Create Checkout Session
+```typescript
+const checkout = await whop.payments.createCheckoutSession({
+  planId: "plan_xxx"
+});
+
+// Use with iframe SDK
+iframeSdk.inAppPurchase({ planId, id: checkout.id });
+```
+
+### List Receipts (Filtered to User)
+```typescript
+const receipts = await whop.payments.listReceiptsForCompany({
+  companyId,
+  filter: {
+    accessPassIds: ["prod_xxx"],
+    statuses: ['succeeded']
+  }
+});
+
+// IMPORTANT: Filter to current user only
+const userReceipts = receipts?.receipts?.nodes?.filter(
+  (r) => r?.member?.user?.id === userId
+);
+```
+
+### List Members with Filters
+```typescript
+const members = await whop.companies.listMembers({
+  companyId,
+  filters: {
+    accessPassIds: ["prod_xxx"]
+  }
+});
+
+const nodes = members?.members?.nodes ?? [];
+```
+
+## Best Practices
+
+1. **Always use `WhopServerSdk`** from `@whop/api` package
+2. **Use object parameters with camelCase** - `{ companyId }`, `{ experienceId }`, `{ userId }`
+3. **Handle webhooks** to stay in sync with installations and payments
+4. **Implement proper error handling** for API calls
+5. **Cache user permissions** to avoid excessive API calls
+6. **Use the agent user** for automated messaging features
+7. **Test paywalling** thoroughly before launch
+8. **Follow OAuth best practices** for user authentication
+9. **Monitor API rate limits** and implement backoff strategies
+10. **Filter all company-wide API responses** to current user only - critical for privacy
+
+## Notes for LLM Agents
+
+### API Usage
+- Use `WhopServerSdk` from `@whop/api` package
+- Initialize with `appId`, `appApiKey`, `onBehalfOfUserId`, `companyId`
+- **Use camelCase for parameters**: `companyId`, `experienceId`, `userId`
+- **Use object-based params**: `{ experienceId }` not positional arguments
+- Always use optional chaining (`?.`) for nested API responses
+
+### Terminology
+- Access passes and products are the same thing
+- Plans and checkout links are the same thing
+- Companies and communities are the same thing
+- Experiences are instances of apps, not the apps themselves
+- The `direct_link` field on plans is the checkout URL customers use
+
+### Validation Rules
+- Routes must be lowercase, alphanumeric with hyphens only: `a-z`, `0-9`, `-`
+- Routes cannot start or end with hyphens
+- Routes must be at least 2 characters, max 100 characters
+- Routes must be unique across all access passes
+
+### SDK Initialization
+```typescript
+import { WhopServerSdk } from '@whop/api';
+
+export const whop = WhopServerSdk({
+  appId: process.env.NEXT_PUBLIC_WHOP_APP_ID,
+  appApiKey: process.env.WHOP_API_KEY,
+  onBehalfOfUserId: process.env.NEXT_PUBLIC_WHOP_AGENT_USER_ID,
+  companyId: process.env.NEXT_PUBLIC_WHOP_COMPANY_ID,
+});
+```
+
+### API Response Pattern
+API responses use nested structures - always check for null/undefined:
+```typescript
+// Safe property access
+const receipts = await whop.payments.listReceiptsForCompany({ companyId, filter });
+const nodes = receipts?.receipts?.nodes ?? [];
+
+// Filter and transform safely
+const userReceipts = nodes.filter((r) => r?.member?.user?.id === userId);
+```
+
