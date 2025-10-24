@@ -3,8 +3,10 @@ import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { Whop } from '@whoplabs/whop-client'
 
-const configDir = join(homedir(), '.config', 'whopctl')
-const sessionPath = join(configDir, 'session.json')
+const whoplabsDir = join(homedir(), '.whoplabs')
+const configDir = join(whoplabsDir, 'whopctl')
+const sessionPath = join(whoplabsDir, 'whop-session.json')
+
 //on startup make our config dir if it doesn't exist
 try {
 	mkdirSync(configDir, { recursive: true })

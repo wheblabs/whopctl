@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 
+import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import chalk from 'chalk'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import { deployAppCommand } from './commands/apps/deploy.ts'
 import { listAppsCommand } from './commands/apps/list.ts'
+import { checkAuthCommand } from './commands/auth/check.ts'
 import { loginCommand } from './commands/login.ts'
 
 /**
@@ -21,12 +25,25 @@ import { loginCommand } from './commands/login.ts'
  * - Session-based authentication stored in ~/.config/whopctl/session.json
  */
 
+// Read version from package.json
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
+const pkgPath = resolve(__dirname, '../package.json')
+const pkg = JSON.parse(await readFile(pkgPath, 'utf-8'))
+
 async function main() {
 	await yargs(hideBin(process.argv))
 		.scriptName('whopctl')
 		.usage('$0 <command> [options]')
 		.command('login', 'Authenticate with your Whop account', {}, async () => {
 			await loginCommand()
+		})
+		.command('auth', 'Manage authentication', (yargs) => {
+			return yargs
+				.command('check', 'Check authentication status', {}, async () => {
+					await checkAuthCommand()
+				})
+				.demandCommand(1, 'Please specify a subcommand (check)')
+				.help()
 		})
 		.command('apps', 'Manage Whop apps', (yargs) => {
 			return yargs
@@ -53,7 +70,7 @@ async function main() {
 		.demandCommand(1, 'Please specify a command')
 		.help()
 		.alias('h', 'help')
-		.version('1.0.1')
+		.version(pkg.version)
 		.alias('v', 'version')
 		.strict()
 		.parse()
