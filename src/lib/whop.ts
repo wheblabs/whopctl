@@ -8,7 +8,7 @@ const sessionPath = join(configDir, 'session.json')
 //on startup make our config dir if it doesn't exist
 try {
 	mkdirSync(configDir, { recursive: true })
-} catch (error) {
+} catch (_error) {
 	// Directory might already exist, that's fine
 }
 
@@ -28,6 +28,11 @@ try {
  * ```
  */
 export const whop = new Whop({ sessionPath, autoLoad: true })
+
+/**
+ * Path to the config directory where session and history files are stored.
+ */
+export { configDir }
 
 /**
  * Path where the authentication session is stored.

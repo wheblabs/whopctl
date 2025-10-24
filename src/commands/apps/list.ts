@@ -11,7 +11,7 @@ import { whop } from '../../lib/whop.ts'
 /**
  * Interface for formatted app data displayed in the table.
  */
-interface AppTableRow {
+interface AppTableRow extends Record<string, unknown> {
 	'App ID': string
 	Name: string
 	Company: string

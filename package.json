@@ -1,46 +1,45 @@
 {
-
-  "name": "whopctl",
-  "version": "1.0.3",
-  "author": "Whop Labs",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/wheblabs/cli.git"
-  },
-  "main": "index.js",
-  "devDependencies": {
-    "@biomejs/biome": "^2.2.7",
-    "@types/bun": "latest",
-    "@types/yargs": "^17.0.33",
-    "chalk": "^5.6.2",
-    "yargs": "^18.0.0"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "bin": {
-    "whopctl": "./dist/index.js"
-  },
-  "bugs": {
-    "url": "https://github.com/wheblabs/cli/issues"
-  },
-  "description": "Deploy, host and observe your whop apps",
-  "engines": {
-    "node": ">=22.0.0"
-  },
-  "homepage": "https://github.com/wheblabs/cli#readme",
-  "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "build": "bun build ./src/index.ts --target node --outfile ./dist/index.js && chmod +x ./dist/index.js",
-    "prepublishOnly": "bun run build",
-    "lint": "biome check .",
-    "format": "biome format --write ."
-  },
-  "type": "module",
-  "dependencies": {
-    "@whoplabs/whop-client": "^0.1.3"
-  }
+	"name": "whopctl",
+	"version": "1.0.3",
+	"author": "Whop Labs",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/wheblabs/cli.git"
+	},
+	"main": "index.js",
+	"devDependencies": {
+		"@biomejs/biome": "^2.2.7",
+		"@types/bun": "latest",
+		"@types/yargs": "^17.0.33",
+		"chalk": "^5.6.2",
+		"yargs": "^18.0.0"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"bin": {
+		"whopctl": "./dist/index.js"
+	},
+	"bugs": {
+		"url": "https://github.com/wheblabs/cli/issues"
+	},
+	"description": "Deploy, host and observe your whop apps",
+	"engines": {
+		"node": ">=22.0.0"
+	},
+	"homepage": "https://github.com/wheblabs/cli#readme",
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "bun build ./src/index.ts --target node --outfile ./dist/index.js && chmod +x ./dist/index.js",
+		"prepublishOnly": "bun run build",
+		"lint": "biome check .",
+		"format": "biome format --write ."
+	},
+	"type": "module",
+	"dependencies": {
+		"@whoplabs/whop-client": "^0.1.3"
+	}
 }
