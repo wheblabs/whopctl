@@ -11,13 +11,10 @@ import { whop } from '../../lib/whop.ts'
 /**
  * Interface for formatted app data displayed in the table.
  */
-interface AppTableRow {
+interface AppTableRow extends Record<string, unknown> {
 	'App ID': string
 	Name: string
 	Company: string
-	DAU: number
-	WAU: number
-	MAU: number
 }
 
 /**
@@ -26,13 +23,12 @@ interface AppTableRow {
  * This command:
  * 1. Fetches all companies owned by the authenticated user
  * 2. For each company, fetches all installed apps
- * 3. Displays the apps in a formatted table with usage statistics
+ * 3. Displays the apps in a formatted table
  *
  * The table shows:
  * - App ID: Unique identifier for the app
  * - Name: App display name
  * - Company: Which company the app is installed on
- * - DAU/WAU/MAU: Daily/Weekly/Monthly Active Users - think this is some hallucinated bullshit tbh
  */
 export async function listAppsCommand(): Promise<void> {
 	// Ensure user is authenticated
@@ -67,9 +63,6 @@ export async function listAppsCommand(): Promise<void> {
 							'App ID': app.id,
 							Name: app.name,
 							Company: company.title,
-							DAU: app.dau ?? 0,
-							WAU: app.wau ?? 0,
-							MAU: app.mau ?? 0,
 						})
 					}
 				}

@@ -1,6 +1,6 @@
-import { stdin as input, stdout as output } from 'node:process'
-import * as readline from 'node:readline/promises'
 import { printError, printInfo, printSuccess, printWhopError } from '../lib/output.ts'
+import { isInReplMode } from '../lib/repl-context.ts'
+import { promptUser } from '../lib/repl-prompt.ts'
 import { sessionPath, whop } from '../lib/whop.ts'
 
 /**
@@ -16,25 +16,27 @@ import { sessionPath, whop } from '../lib/whop.ts'
  * automatically loaded for future commands.
  */
 export async function loginCommand(): Promise<void> {
-	const rl = readline.createInterface({ input, output })
+	const inRepl = isInReplMode()
 
 	try {
 		// Check if already authenticated
 		if (whop.isAuthenticated()) {
 			printInfo('You are already logged in.')
-			const answer = await rl.question('Do you want to login with a different account? (y/N) ')
-			if (answer.toLowerCase() !== 'y' && answer.toLowerCase() !== 'yes') {
-				rl.close()
+			const answer = await promptUser('Do you want to login with a different account? (y/N) ')
+			const trimmedAnswer = answer.trim().toLowerCase()
+			if (trimmedAnswer !== 'y' && trimmedAnswer !== 'yes') {
 				return
 			}
 		}
 
 		// Step 1: Prompt for email
-		const email = await rl.question('Enter your email: ')
+		const email = await promptUser('Enter your email: ')
 		if (!email || !email.includes('@')) {
 			printError('Invalid email address')
-			rl.close()
-			process.exit(1)
+			if (!inRepl) {
+				process.exit(1)
+			}
+			return
 		}
 
 		printInfo('Sending OTP to your email...')
@@ -45,18 +47,22 @@ export async function loginCommand(): Promise<void> {
 			ticket = await whop.auth.sendOTP(email)
 		} catch (error) {
 			printWhopError(error)
-			rl.close()
-			process.exit(1)
+			if (!inRepl) {
+				process.exit(1)
+			}
+			return
 		}
 
 		printSuccess('OTP sent! Check your email.')
 
 		// Step 3: Prompt for OTP code
-		const code = await rl.question('Enter the OTP code: ')
+		const code = await promptUser('Enter the OTP code: ')
 		if (!code || code.length < 4) {
 			printError('Invalid OTP code')
-			rl.close()
-			process.exit(1)
+			if (!inRepl) {
+				process.exit(1)
+			}
+			return
 		}
 
 		printInfo('Verifying OTP...')
@@ -70,16 +76,18 @@ export async function loginCommand(): Promise<void> {
 			})
 		} catch (error) {
 			printWhopError(error)
-			rl.close()
-			process.exit(1)
+			if (!inRepl) {
+				process.exit(1)
+			}
+			return
 		}
 
 		printSuccess('Successfully authenticated!')
 		printInfo(`Session saved to: ${sessionPath}`)
 	} catch (error) {
 		printError(`Login failed: ${error}`)
-		process.exit(1)
-	} finally {
-		rl.close()
+		if (!inRepl) {
+			process.exit(1)
+		}
 	}
 }
