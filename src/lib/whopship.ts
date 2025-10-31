@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { whop } from './whop.ts'
 
-const WHOPSHIP_API_URL = 'https://api.whopship.com'
+const WHOPSHIP_API_URL = process.env.WHOPSHIP_API_URL || 'http://localhost:3000'
 
 /**
  * Request body for creating a new deployment.

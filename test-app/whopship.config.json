@@ -1,0 +1,8 @@
+{
+  "whopAppId": "app_test123",
+  "subdomain": "test-app",
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
+

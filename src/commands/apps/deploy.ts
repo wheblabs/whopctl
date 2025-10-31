@@ -1,6 +1,7 @@
 import chalk from 'chalk'
 import { requireAuth } from '../../lib/auth-guard.ts'
 import { BuildManager } from '../../lib/build.ts'
+import { hasWhopshipConfig, loadWhopshipConfig } from '../../lib/config.ts'
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
 import { isInReplMode } from '../../lib/repl-context.ts'
 import { type DeploymentStatus, whopship } from '../../lib/whopship.ts'
@@ -15,11 +16,40 @@ import { type DeploymentStatus, whopship } from '../../lib/whopship.ts'
  * 4. Triggers the deployment process
  * 5. Monitors deployment status and streams logs
  *
- * @param appId The Whop app ID to deploy
+ * @param appId The Whop app ID to deploy (optional if whopship.config.json exists)
  */
-export async function deployAppCommand(appId: string): Promise<void> {
+export async function deployAppCommand(appId?: string): Promise<void> {
 	// Ensure user is authenticated
 	requireAuth()
+
+	// If no appId provided, try to load from config file
+	if (!appId) {
+		if (!hasWhopshipConfig()) {
+			printError('No app ID provided and no whopship.config.json found')
+			console.log(chalk.dim('Usage:'))
+			console.log(chalk.dim('  whopctl deploy <app-id>'))
+			console.log(chalk.dim('  OR create a whopship.config.json with "whopAppId"'))
+			if (!isInReplMode()) {
+				process.exit(1)
+			}
+			return
+		}
+
+		try {
+			const config = loadWhopshipConfig()
+			appId = config.whopAppId
+			printInfo(`Using app ID from whopship.config.json: ${appId}`)
+		} catch (error) {
+			printError('Failed to load whopship.config.json')
+			if (error instanceof Error) {
+				console.error(chalk.red(error.message))
+			}
+			if (!isInReplMode()) {
+				process.exit(1)
+			}
+			return
+		}
+	}
 
 	const buildManager = new BuildManager()
 

@@ -69,17 +69,16 @@ async function main() {
 					await listAppsCommand()
 				})
 				.command(
-					'deploy <appId>',
+					'deploy [appId]',
 					'Deploy an app',
 					(yargs) => {
 						return yargs.positional('appId', {
-							describe: 'The ID of the app to deploy',
+							describe: 'The ID of the app to deploy (optional if whopship.config.json exists)',
 							type: 'string',
-							demandOption: true,
 						})
 					},
 					async (argv) => {
-						await deployAppCommand(argv.appId as string)
+						await deployAppCommand(argv.appId as string | undefined)
 					},
 				)
 				.demandCommand(1, 'Please specify a subcommand (list, deploy)')
