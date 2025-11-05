@@ -17,7 +17,7 @@ export function printReplHelp(): void {
 	console.log(`${chalk.bold('│')}  login              Authenticate with your Whop account`)
 	console.log(`${chalk.bold('│')}  logout             Clear authentication session`)
 	console.log(`${chalk.bold('│')}  apps list          List all your apps`)
-	console.log(`${chalk.bold('│')}  apps deploy <id>   Deploy an app`)
+	console.log(`${chalk.bold('│')}  apps deploy <id>   Build and deploy an app with OpenNext`)
 	console.log(chalk.bold('│'))
 	console.log(chalk.bold('╰────────────────────────────────────────────────────╯'))
 	console.log('')
@@ -122,7 +122,12 @@ async function handleAppsCommand(args: string[]): Promise<void> {
 			console.log(chalk.dim('Usage: apps deploy <appId>'))
 			return
 		}
-		await deployAppCommand(subArgs[0])
+		const appId = subArgs[0]
+		if (!appId) {
+			printError('Missing app ID for deploy command')
+			return
+		}
+		await deployAppCommand(appId)
 	} else {
 		printError(`Unknown apps subcommand: ${subcommand}`)
 		console.log(chalk.dim('Available: list, deploy <id>'))
