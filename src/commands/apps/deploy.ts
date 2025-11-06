@@ -12,8 +12,9 @@ import { type DeploymentStatus, whopship } from '../../lib/whopship.ts'
  * 1. Builds the Next.js app with OpenNext Cloudflare adapter
  * 2. Creates a deployment artifact (zip file)
  * 3. Uploads the artifact to WhopShip's R2 storage
- * 4. Triggers the deployment process
- * 5. Monitors deployment status and streams logs
+ * 4. Notifies the API that upload is complete
+ * 5. Triggers the deployment process
+ * 6. Monitors deployment status and streams logs
  *
  * @param appId The Whop app ID to deploy
  */
@@ -64,12 +65,15 @@ export async function deployAppCommand(appId: string): Promise<void> {
 		await whopship.uploadArtifact(deployment.uploadUrl, artifactPath)
 		printSuccess('Artifact uploaded successfully')
 
-		// Step 5: Trigger deployment
+		// Step 5: Notify upload complete
+		await whopship.completeDeployment(deployment.deployment.id)
+
+		// Step 6: Trigger deployment
 		printInfo('Triggering deployment...')
 		await whopship.triggerDeployment(deployment.deployment.id)
 		printSuccess('Deployment triggered')
 
-		// Step 6: Monitor status and stream logs
+		// Step 7: Monitor status and stream logs
 		printInfo('Monitoring deployment progress...')
 		console.log(chalk.dim('This may take a few minutes...\n'))
 
@@ -115,7 +119,6 @@ async function monitorDeployment(deploymentId: number): Promise<void> {
 			status = statusData.deployment.status
 
 			// Show status update
-			const statusEmoji = getStatusEmoji(status)
 			const rolloutInfo = statusData.deployment.rolloutStage
 				? ` (${formatRolloutStage(statusData.deployment.rolloutStage)})`
 				: ''
@@ -186,28 +189,6 @@ async function monitorDeployment(deploymentId: number): Promise<void> {
  */
 function sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-/**
- * Gets an emoji for a deployment status.
- */
-function getStatusEmoji(
-	status: DeploymentStatus['deployment']['status'],
-): string {
-	switch (status) {
-		case 'pending':
-			return '⏳'
-		case 'building':
-			return '🔨'
-		case 'deploying':
-			return '🚀'
-		case 'active':
-			return '✅'
-		case 'failed':
-			return '❌'
-		default:
-			return '❓'
-	}
 }
 
 /**

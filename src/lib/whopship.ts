@@ -171,6 +171,31 @@ export class WhopShipClient {
 	}
 
 	/**
+	 * Notifies the API that artifact upload is complete.
+	 * This signals that the deployment can begin processing.
+	 *
+	 * @param deploymentId Deployment ID
+	 */
+	async completeDeployment(deploymentId: number): Promise<void> {
+		const headers = await this.getAuthHeaders()
+
+		const response = await fetch(
+			`${this.baseUrl}/deployments/${deploymentId}/complete`,
+			{
+				method: 'POST',
+				headers,
+			},
+		)
+
+		if (!response.ok) {
+			const errorText = await response.text()
+			throw new Error(
+				`Failed to complete deployment (${response.status}): ${errorText}`,
+			)
+		}
+	}
+
+	/**
 	 * Triggers deployment processing after artifact upload.
 	 *
 	 * @param deploymentId Deployment ID
