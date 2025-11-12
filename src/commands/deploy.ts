@@ -3,7 +3,7 @@ import { createReadStream, createWriteStream } from 'node:fs'
 import { readFile, writeFile, stat, unlink } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { pipeline } from 'node:stream/promises'
-import { createBrotliCompress } from 'node:zlib'
+import { createGzip } from 'node:zlib'
 import { create as createTar} from 'tar'
 import { requireAuth } from '../lib/auth-guard.ts'
 import { printError, printInfo, printSuccess, printWarning } from '../lib/output.ts'
@@ -11,11 +11,11 @@ import { whop } from '../lib/whop.ts'
 import { WhopshipAPI } from '../lib/whopship-api.ts'
 
 /**
- * Create tar.br archive of the project
+ * Create tar.gz archive of the project
  */
 async function createArchive(dir: string): Promise<{ path: string; sha256: string }> {
   const tarPath = join(dir, '.whopctl-build.tar')
-  const brPath = join(dir, '.whopctl-build.tar.br')
+  const gzPath = join(dir, '.whopctl-build.tar.gz')
 
   printInfo('Creating tar archive...')
   
@@ -26,40 +26,34 @@ async function createArchive(dir: string): Promise<{ path: string; sha256: strin
       file: tarPath,
       cwd: dir,
       filter: (path) => {
-        const excluded = [
-          'node_modules',
-          '.next',
-          '.git',
-          '.whopctl-build.tar',
-          '.whopctl-build.tar.br',
-        ]
+        const excluded = ['node_modules', '.next', '.git', '.whopctl-build.tar', '.whopctl-build.tar.gz']
         return !excluded.some(e => path.includes(e))
       }
     },
     ['.'] // Archive everything from current directory
   )
 
-  printInfo('Compressing with Brotli...')
+  printInfo('Compressing with gzip...')
   
-  // Compress with Brotli
+  // Compress with gzip (fastest for upload + build-runner expectations)
   await pipeline(
     createReadStream(tarPath),
-    createBrotliCompress(),
-    createWriteStream(brPath)
+    createGzip({ level: 1 }), // prioritize speed over ratio
+    createWriteStream(gzPath)
   )
 
   // Calculate SHA256
   printInfo('Calculating SHA256...')
-  const fileBuffer = await readFile(brPath)
+  const fileBuffer = await readFile(gzPath)
   const sha256 = createHash('sha256').update(fileBuffer).digest('hex')
   
   // Clean up tar file
   await unlink(tarPath)
   
-  const stats = await stat(brPath)
+  const stats = await stat(gzPath)
   printSuccess(`✓ Archive created: ${(stats.size / 1024 / 1024).toFixed(2)} MB`)
   
-  return { path: brPath, sha256 }
+  return { path: gzPath, sha256 }
 }
 
 /**

@@ -91,6 +91,24 @@ export async function statusCommand(path: string = '.'): Promise<void> {
     console.log(`  Updated:    ${build.updated_at.toLocaleString()}`)
     console.log()
     
+    // Show deployment URLs if built
+    if (build.status === 'built') {
+      const normalizedSubdomain = build.app.subdomain.toLowerCase()
+      const appUrl = `https://${normalizedSubdomain}.whopship.app`
+      
+      console.log(chalk.bold.cyan('🌐 Deployed App URL:'))
+      console.log(chalk.cyan(`   ${appUrl}`))
+      console.log()
+      console.log(chalk.dim('To use this app in Whop:'))
+      console.log(chalk.dim(`   1. Go to https://whop.com/apps/${build.app.whop_app_id}/settings`))
+      console.log(chalk.dim(`   2. Set the App URL to: ${appUrl}`))
+      console.log(chalk.dim(`   3. Install the app in your company to test`))
+      console.log()
+      console.log(chalk.yellow('📋 View runtime logs:'))
+      console.log(chalk.dim(`   whopctl logs app ${build.app.whop_app_id}`))
+      console.log()
+    }
+    
     if (build.error_message) {
       printError(`Error: ${build.error_message}`)
       console.log()

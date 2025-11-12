@@ -43,8 +43,9 @@
   },
   "type": "module",
   "dependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "^3.929.0",
     "@whoplabs/whop-client": "^0.1.3",
-    "tar": "^7.5.1",
-    "adm-zip": "^0.5.16"
+    "adm-zip": "^0.5.16",
+    "tar": "^7.5.1"
   }
 }

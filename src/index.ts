@@ -14,9 +14,10 @@ import { logoutCommand } from './commands/logout.ts'
 import { startRepl } from './lib/repl.ts'
 import { deployCommand } from './commands/deploy.ts'
 import { statusCommand } from './commands/status/status.ts'
-import { logsCommand } from './commands/status/logs.ts'
+import { logsCommand as buildLogsCommand } from './commands/status/logs.ts'
 import { redeployBuildCommand } from './commands/builds/redeploy.ts'
 import { listBuildsCommand } from './commands/builds/list.ts'
+import { logsCommand } from './commands/logs.ts'
 
 /**
  * Whopctl - CLI tool for managing Whop apps
@@ -117,7 +118,7 @@ async function main() {
             })
           },
           async (argv) => {
-            await logsCommand(argv.path as string)
+            await buildLogsCommand(argv.path as string)
           }
         )
         .command(
@@ -188,6 +189,75 @@ async function main() {
           }
         )
         .demandCommand(0)
+        .help()
+    })
+    .command('logs', 'View runtime logs', (yargs) => {
+      return yargs
+        .command(
+          'deploy-runner [buildId]',
+          'View deploy-runner Lambda logs',
+          (yargs) => {
+            return yargs
+              .positional('buildId', {
+                describe: 'Filter logs for specific build ID',
+                type: 'string',
+              })
+              .option('hours', {
+                type: 'number',
+                default: 1,
+                describe: 'Hours of logs to fetch',
+              })
+          },
+          async (argv) => {
+            await logsCommand({
+              type: 'deploy-runner',
+              buildId: argv.buildId as string | undefined,
+              hours: argv.hours,
+            })
+          }
+        )
+        .command(
+          'router',
+          'View router Lambda logs',
+          (yargs) => {
+            return yargs.option('hours', {
+              type: 'number',
+              default: 1,
+              describe: 'Hours of logs to fetch',
+            })
+          },
+          async (argv) => {
+            await logsCommand({
+              type: 'router',
+              hours: argv.hours,
+            })
+          }
+        )
+        .command(
+          'app <appId>',
+          'View app runtime logs',
+          (yargs) => {
+            return yargs
+              .positional('appId', {
+                describe: 'Whop app ID (e.g., app_xxx)',
+                type: 'string',
+                demandOption: true,
+              })
+              .option('hours', {
+                type: 'number',
+                default: 1,
+                describe: 'Hours of logs to fetch',
+              })
+          },
+          async (argv) => {
+            await logsCommand({
+              type: 'app',
+              appId: argv.appId as string,
+              hours: argv.hours,
+            })
+          }
+        )
+        .demandCommand(1, 'Please specify log type (deploy-runner, router, app)')
         .help()
     })
 		.demandCommand(1, 'Please specify a command or run without arguments for interactive mode')

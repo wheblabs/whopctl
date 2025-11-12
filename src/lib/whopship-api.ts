@@ -187,4 +187,23 @@ export class WhopshipAPI {
   
     return await response.json()
   }
+
+  async getAppInfo(whopAppId: string) {
+    const response = await fetch(
+      `${this.apiURL}/api/apps/${whopAppId}`,
+      {
+        headers: {
+          'x-whop-access-token': this.accessToken,
+          'x-whop-refresh-token': this.refreshToken,
+          'x-whop-csrf-token': this.csrfToken,
+        },
+      }
+    )
+  
+    if (!response.ok) {
+      throw new Error(`Failed to get app info: ${await response.text()}`)
+    }
+  
+    return await response.json()
+  }
 }
