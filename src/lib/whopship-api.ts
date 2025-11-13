@@ -42,14 +42,17 @@ export const buildStatusSchema = z.object({
 export type BuildStatus = z.infer<typeof buildStatusSchema>
 
 export class WhopshipAPI {
-	// private readonly apiURL: string = 'https://api.whopship.com'
-	private readonly apiURL: string = 'http://localhost:3000'
+	private readonly apiURL: string
 
 	constructor(
 		private readonly accessToken: string,
 		private readonly refreshToken: string,
 		private readonly csrfToken: string,
-	) {}
+		apiURL?: string,
+	) {
+		// Allow override via constructor, then env var, then default to localhost for development
+		this.apiURL = apiURL || process.env.WHOPSHIP_API_URL || 'http://localhost:3000'
+	}
 
 	async getMe(): Promise<WhopshipUser> {
 		const response = await fetch(`${this.apiURL}/api/me`, {

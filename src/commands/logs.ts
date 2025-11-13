@@ -25,7 +25,9 @@ export async function logsCommand(options: {
 
 		// Determine which log group to query
 		if (options.type === 'deploy-runner') {
-			logGroupName = '/aws/lambda/whopship-infra-production-DeployRunner'
+			// The actual function name includes a random suffix, but we can search for it
+			// For now, use the log group we know exists
+			logGroupName = '/aws/lambda/whopship-infra-production-DeployRunnerFunction-dhkddrhs'
 			printInfo(
 				`Fetching deploy-runner logs (last ${options.hours || 1} hour)...`,
 			)
