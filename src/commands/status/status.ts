@@ -50,9 +50,124 @@ function formatStatus(status: string): string {
 }
 
 /**
+ * Format log line with colors
+ */
+function formatLogLine(line: string): string {
+  // Check for common log patterns and colorize
+  const lowerLine = line.toLowerCase()
+  
+  if (lowerLine.includes('error') || lowerLine.includes('failed') || lowerLine.includes('✗')) {
+    return chalk.red(line)
+  }
+  if (lowerLine.includes('warning') || lowerLine.includes('warn') || lowerLine.includes('⚠')) {
+    return chalk.yellow(line)
+  }
+  if (lowerLine.includes('success') || lowerLine.includes('complete') || lowerLine.includes('✓')) {
+    return chalk.green(line)
+  }
+  if (lowerLine.includes('info') || lowerLine.includes('ℹ')) {
+    return chalk.blue(line)
+  }
+  
+  return line
+}
+
+/**
+ * Display build logs
+ */
+async function displayLogs(
+  api: WhopshipAPI,
+  buildId: string,
+  options: { lines: number; follow: boolean },
+): Promise<void> {
+  let lastLogCount = 0
+  
+  const fetchAndDisplayLogs = async (): Promise<{ logs: string[]; status: string }> => {
+    try {
+      const logsResponse = (await api.getBuildLogs(buildId)) as {
+        logs: string[]
+        status: string
+      }
+      
+      if (logsResponse.logs && logsResponse.logs.length > 0) {
+        // Show only new logs if following
+        const logsToShow = options.follow
+          ? logsResponse.logs.slice(lastLogCount)
+          : logsResponse.logs.slice(-options.lines)
+        
+        for (const log of logsToShow) {
+          console.log(formatLogLine(log))
+        }
+        
+        lastLogCount = logsResponse.logs.length
+      }
+      
+      return { logs: logsResponse.logs || [], status: logsResponse.status }
+    } catch (error: any) {
+      if (error.message?.includes('404') || error.message?.includes('not found')) {
+        return { logs: [], status: 'unknown' }
+      }
+      throw error
+    }
+  }
+  
+  // Initial fetch
+  const initialResult = await fetchAndDisplayLogs()
+  
+  if (initialResult.logs.length === 0 && !options.follow) {
+    printInfo('No logs available yet. Build may still be in queue.')
+    return
+  }
+  
+  // Follow mode: poll for updates
+  if (options.follow) {
+    const activeStatuses = ['init', 'uploading', 'uploaded', 'queued', 'building']
+    
+    if (!activeStatuses.includes(initialResult.status)) {
+      // Build is complete, no need to follow
+      return
+    }
+    
+    console.log()
+    printInfo('Following logs... (Press Ctrl+C to stop)')
+    console.log()
+    
+    // Handle Ctrl+C gracefully
+    let interrupted = false
+    const interruptHandler = () => {
+      interrupted = true
+      console.log()
+      printInfo('Stopped following logs.')
+      process.exit(0)
+    }
+    process.on('SIGINT', interruptHandler)
+    
+    try {
+      while (!interrupted) {
+        await new Promise((resolve) => setTimeout(resolve, 2500)) // Poll every 2.5 seconds
+        
+        const result = await fetchAndDisplayLogs()
+        
+        // Exit if build is complete
+        if (!activeStatuses.includes(result.status)) {
+          console.log()
+          printInfo(`Build status changed to ${result.status}. Stopping follow mode.`)
+          break
+        }
+      }
+    } finally {
+      process.removeListener('SIGINT', interruptHandler)
+    }
+  }
+}
+
+/**
  * Check deployment status for the current app
  */
-export async function statusCommand(path: string = '.'): Promise<void> {
+export async function statusCommand(
+  path: string = '.',
+  options: { showLogs?: boolean; follow?: boolean; lines?: number } = {},
+): Promise<void> {
   requireAuth()
   const targetDir = resolve(process.cwd(), path)
   
@@ -109,17 +224,35 @@ export async function statusCommand(path: string = '.'): Promise<void> {
       console.log()
     }
     
+    // Show hint for active/failed builds
+    if ((build.status === 'building' || build.status === 'failed') && !options.showLogs) {
+      console.log(chalk.yellow('💡 Tip: Run `whopctl status --logs` to view build logs'))
+      console.log()
+    }
+    
     if (build.error_message) {
       printError(`Error: ${build.error_message}`)
       console.log()
     }
     
-    if (build.build_log_url) {
+    if (build.build_log_url && !options.showLogs) {
       printInfo(`Logs: ${build.build_log_url}`)
     }
     
     if (build.artifacts) {
       printSuccess(`✓ Artifacts available at: ${build.artifacts.s3_bucket}/${build.artifacts.s3_key}`)
+    }
+    
+    // Display logs if requested
+    if (options.showLogs) {
+      console.log()
+      printInfo('📋 Build Logs')
+      console.log()
+      await displayLogs(api, build.build_id, {
+        lines: options.lines || 30,
+        follow: options.follow || false,
+      })
+      console.log()
     }
     
   } catch (error) {

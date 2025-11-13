@@ -111,28 +111,67 @@ async function main() {
           'logs [path]',
           'View build logs',
           (yargs) => {
-            return yargs.positional('path', {
-              describe: 'Path to the app directory (defaults to current directory)',
-              type: 'string',
-              default: '.',
-            })
+            return yargs
+              .positional('path', {
+                describe: 'Path to the app directory (defaults to current directory)',
+                type: 'string',
+                default: '.',
+              })
+              .option('follow', {
+                alias: 'f',
+                type: 'boolean',
+                default: false,
+                describe: 'Follow logs for active builds (stream updates)',
+              })
+              .option('lines', {
+                alias: 'n',
+                type: 'number',
+                default: 30,
+                describe: 'Number of log lines to show (default: 30)',
+              })
           },
           async (argv) => {
-            await buildLogsCommand(argv.path as string)
+            await buildLogsCommand(argv.path as string, {
+              follow: argv.follow as boolean,
+              lines: argv.lines as number,
+            })
           }
         )
         .command(
           '$0 [path]',  // Default subcommand (runs when just "status" is called)
           'Show latest build status',
           (yargs) => {
-            return yargs.positional('path', {
-              describe: 'Path to the app directory (defaults to current directory)',
-              type: 'string',
-              default: '.',
-            })
+            return yargs
+              .positional('path', {
+                describe: 'Path to the app directory (defaults to current directory)',
+                type: 'string',
+                default: '.',
+              })
+              .option('logs', {
+                alias: 'l',
+                type: 'boolean',
+                default: false,
+                describe: 'Display build logs inline',
+              })
+              .option('follow', {
+                alias: 'f',
+                type: 'boolean',
+                default: false,
+                describe: 'Follow logs for active builds (stream updates)',
+              })
+              .option('lines', {
+                alias: 'n',
+                type: 'number',
+                default: 30,
+                describe: 'Number of log lines to show when using --logs (default: 30)',
+              })
           },
           async (argv) => {
-            await statusCommand(argv.path as string)
+            await statusCommand(argv.path as string, {
+              showLogs: argv.logs as boolean,
+              follow: argv.follow as boolean,
+              lines: argv.lines as number,
+            })
           }
         )
         .demandCommand(0) // Allow running without subcommand (defaults to status)
