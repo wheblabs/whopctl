@@ -1,212 +1,352 @@
-import { z } from 'zod'
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { homedir } from 'node:os'
+import { printError } from './output.ts'
 
-export const whopshipUserSchema = z.object({
-	id: z.number(),
-	uuid: z.string(),
-	whopUsername: z.string(),
-	whopUserId: z.string(),
-	whopDisplayName: z.string(),
-	whopEmail: z.string(),
-	metadata: z.record(z.string(), z.unknown()).nullable(),
-	createdAt: z.coerce.date(),
-	updatedAt: z.coerce.date(),
-})
+const whoplabsDir = join(homedir(), '.whoplabs')
+const sessionPath = join(whoplabsDir, 'whop-session.json')
 
-export type WhopshipUser = z.infer<typeof whopshipUserSchema>
+/**
+ * Session structure from Whop SDK
+ */
+interface WhopSession {
+	accessToken?: string
+	refreshToken?: string
+	csrfToken?: string
+	userId?: string
+	expiresAt?: number
+	tokens?: {
+		accessToken?: string
+		refreshToken?: string
+		csrfToken?: string
+		uidToken?: string
+		ssk?: string
+		userId?: string
+	}
+}
 
-export const buildStatusSchema = z.object({
-  build_id: z.string(),
-  status: z.string(),
-  app: z.object({
-    id: z.string(),
-    whop_app_id: z.string(),
-    whop_app_name: z.string(),
-    subdomain: z.string(),
-  }),
-  source: z.object({
-    sha256: z.string(),
-    s3_bucket: z.string(),
-    s3_key: z.string(),
-  }),
-  artifacts: z.object({
-    s3_bucket: z.string(),
-    s3_key: z.string(),
-  }).nullable(),
-  error_message: z.string().nullable(),
-  build_log_url: z.string().nullable(),
-  metadata: z.any().nullable(),
-  created_at: z.coerce.date(),
-  updated_at: z.coerce.date(),
-})
+/**
+ * WhopShip API client for CLI commands.
+ * 
+ * This client:
+ * - Reads Whop session tokens from ~/.whoplabs/whop-session.json
+ * - Converts Whop tokens to WhopShip API headers
+ * - Makes authenticated requests to WhopShip API
+ * 
+ * Usage:
+ * ```typescript
+ * import { whopshipApi } from '~/lib/whopship-api';
+ * 
+ * const usage = await whopshipApi.getUsage();
+ * ```
+ */
+class WhopShipApiClient {
+	private apiUrl: string
 
-export type BuildStatus = z.infer<typeof buildStatusSchema>
-
-export class WhopshipAPI {
-	private readonly apiURL: string
-
-	constructor(
-		private readonly accessToken: string,
-		private readonly refreshToken: string,
-		private readonly csrfToken: string,
-		apiURL?: string,
-	) {
-		// Allow override via constructor, then env var, then default to localhost for development
-		this.apiURL = apiURL || process.env.WHOPSHIP_API_URL || 'http://localhost:3000'
+	constructor() {
+		// Get API URL from environment or default to production
+		this.apiUrl = process.env.WHOPSHIP_API_URL || 'https://api.whopship.com'
 	}
 
-	async getMe(): Promise<WhopshipUser> {
-		const response = await fetch(`${this.apiURL}/api/me`, {
+	/**
+	 * Load Whop session from disk
+	 */
+	private async loadSession(): Promise<WhopSession | null> {
+		try {
+			const sessionData = await readFile(sessionPath, 'utf-8')
+			const session = JSON.parse(sessionData) as WhopSession
+			
+			// Handle nested tokens structure (new format)
+			if (session.tokens) {
+				return {
+					accessToken: session.tokens.accessToken,
+					refreshToken: session.tokens.refreshToken,
+					csrfToken: session.tokens.csrfToken,
+					userId: session.tokens.userId,
+				}
+			}
+			
+			// Handle flat structure (old format)
+			return session
+		} catch (error) {
+			return null
+		}
+	}
+
+	/**
+	 * Get authentication headers from Whop session
+	 */
+	private async getAuthHeaders(): Promise<Record<string, string>> {
+		const session = await this.loadSession()
+		
+		if (!session) {
+			throw new Error('Not authenticated. Please run "whopctl login" first.')
+		}
+
+		const headers: Record<string, string> = {
+			'Content-Type': 'application/json',
+		}
+
+		if (session.accessToken) {
+			headers['X-Whop-Access-Token'] = session.accessToken
+		}
+		if (session.refreshToken) {
+			headers['X-Whop-Refresh-Token'] = session.refreshToken
+		}
+		if (session.csrfToken) {
+			headers['X-Whop-Csrf-Token'] = session.csrfToken
+		}
+
+		return headers
+	}
+
+	/**
+	 * Make an authenticated request to WhopShip API
+	 */
+	private async request<T>(
+		endpoint: string,
+		options: RequestInit = {},
+	): Promise<T> {
+		const headers = await this.getAuthHeaders()
+		
+		const url = `${this.apiUrl}${endpoint}`
+		const response = await fetch(url, {
+			...options,
 			headers: {
-				'x-whop-access-token': this.accessToken,
-				'x-whop-refresh-token': this.refreshToken,
-				'x-whop-csrf-token': this.csrfToken,
+				...headers,
+				...options.headers,
 			},
 		})
 
-		const json = (await response.json()) as { user: WhopshipUser }
-		return whopshipUserSchema.parse(json.user)
+		if (!response.ok) {
+			const errorText = await response.text()
+			let errorMessage = `API error: ${response.status} ${response.statusText}`
+			
+			try {
+				const errorJson = JSON.parse(errorText)
+				errorMessage = errorJson.error || errorJson.message || errorMessage
+			} catch {
+				// If not JSON, use the text as-is
+				if (errorText) {
+					errorMessage = errorText
+				}
+			}
+			
+			throw new Error(errorMessage)
+		}
+
+		return response.json()
 	}
 
-  async deployInit(params: {
-    whop_app_id: string
-    whop_app_company_id: string
-    source_sha256: string
-  }): Promise<any> {
-    const response = await fetch(`${this.apiURL}/api/deploy/init`, {
-      method: 'POST',
+	/**
+	 * Get usage data for a time period
+	 */
+	async getUsage(params?: {
+		appId?: number
+		startDate?: string
+		endDate?: string
+	}) {
+		const queryParams = new URLSearchParams()
+		if (params?.appId) queryParams.set('app_id', params.appId.toString())
+		if (params?.startDate) queryParams.set('start_date', params.startDate)
+		if (params?.endDate) queryParams.set('end_date', params.endDate)
+		
+		const query = queryParams.toString() ? `?${queryParams}` : ''
+		return this.request(`/api/analytics/usage${query}`)
+	}
+
+	/**
+	 * Get usage summary for a specific month
+	 */
+	async getUsageSummary(params?: {
+		appId?: number
+		month?: string
+	}) {
+		const queryParams = new URLSearchParams()
+		if (params?.appId) queryParams.set('app_id', params.appId.toString())
+		if (params?.month) queryParams.set('month', params.month)
+		
+		const query = queryParams.toString() ? `?${queryParams}` : ''
+		return this.request(`/api/analytics/usage/summary${query}`)
+	}
+
+	/**
+	 * Get current period usage
+	 */
+	async getCurrentUsage(appId?: number) {
+		const query = appId ? `?app_id=${appId}` : ''
+		return this.request(`/api/billing/usage${query}`)
+	}
+
+	/**
+	 * Get usage history
+	 */
+	async getUsageHistory(params?: {
+		appId?: number
+		months?: number
+	}) {
+		const queryParams = new URLSearchParams()
+		if (params?.appId) queryParams.set('app_id', params.appId.toString())
+		if (params?.months) queryParams.set('months', params.months.toString())
+		
+		const query = queryParams.toString() ? `?${queryParams}` : ''
+		return this.request(`/api/billing/history${query}`)
+	}
+
+	/**
+	 * Get billing periods
+	 */
+	async getBillingPeriods(limit?: number) {
+		const query = limit ? `?limit=${limit}` : ''
+		return this.request(`/api/billing/periods${query}`)
+	}
+
+	/**
+	 * Get billing cost breakdown
+	 */
+	async getBillingCost(params?: {
+		startDate?: string
+		endDate?: string
+	}) {
+		const queryParams = new URLSearchParams()
+		if (params?.startDate) queryParams.set('start_date', params.startDate)
+		if (params?.endDate) queryParams.set('end_date', params.endDate)
+		
+		const query = queryParams.toString() ? `?${queryParams}` : ''
+		return this.request(`/api/billing/cost${query}`)
+	}
+
+	/**
+	 * Get current tier
+	 */
+	async getCurrentTier() {
+		return this.request('/api/tiers/current')
+	}
+
+	/**
+	 * Update tier
+	 */
+	async updateTier(tier: 'free' | 'hobby' | 'pro') {
+		return this.request('/api/tiers/update', {
+			method: 'POST',
+			body: JSON.stringify({ tier }),
+		})
+	}
+
+	/**
+	 * Upgrade tier
+	 */
+	async upgradeTier(tier: 'free' | 'hobby' | 'pro') {
+		return this.request('/api/tiers/upgrade', {
+			method: 'POST',
+			body: JSON.stringify({ tier }),
+		})
+	}
+
+	/**
+	 * Downgrade tier
+	 */
+	async downgradeTier(tier: 'free' | 'hobby' | 'pro') {
+		return this.request('/api/tiers/downgrade', {
+			method: 'POST',
+			body: JSON.stringify({ tier }),
+		})
+	}
+}
+
+/**
+ * Shared WhopShip API client instance
+ */
+export const whopshipApi = new WhopShipApiClient()
+
+/**
+ * Compatibility class for old WhopshipAPI interface
+ * @deprecated Use whopshipApi instance instead
+ */
+export class WhopshipAPI {
+	private apiUrl: string
+
+	constructor(
+		private accessToken: string,
+		private refreshToken: string,
+		private csrfToken: string,
+	) {
+		this.apiUrl = process.env.WHOPSHIP_API_URL || 'https://api.whopship.com'
+	}
+
+	private async request<T>(
+		endpoint: string,
+		options: RequestInit = {},
+	): Promise<T> {
+		const headers: Record<string, string> = {
+			'Content-Type': 'application/json',
+			'X-Whop-Access-Token': this.accessToken,
+			'X-Whop-Refresh-Token': this.refreshToken,
+			'X-Whop-Csrf-Token': this.csrfToken,
+		}
+
+		const url = `${this.apiUrl}${endpoint}`
+		const response = await fetch(url, {
+			...options,
       headers: {
-        'Content-Type': 'application/json',
-        'x-whop-access-token': this.accessToken,
-        'x-whop-refresh-token': this.refreshToken,
-        'x-whop-csrf-token': this.csrfToken,
+				...headers,
+				...options.headers,
       },
-      body: JSON.stringify(params),
     })
   
     if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`Deploy init failed: ${error}`)
-    }
-  
-    const json = await response.json()
-    // return deployInitResponseSchema.parse(json)
-    return json
-  }
+			const errorText = await response.text()
+			let errorMessage = `API error: ${response.status} ${response.statusText}`
+			
+			try {
+				const errorJson = JSON.parse(errorText)
+				errorMessage = errorJson.error || errorJson.message || errorMessage
+			} catch {
+				if (errorText) {
+					errorMessage = errorText
+				}
+			}
+			
+			throw new Error(errorMessage)
+		}
 
-  async deployComplete(buildId: string): Promise<{ success: boolean; build_id: string; status: string }> {
-    const response = await fetch(`${this.apiURL}/api/deploy/complete`, {
+		return response.json()
+	}
+
+	async getMe() {
+		return this.request('/api/me')
+	}
+
+	async deployInit(data: {
+		whop_app_id: string
+		whop_app_company_id?: string
+		source_sha256: string
+	}) {
+		return this.request('/api/deploy/init', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-whop-access-token': this.accessToken,
-        'x-whop-refresh-token': this.refreshToken,
-        'x-whop-csrf-token': this.csrfToken,
-      },
-      body: JSON.stringify({ build_id: buildId }),
-    })
-  
-    if (!response.ok) {
-      throw new Error(`Deploy complete failed: ${await response.text()}`)
-    }
-  
-    const json = await response.json() as { success: boolean; build_id: string; status: string }
-    return json
-  }
+			body: JSON.stringify(data),
+		})
+	}
 
-  async getLatestBuildForApp(whopAppId: string): Promise<BuildStatus> {
+	async getDeploymentStatus(deploymentId: number) {
+		return this.request(`/api/deployments/${deploymentId}`)
+	}
+
+	async getDeploymentLogs(deploymentId: number) {
     const response = await fetch(
-      `${this.apiURL}/api/deploy/builds?whop_app_id=${whopAppId}&limit=1`,
+			`${this.apiUrl}/api/deployments/${deploymentId}/logs`,
       {
         headers: {
-          'x-whop-access-token': this.accessToken,
-          'x-whop-refresh-token': this.refreshToken,
-          'x-whop-csrf-token': this.csrfToken,
-        },
-      }
-    )
-  
+					'X-Whop-Access-Token': this.accessToken,
+					'X-Whop-Refresh-Token': this.refreshToken,
+					'X-Whop-Csrf-Token': this.csrfToken,
+				},
+			},
+		)
     if (!response.ok) {
-      throw new Error(`Failed to get builds: ${await response.text()}`)
+			if (response.status === 404) return ''
+			throw new Error(`Failed to fetch logs: ${response.statusText}`)
     }
-  
-    const json = await response.json() as { builds: BuildStatus[] }
-    if (!json.builds || json.builds.length === 0) {
-      throw new Error('No builds found for this app')
-    }
-  
-    return buildStatusSchema.parse(json.builds[0])
-  }
-
-  async getBuildLogs(buildId: string) {
-    const response = await fetch(`${this.apiURL}/api/deploy/builds/${buildId}/logs`, {
-      headers: {
-        'x-whop-access-token': this.accessToken,
-        'x-whop-refresh-token': this.refreshToken,
-        'x-whop-csrf-token': this.csrfToken,
-      },
-    })
-  
-    if (!response.ok) {
-      throw new Error(`Failed to get build logs: ${await response.text()}`)
-    }
-  
-    return await response.json()
-  }
-
-  async getBuilds(whopAppId: string, limit: number = 10) {
-    const response = await fetch(
-      `${this.apiURL}/api/deploy/builds?whop_app_id=${whopAppId}&limit=${limit}`,
-      {
-        headers: {
-          'x-whop-access-token': this.accessToken,
-          'x-whop-refresh-token': this.refreshToken,
-          'x-whop-csrf-token': this.csrfToken,
-        },
-      }
-    )
-  
-    if (!response.ok) {
-      throw new Error(`Failed to get builds: ${await response.text()}`)
-    }
-  
-    return await response.json()
-  }
-  
-  async redeploy(buildId: string) {
-    const response = await fetch(`${this.apiURL}/api/deploy/redeploy`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-whop-access-token': this.accessToken,
-        'x-whop-refresh-token': this.refreshToken,
-        'x-whop-csrf-token': this.csrfToken,
-      },
-      body: JSON.stringify({ build_id: buildId }),
-    })
-  
-    if (!response.ok) {
-      throw new Error(`Redeploy failed: ${await response.text()}`)
-    }
-  
-    return await response.json()
-  }
-
-  async getAppInfo(whopAppId: string) {
-    const response = await fetch(
-      `${this.apiURL}/api/apps/${whopAppId}`,
-      {
-        headers: {
-          'x-whop-access-token': this.accessToken,
-          'x-whop-refresh-token': this.refreshToken,
-          'x-whop-csrf-token': this.csrfToken,
-        },
-      }
-    )
-  
-    if (!response.ok) {
-      throw new Error(`Failed to get app info: ${await response.text()}`)
-    }
-  
-    return await response.json()
+		return response.text()
   }
 }

@@ -62,6 +62,124 @@ Deploy an app (placeholder for v0).
 
 **Note:** This is a placeholder command in v0. The deployment functionality is coming soon.
 
+### Analytics
+
+#### `whopctl analytics usage`
+
+Get usage data for a time period.
+
+```bash
+./dist/index.js analytics usage
+./dist/index.js analytics usage --app-id 123
+./dist/index.js analytics usage --start-date 2024-01-01 --end-date 2024-01-31
+```
+
+Options:
+- `--app-id`: Filter by app ID
+- `--start-date`: Start date in ISO format (defaults to 30 days ago)
+- `--end-date`: End date in ISO format (defaults to today)
+
+#### `whopctl analytics summary`
+
+Get usage summary for a specific month.
+
+```bash
+./dist/index.js analytics summary
+./dist/index.js analytics summary --app-id 123
+./dist/index.js analytics summary --month 2024-01
+```
+
+Options:
+- `--app-id`: Filter by app ID
+- `--month`: Month in YYYY-MM format (defaults to current month)
+
+### Billing
+
+#### `whopctl billing current`
+
+Get current period usage and cost.
+
+```bash
+./dist/index.js billing current
+./dist/index.js billing current --app-id 123
+```
+
+Options:
+- `--app-id`: Filter by app ID
+
+#### `whopctl billing history`
+
+Get usage history for the last N months.
+
+```bash
+./dist/index.js billing history
+./dist/index.js billing history --app-id 123 --months 12
+```
+
+Options:
+- `--app-id`: Filter by app ID
+- `--months`: Number of months to show (default: 6)
+
+#### `whopctl billing periods`
+
+List billing periods (invoices).
+
+```bash
+./dist/index.js billing periods
+./dist/index.js billing periods --limit 24
+```
+
+Options:
+- `--limit`: Number of periods to show (default: 12)
+
+### Tier Management
+
+#### `whopctl tier current`
+
+Show current pricing tier and limits.
+
+```bash
+./dist/index.js tier current
+```
+
+#### `whopctl tier update <tier>`
+
+Update your pricing tier.
+
+```bash
+./dist/index.js tier update hobby
+./dist/index.js tier update pro
+```
+
+Available tiers: `free`, `hobby`, `pro`
+
+#### `whopctl tier upgrade <tier>`
+
+Upgrade your pricing tier.
+
+```bash
+./dist/index.js tier upgrade hobby
+./dist/index.js tier upgrade pro
+```
+
+#### `whopctl tier downgrade <tier>`
+
+Downgrade your pricing tier.
+
+```bash
+./dist/index.js tier downgrade hobby
+./dist/index.js tier downgrade free
+```
+
+### Configuration
+
+The CLI uses the `WHOPSHIP_API_URL` environment variable to determine the WhopShip API endpoint. Defaults to `http://localhost:3000` if not set.
+
+```bash
+export WHOPSHIP_API_URL=https://api.whopship.com
+./dist/index.js analytics usage
+```
+
 ### Help
 
 View available commands and options:
@@ -80,13 +198,26 @@ src/
 ├── index.ts              # Main entry with yargs setup
 ├── lib/
 │   ├── whop.ts          # Shared Whop client instance
+│   ├── whopship-api.ts  # WhopShip API client
 │   ├── auth-guard.ts    # Authentication check helper
 │   └── output.ts        # Formatted output helpers
 ├── commands/
 │   ├── login.ts         # Login command handler
-│   └── apps/
-│       ├── list.ts      # List apps command
-│       └── deploy.ts    # Deploy app command (placeholder)
+│   ├── apps/
+│   │   ├── list.ts      # List apps command
+│   │   └── deploy.ts    # Deploy app command
+│   ├── analytics/
+│   │   ├── usage.ts     # Usage analytics command
+│   │   └── summary.ts   # Usage summary command
+│   ├── billing/
+│   │   ├── current.ts   # Current usage command
+│   │   ├── history.ts   # Usage history command
+│   │   └── periods.ts  # Billing periods command
+│   └── tier/
+│       ├── current.ts   # Current tier command
+│       ├── update.ts    # Update tier command
+│       ├── upgrade.ts   # Upgrade tier command
+│       └── downgrade.ts # Downgrade tier command
 └── types/
     └── index.ts         # Shared TypeScript types
 ```
@@ -95,8 +226,13 @@ src/
 
 **Whop Client (`src/lib/whop.ts`)**
 - Shared instance of `@whoplabs/whop-client`
-- Automatically loads sessions from `~/.config/whopctl/session.json`
+- Automatically loads sessions from `~/.whoplabs/whop-session.json`
 - Handles token refresh automatically
+
+**WhopShip API Client (`src/lib/whopship-api.ts`)**
+- Client for WhopShip API endpoints
+- Reads Whop session tokens and converts them to WhopShip API headers
+- Configurable API URL via `WHOPSHIP_API_URL` environment variable
 
 **Auth Guard (`src/lib/auth-guard.ts`)**
 - Checks if user is authenticated before running commands
@@ -147,7 +283,7 @@ bun run format
 
 Authentication sessions are stored at:
 ```
-~/.config/whopctl/session.json
+~/.whoplabs/whop-session.json
 ```
 
 This file contains:
@@ -161,8 +297,23 @@ The file is automatically created with `chmod 0600` permissions for security.
 
 To logout, simply delete this file:
 ```bash
-rm ~/.config/whopctl/session.json
+rm ~/.whoplabs/whop-session.json
 ```
+
+## WhopShip API Integration
+
+The CLI integrates with the WhopShip API for analytics and billing features. The API URL can be configured via the `WHOPSHIP_API_URL` environment variable:
+
+```bash
+export WHOPSHIP_API_URL=https://api.whopship.com
+```
+
+If not set, defaults to `http://localhost:3000` for local development.
+
+All analytics and billing commands require:
+1. Authentication with Whop (via `whopctl login`)
+2. The WhopShip API to be running and accessible
+3. Your Whop account to be registered in the WhopShip system
 
 ## Next Steps (Post-v0)
 

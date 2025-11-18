@@ -18,6 +18,15 @@ import { logsCommand as buildLogsCommand } from './commands/status/logs.ts'
 import { redeployBuildCommand } from './commands/builds/redeploy.ts'
 import { listBuildsCommand } from './commands/builds/list.ts'
 import { logsCommand } from './commands/logs.ts'
+import { analyticsUsageCommand } from './commands/analytics/usage.ts'
+import { analyticsSummaryCommand } from './commands/analytics/summary.ts'
+import { billingCurrentCommand } from './commands/billing/current.ts'
+import { billingHistoryCommand } from './commands/billing/history.ts'
+import { billingPeriodsCommand } from './commands/billing/periods.ts'
+import { tierCurrentCommand } from './commands/tier/current.ts'
+import { tierUpdateCommand } from './commands/tier/update.ts'
+import { tierUpgradeCommand } from './commands/tier/upgrade.ts'
+import { tierDowngradeCommand } from './commands/tier/downgrade.ts'
 
 /**
  * Whopctl - CLI tool for managing Whop apps
@@ -299,6 +308,165 @@ async function main() {
         .demandCommand(1, 'Please specify log type (deploy-runner, router, app)')
         .help()
     })
+		.command('analytics', 'View usage analytics', (yargs) => {
+			return yargs
+				.command(
+					'usage',
+					'Get usage data for a time period',
+					(yargs) => {
+						return yargs
+							.option('app-id', {
+								type: 'number',
+								describe: 'Filter by app ID',
+							})
+							.option('start-date', {
+								type: 'string',
+								describe: 'Start date (ISO format)',
+							})
+							.option('end-date', {
+								type: 'string',
+								describe: 'End date (ISO format)',
+							})
+					},
+					async (argv) => {
+						await analyticsUsageCommand(
+							argv['app-id'] as number | undefined,
+							argv['start-date'] as string | undefined,
+							argv['end-date'] as string | undefined,
+						)
+					},
+				)
+				.command(
+					'summary',
+					'Get usage summary for a month',
+					(yargs) => {
+						return yargs
+							.option('app-id', {
+								type: 'number',
+								describe: 'Filter by app ID',
+							})
+							.option('month', {
+								type: 'string',
+								describe: 'Month in YYYY-MM format (defaults to current month)',
+							})
+					},
+					async (argv) => {
+						await analyticsSummaryCommand(
+							argv['app-id'] as number | undefined,
+							argv.month as string | undefined,
+						)
+					},
+				)
+				.demandCommand(1, 'Please specify a subcommand (usage, summary)')
+				.help()
+		})
+		.command('billing', 'View billing information', (yargs) => {
+			return yargs
+				.command(
+					'current',
+					'Get current period usage',
+					(yargs) => {
+						return yargs.option('app-id', {
+							type: 'number',
+							describe: 'Filter by app ID',
+						})
+					},
+					async (argv) => {
+						await billingCurrentCommand(argv['app-id'] as number | undefined)
+					},
+				)
+				.command(
+					'history',
+					'Get usage history',
+					(yargs) => {
+						return yargs
+							.option('app-id', {
+								type: 'number',
+								describe: 'Filter by app ID',
+							})
+							.option('months', {
+								type: 'number',
+								default: 6,
+								describe: 'Number of months to show (default: 6)',
+							})
+					},
+					async (argv) => {
+						await billingHistoryCommand(
+							argv['app-id'] as number | undefined,
+							argv.months as number | undefined,
+						)
+					},
+				)
+				.command(
+					'periods',
+					'List billing periods',
+					(yargs) => {
+						return yargs.option('limit', {
+							type: 'number',
+							default: 12,
+							describe: 'Number of periods to show (default: 12)',
+						})
+					},
+					async (argv) => {
+						await billingPeriodsCommand(argv.limit as number | undefined)
+					},
+				)
+				.demandCommand(1, 'Please specify a subcommand (current, history, periods)')
+				.help()
+		})
+		.command('tier', 'Manage pricing tier', (yargs) => {
+			return yargs
+				.command('current', 'Show current tier', {}, async () => {
+					await tierCurrentCommand()
+				})
+				.command(
+					'update <tier>',
+					'Update tier',
+					(yargs) => {
+						return yargs.positional('tier', {
+							describe: 'Tier to set (free, hobby, pro)',
+							type: 'string',
+							choices: ['free', 'hobby', 'pro'],
+							demandOption: true,
+						})
+					},
+					async (argv) => {
+						await tierUpdateCommand(argv.tier as 'free' | 'hobby' | 'pro')
+					},
+				)
+				.command(
+					'upgrade <tier>',
+					'Upgrade tier',
+					(yargs) => {
+						return yargs.positional('tier', {
+							describe: 'Tier to upgrade to (hobby, pro)',
+							type: 'string',
+							choices: ['hobby', 'pro'],
+							demandOption: true,
+						})
+					},
+					async (argv) => {
+						await tierUpgradeCommand(argv.tier as 'free' | 'hobby' | 'pro')
+					},
+				)
+				.command(
+					'downgrade <tier>',
+					'Downgrade tier',
+					(yargs) => {
+						return yargs.positional('tier', {
+							describe: 'Tier to downgrade to (free, hobby)',
+							type: 'string',
+							choices: ['free', 'hobby'],
+							demandOption: true,
+						})
+					},
+					async (argv) => {
+						await tierDowngradeCommand(argv.tier as 'free' | 'hobby' | 'pro')
+					},
+				)
+				.demandCommand(1, 'Please specify a subcommand (current, update, upgrade, downgrade)')
+				.help()
+		})
 		.demandCommand(1, 'Please specify a command or run without arguments for interactive mode')
 		.help()
 		.alias('h', 'help')
