@@ -21,4 +21,3 @@ export function setReplServer(server: repl.REPLServer): void {
 export function getReplServer(): repl.REPLServer | null {
 	return replServerInstance
 }
-

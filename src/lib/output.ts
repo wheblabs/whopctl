@@ -4,6 +4,8 @@ import {
 	WhopError,
 	WhopHTTPError,
 	WhopNetworkError,
+	WhopParseError,
+	WhopServerActionError,
 } from '@whoplabs/whop-client'
 import chalk from 'chalk'
 
@@ -134,6 +136,20 @@ export function printWhopError(error: unknown): void {
 		if (error.code) {
 			console.error(chalk.dim('Error code:'), error.code)
 		}
+	} else if (error instanceof WhopParseError) {
+		printError(`Parse error: ${error.message}`)
+		if (error.code) {
+			console.error(chalk.dim('Error code:'), error.code)
+		}
+		printInfo('This might indicate that Whop has changed their API format.')
+		printInfo('Please try again, or report this issue if it persists.')
+	} else if (error instanceof WhopServerActionError) {
+		printError(`Server action error: ${error.message}`)
+		if (error.code) {
+			console.error(chalk.dim('Error code:'), error.code)
+		}
+		printInfo('This might indicate that Whop has changed their frontend structure.')
+		printInfo('Please try again, or report this issue if it persists.')
 	} else {
 		printError(`Whop error: ${error.message}`)
 		if (error.code) {

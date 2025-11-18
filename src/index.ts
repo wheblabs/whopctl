@@ -101,213 +101,213 @@ async function main() {
 				.help()
 		})
 		.command(
-      'deploy [path]', 
-      'Deploy a whop app from a directory', 
-      (yargs) => {
-			  return yargs.positional('path', {
-          describe: 'Path to the app directory (defaults to current directory)',
-          type: 'string',
-          default: '.',
-        })
-      },
-      async (argv) => {
-        await deployCommand(argv.path as string)
-      }
-    )
-    .command('status', 'Check deployment status', (yargs) => {
-      return yargs
-        .command(
-          'logs [path]',
-          'View build logs',
-          (yargs) => {
-            return yargs
-              .positional('path', {
-                describe: 'Path to the app directory (defaults to current directory)',
-                type: 'string',
-                default: '.',
-              })
-              .option('follow', {
-                alias: 'f',
-                type: 'boolean',
-                default: false,
-                describe: 'Follow logs for active builds (stream updates)',
-              })
-              .option('lines', {
-                alias: 'n',
-                type: 'number',
-                default: 30,
-                describe: 'Number of log lines to show (default: 30)',
-              })
-          },
-          async (argv) => {
-            await buildLogsCommand(argv.path as string, {
-              follow: argv.follow as boolean,
-              lines: argv.lines as number,
-            })
-          }
-        )
-        .command(
-          '$0 [path]',  // Default subcommand (runs when just "status" is called)
-          'Show latest build status',
-          (yargs) => {
-            return yargs
-              .positional('path', {
-                describe: 'Path to the app directory (defaults to current directory)',
-                type: 'string',
-                default: '.',
-              })
-              .option('logs', {
-                alias: 'l',
-                type: 'boolean',
-                default: false,
-                describe: 'Display build logs inline',
-              })
-              .option('follow', {
-                alias: 'f',
-                type: 'boolean',
-                default: false,
-                describe: 'Follow logs for active builds (stream updates)',
-              })
-              .option('lines', {
-                alias: 'n',
-                type: 'number',
-                default: 30,
-                describe: 'Number of log lines to show when using --logs (default: 30)',
-              })
-          },
-          async (argv) => {
-            await statusCommand(argv.path as string, {
-              showLogs: argv.logs as boolean,
-              follow: argv.follow as boolean,
-              lines: argv.lines as number,
-            })
-          }
-        )
-        .demandCommand(0) // Allow running without subcommand (defaults to status)
-        .help()
-    })
-    .command('builds', 'Manage builds', (yargs) => {
-      return yargs
-        .command(
-          'list [path]',
-          'List recent builds',
-          (yargs) => {
-            return yargs
-              .positional('path', {
-                describe: 'Path to the app directory',
-                type: 'string',
-                default: '.',
-              })
-              .option('limit', {
-                describe: 'Number of builds to show',
-                type: 'number',
-                default: 10,
-              })
-          },
-          async (argv) => {
-            await listBuildsCommand(argv.path as string, argv.limit as number)
-          }
-        )
-        .command(
-          'deploy <buildId>',  // Changed from 'redeploy' to 'deploy'
-          'Deploy a build',
-          (yargs) => {
-            return yargs.positional('buildId', {
-              describe: 'Build ID to deploy',
-              type: 'string',
-              demandOption: true,
-            })
-          },
-          async (argv) => {
-            await redeployBuildCommand(argv.buildId as string)
-          }
-        )
-        .command(
-          '$0 [path]',
-          'List recent builds (default)',
-          (yargs) => {
-            return yargs.positional('path', {
-              describe: 'Path to the app directory',
-              type: 'string',
-              default: '.',
-            })
-          },
-          async (argv) => {
-            await listBuildsCommand(argv.path as string, 10)
-          }
-        )
-        .demandCommand(0)
-        .help()
-    })
-    .command('logs', 'View runtime logs', (yargs) => {
-      return yargs
-        .command(
-          'deploy-runner [buildId]',
-          'View deploy-runner Lambda logs',
-          (yargs) => {
-            return yargs
-              .positional('buildId', {
-                describe: 'Filter logs for specific build ID',
-                type: 'string',
-              })
-              .option('hours', {
-                type: 'number',
-                default: 1,
-                describe: 'Hours of logs to fetch',
-              })
-          },
-          async (argv) => {
-            await logsCommand({
-              type: 'deploy-runner',
-              buildId: argv.buildId as string | undefined,
-              hours: argv.hours,
-            })
-          }
-        )
-        .command(
-          'router',
-          'View router Lambda logs',
-          (yargs) => {
-            return yargs.option('hours', {
-              type: 'number',
-              default: 1,
-              describe: 'Hours of logs to fetch',
-            })
-          },
-          async (argv) => {
-            await logsCommand({
-              type: 'router',
-              hours: argv.hours,
-            })
-          }
-        )
-        .command(
-          'app <appId>',
-          'View app runtime logs',
-          (yargs) => {
-            return yargs
-              .positional('appId', {
-                describe: 'Whop app ID (e.g., app_xxx)',
-                type: 'string',
-                demandOption: true,
-              })
-              .option('hours', {
-                type: 'number',
-                default: 1,
-                describe: 'Hours of logs to fetch',
-              })
-          },
-          async (argv) => {
-            await logsCommand({
-              type: 'app',
-              appId: argv.appId as string,
-              hours: argv.hours,
-            })
-          }
-        )
-        .demandCommand(1, 'Please specify log type (deploy-runner, router, app)')
-        .help()
-    })
+			'deploy [path]',
+			'Deploy a whop app from a directory',
+			(yargs) => {
+				return yargs.positional('path', {
+					describe: 'Path to the app directory (defaults to current directory)',
+					type: 'string',
+					default: '.',
+				})
+			},
+			async (argv) => {
+				await deployCommand(argv.path as string)
+			},
+		)
+		.command('status', 'Check deployment status', (yargs) => {
+			return yargs
+				.command(
+					'logs [path]',
+					'View build logs',
+					(yargs) => {
+						return yargs
+							.positional('path', {
+								describe: 'Path to the app directory (defaults to current directory)',
+								type: 'string',
+								default: '.',
+							})
+							.option('follow', {
+								alias: 'f',
+								type: 'boolean',
+								default: false,
+								describe: 'Follow logs for active builds (stream updates)',
+							})
+							.option('lines', {
+								alias: 'n',
+								type: 'number',
+								default: 30,
+								describe: 'Number of log lines to show (default: 30)',
+							})
+					},
+					async (argv) => {
+						await buildLogsCommand(argv.path as string, {
+							follow: argv.follow as boolean,
+							lines: argv.lines as number,
+						})
+					},
+				)
+				.command(
+					'$0 [path]', // Default subcommand (runs when just "status" is called)
+					'Show latest build status',
+					(yargs) => {
+						return yargs
+							.positional('path', {
+								describe: 'Path to the app directory (defaults to current directory)',
+								type: 'string',
+								default: '.',
+							})
+							.option('logs', {
+								alias: 'l',
+								type: 'boolean',
+								default: false,
+								describe: 'Display build logs inline',
+							})
+							.option('follow', {
+								alias: 'f',
+								type: 'boolean',
+								default: false,
+								describe: 'Follow logs for active builds (stream updates)',
+							})
+							.option('lines', {
+								alias: 'n',
+								type: 'number',
+								default: 30,
+								describe: 'Number of log lines to show when using --logs (default: 30)',
+							})
+					},
+					async (argv) => {
+						await statusCommand(argv.path as string, {
+							showLogs: argv.logs as boolean,
+							follow: argv.follow as boolean,
+							lines: argv.lines as number,
+						})
+					},
+				)
+				.demandCommand(0) // Allow running without subcommand (defaults to status)
+				.help()
+		})
+		.command('builds', 'Manage builds', (yargs) => {
+			return yargs
+				.command(
+					'list [path]',
+					'List recent builds',
+					(yargs) => {
+						return yargs
+							.positional('path', {
+								describe: 'Path to the app directory',
+								type: 'string',
+								default: '.',
+							})
+							.option('limit', {
+								describe: 'Number of builds to show',
+								type: 'number',
+								default: 10,
+							})
+					},
+					async (argv) => {
+						await listBuildsCommand(argv.path as string, argv.limit as number)
+					},
+				)
+				.command(
+					'deploy <buildId>', // Changed from 'redeploy' to 'deploy'
+					'Deploy a build',
+					(yargs) => {
+						return yargs.positional('buildId', {
+							describe: 'Build ID to deploy',
+							type: 'string',
+							demandOption: true,
+						})
+					},
+					async (argv) => {
+						await redeployBuildCommand(argv.buildId as string)
+					},
+				)
+				.command(
+					'$0 [path]',
+					'List recent builds (default)',
+					(yargs) => {
+						return yargs.positional('path', {
+							describe: 'Path to the app directory',
+							type: 'string',
+							default: '.',
+						})
+					},
+					async (argv) => {
+						await listBuildsCommand(argv.path as string, 10)
+					},
+				)
+				.demandCommand(0)
+				.help()
+		})
+		.command('logs', 'View runtime logs', (yargs) => {
+			return yargs
+				.command(
+					'deploy-runner [buildId]',
+					'View deploy-runner Lambda logs',
+					(yargs) => {
+						return yargs
+							.positional('buildId', {
+								describe: 'Filter logs for specific build ID',
+								type: 'string',
+							})
+							.option('hours', {
+								type: 'number',
+								default: 1,
+								describe: 'Hours of logs to fetch',
+							})
+					},
+					async (argv) => {
+						await logsCommand({
+							type: 'deploy-runner',
+							buildId: argv.buildId as string | undefined,
+							hours: argv.hours,
+						})
+					},
+				)
+				.command(
+					'router',
+					'View router Lambda logs',
+					(yargs) => {
+						return yargs.option('hours', {
+							type: 'number',
+							default: 1,
+							describe: 'Hours of logs to fetch',
+						})
+					},
+					async (argv) => {
+						await logsCommand({
+							type: 'router',
+							hours: argv.hours,
+						})
+					},
+				)
+				.command(
+					'app <appId>',
+					'View app runtime logs',
+					(yargs) => {
+						return yargs
+							.positional('appId', {
+								describe: 'Whop app ID (e.g., app_xxx)',
+								type: 'string',
+								demandOption: true,
+							})
+							.option('hours', {
+								type: 'number',
+								default: 1,
+								describe: 'Hours of logs to fetch',
+							})
+					},
+					async (argv) => {
+						await logsCommand({
+							type: 'app',
+							appId: argv.appId as string,
+							hours: argv.hours,
+						})
+					},
+				)
+				.demandCommand(1, 'Please specify log type (deploy-runner, router, app)')
+				.help()
+		})
 		.command('analytics', 'View usage analytics', (yargs) => {
 			return yargs
 				.command(

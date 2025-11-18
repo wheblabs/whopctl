@@ -28,9 +28,7 @@ export async function logsCommand(options: {
 			// The actual function name includes a random suffix, but we can search for it
 			// For now, use the log group we know exists
 			logGroupName = '/aws/lambda/whopship-infra-production-DeployRunnerFunction-dhkddrhs'
-			printInfo(
-				`Fetching deploy-runner logs (last ${options.hours || 1} hour)...`,
-			)
+			printInfo(`Fetching deploy-runner logs (last ${options.hours || 1} hour)...`)
 
 			if (options.buildId) {
 				printInfo(`Filtering for build ID: ${options.buildId}`)
@@ -44,28 +42,18 @@ export async function logsCommand(options: {
 				process.exit(1)
 			}
 
-		// Get internal app ID from WhopShip API
-		const api = new WhopshipAPI(
-			session.accessToken,
-			session.refreshToken,
-			session.csrfToken,
-		)
-		const appInfo = await api.getAppInfo(options.appId)
-		const internalAppId = appInfo.id
+			// Get internal app ID from WhopShip API
+			const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken)
+			const appInfo = await api.getAppInfo(options.appId)
+			const internalAppId = appInfo.id
 
-		logGroupName = `/aws/lambda/whopship-app-${internalAppId}`
-		printInfo(
-			`Fetching app logs for ${options.appId} (last ${options.hours || 1} hour)...`,
-		)
+			logGroupName = `/aws/lambda/whopship-app-${internalAppId}`
+			printInfo(`Fetching app logs for ${options.appId} (last ${options.hours || 1} hour)...`)
 		}
 
 		// Fetch logs
 		const filterPattern = options.buildId ? `"${options.buildId}"` : undefined
-		const events = await cw.getRecentLogs(
-			logGroupName!,
-			options.hours || 1,
-			filterPattern,
-		)
+		const events = await cw.getRecentLogs(logGroupName!, options.hours || 1, filterPattern)
 
 		console.log()
 		if (events.length === 0) {
@@ -74,17 +62,9 @@ export async function logsCommand(options: {
 			if (options.type === 'deploy-runner') {
 				console.log()
 				console.log(chalk.yellow('⚠️  This likely means:'))
-				console.log(
-					chalk.dim('   1. The deploy-runner Lambda never processed this build'),
-				)
-				console.log(
-					chalk.dim('   2. Check if the DEPLOY_QUEUE has messages'),
-				)
-				console.log(
-					chalk.dim(
-						'   3. Check if the deploy-runner Lambda has permissions',
-					),
-				)
+				console.log(chalk.dim('   1. The deploy-runner Lambda never processed this build'))
+				console.log(chalk.dim('   2. Check if the DEPLOY_QUEUE has messages'))
+				console.log(chalk.dim('   3. Check if the deploy-runner Lambda has permissions'))
 			}
 		} else {
 			printSuccess(`Found ${events.length} log events`)
@@ -102,4 +82,3 @@ export async function logsCommand(options: {
 		process.exit(1)
 	}
 }
-

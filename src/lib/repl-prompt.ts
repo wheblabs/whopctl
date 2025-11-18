@@ -5,13 +5,13 @@ import { getReplServer } from './repl-state.ts'
 
 /**
  * Prompts the user for input in a REPL-aware way.
- * 
+ *
  * This function works correctly in both REPL and CLI modes:
  * - In REPL mode: Temporarily overrides the REPL's eval function to capture input
  * - In CLI mode: Uses standard readline interface
- * 
+ *
  * This avoids all stdin conflicts by using the REPL's own input mechanism.
- * 
+ *
  * @param question The question/prompt to display to the user
  * @returns Promise that resolves with the user's input
  */
@@ -36,7 +36,10 @@ export async function promptUser(question: string): Promise<string> {
 				replServer.eval = originalEval
 
 				// Extract the input, removing any wrapping parentheses
-				const input = cmd.toString().trim().replace(/^\(|\)$/g, '')
+				const input = cmd
+					.toString()
+					.trim()
+					.replace(/^\(|\)$/g, '')
 
 				// Resolve the promise with the input
 				resolve(input)
@@ -60,4 +63,3 @@ export async function promptUser(question: string): Promise<string> {
 		}
 	}
 }
-

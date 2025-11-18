@@ -17,7 +17,7 @@ interface TierUpdateResponse {
 
 /**
  * Handles the "tier update" command.
- * 
+ *
  * Updates the user's pricing tier.
  */
 export async function tierUpdateCommand(tier: 'free' | 'hobby' | 'pro'): Promise<void> {
@@ -45,4 +45,3 @@ export async function tierUpdateCommand(tier: 'free' | 'hobby' | 'pro'): Promise
 		process.exit(1)
 	}
 }
-

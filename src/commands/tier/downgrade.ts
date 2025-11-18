@@ -17,7 +17,7 @@ interface TierDowngradeResponse {
 
 /**
  * Handles the "tier downgrade" command.
- * 
+ *
  * Downgrades the user's pricing tier.
  */
 export async function tierDowngradeCommand(tier: 'free' | 'hobby' | 'pro'): Promise<void> {
@@ -45,4 +45,3 @@ export async function tierDowngradeCommand(tier: 'free' | 'hobby' | 'pro'): Prom
 		process.exit(1)
 	}
 }
-

@@ -48,13 +48,10 @@ export class BuildManager {
 
 		try {
 			// Run OpenNext build in the current working directory
-			const { stdout, stderr } = await execAsync(
-				'npx @opennextjs/cloudflare build',
-				{
-					cwd: process.cwd(),
-					maxBuffer: 10 * 1024 * 1024, // 10MB buffer for build output
-				},
-			)
+			const { stdout, stderr } = await execAsync('npx @opennextjs/cloudflare build', {
+				cwd: process.cwd(),
+				maxBuffer: 10 * 1024 * 1024, // 10MB buffer for build output
+			})
 
 			// Log build output (optional, can be controlled by verbose flag later)
 			if (stdout) {
@@ -101,11 +98,7 @@ export class BuildManager {
 		this.artifactPath = join(this.buildDir, 'artifact.zip')
 		const openNextDir = join(process.cwd(), '.open-next')
 
-		this.checksum = await createArtifact(
-			openNextDir,
-			this.artifactPath,
-			this.metadata,
-		)
+		this.checksum = await createArtifact(openNextDir, this.artifactPath, this.metadata)
 
 		// Update metadata with checksum
 		this.metadata.checksum = this.checksum
@@ -166,4 +159,3 @@ export class BuildManager {
 		}
 	}
 }
-

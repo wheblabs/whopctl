@@ -1,0 +1,60 @@
+# Source files
+src/
+tsconfig.json
+
+# Build config
+biome.json
+
+# Development docs
+docs/
+CLAUDE.md
+CLI_INTEGRATION_GUIDE.md
+*.plan.md
+.cursor/
+
+# Lock files
+bun.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Test files
+test/
+tests/
+*.test.ts
+*.spec.ts
+
+# Git files
+.git/
+.gitignore
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env.*
+
+# Build artifacts (keep dist/)
+out/
+*.tsbuildinfo
+
+# Dependencies (will be installed by npm)
+node_modules/
+
+# Coverage
+coverage/
+*.lcov
+
+# OS files
+.DS_Store
+Thumbs.db
+

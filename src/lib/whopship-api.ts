@@ -27,16 +27,16 @@ interface WhopSession {
 
 /**
  * WhopShip API client for CLI commands.
- * 
+ *
  * This client:
  * - Reads Whop session tokens from ~/.whoplabs/whop-session.json
  * - Converts Whop tokens to WhopShip API headers
  * - Makes authenticated requests to WhopShip API
- * 
+ *
  * Usage:
  * ```typescript
  * import { whopshipApi } from '~/lib/whopship-api';
- * 
+ *
  * const usage = await whopshipApi.getUsage();
  * ```
  */
@@ -55,7 +55,7 @@ class WhopShipApiClient {
 		try {
 			const sessionData = await readFile(sessionPath, 'utf-8')
 			const session = JSON.parse(sessionData) as WhopSession
-			
+
 			// Handle nested tokens structure (new format)
 			if (session.tokens) {
 				return {
@@ -65,7 +65,7 @@ class WhopShipApiClient {
 					userId: session.tokens.userId,
 				}
 			}
-			
+
 			// Handle flat structure (old format)
 			return session
 		} catch (error) {
@@ -78,7 +78,7 @@ class WhopShipApiClient {
 	 */
 	private async getAuthHeaders(): Promise<Record<string, string>> {
 		const session = await this.loadSession()
-		
+
 		if (!session) {
 			throw new Error('Not authenticated. Please run "whopctl login" first.')
 		}
@@ -103,12 +103,9 @@ class WhopShipApiClient {
 	/**
 	 * Make an authenticated request to WhopShip API
 	 */
-	private async request<T>(
-		endpoint: string,
-		options: RequestInit = {},
-	): Promise<T> {
+	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
 		const headers = await this.getAuthHeaders()
-		
+
 		const url = `${this.apiUrl}${endpoint}`
 		const response = await fetch(url, {
 			...options,
@@ -121,7 +118,7 @@ class WhopShipApiClient {
 		if (!response.ok) {
 			const errorText = await response.text()
 			let errorMessage = `API error: ${response.status} ${response.statusText}`
-			
+
 			try {
 				const errorJson = JSON.parse(errorText)
 				errorMessage = errorJson.error || errorJson.message || errorMessage
@@ -131,7 +128,7 @@ class WhopShipApiClient {
 					errorMessage = errorText
 				}
 			}
-			
+
 			throw new Error(errorMessage)
 		}
 
@@ -141,16 +138,12 @@ class WhopShipApiClient {
 	/**
 	 * Get usage data for a time period
 	 */
-	async getUsage(params?: {
-		appId?: number
-		startDate?: string
-		endDate?: string
-	}) {
+	async getUsage(params?: { appId?: number; startDate?: string; endDate?: string }) {
 		const queryParams = new URLSearchParams()
 		if (params?.appId) queryParams.set('app_id', params.appId.toString())
 		if (params?.startDate) queryParams.set('start_date', params.startDate)
 		if (params?.endDate) queryParams.set('end_date', params.endDate)
-		
+
 		const query = queryParams.toString() ? `?${queryParams}` : ''
 		return this.request(`/api/analytics/usage${query}`)
 	}
@@ -158,14 +151,11 @@ class WhopShipApiClient {
 	/**
 	 * Get usage summary for a specific month
 	 */
-	async getUsageSummary(params?: {
-		appId?: number
-		month?: string
-	}) {
+	async getUsageSummary(params?: { appId?: number; month?: string }) {
 		const queryParams = new URLSearchParams()
 		if (params?.appId) queryParams.set('app_id', params.appId.toString())
 		if (params?.month) queryParams.set('month', params.month)
-		
+
 		const query = queryParams.toString() ? `?${queryParams}` : ''
 		return this.request(`/api/analytics/usage/summary${query}`)
 	}
@@ -181,14 +171,11 @@ class WhopShipApiClient {
 	/**
 	 * Get usage history
 	 */
-	async getUsageHistory(params?: {
-		appId?: number
-		months?: number
-	}) {
+	async getUsageHistory(params?: { appId?: number; months?: number }) {
 		const queryParams = new URLSearchParams()
 		if (params?.appId) queryParams.set('app_id', params.appId.toString())
 		if (params?.months) queryParams.set('months', params.months.toString())
-		
+
 		const query = queryParams.toString() ? `?${queryParams}` : ''
 		return this.request(`/api/billing/history${query}`)
 	}
@@ -204,14 +191,11 @@ class WhopShipApiClient {
 	/**
 	 * Get billing cost breakdown
 	 */
-	async getBillingCost(params?: {
-		startDate?: string
-		endDate?: string
-	}) {
+	async getBillingCost(params?: { startDate?: string; endDate?: string }) {
 		const queryParams = new URLSearchParams()
 		if (params?.startDate) queryParams.set('start_date', params.startDate)
 		if (params?.endDate) queryParams.set('end_date', params.endDate)
-		
+
 		const query = queryParams.toString() ? `?${queryParams}` : ''
 		return this.request(`/api/billing/cost${query}`)
 	}
@@ -274,10 +258,7 @@ export class WhopshipAPI {
 		this.apiUrl = process.env.WHOPSHIP_API_URL || 'https://api.whopship.com'
 	}
 
-	private async request<T>(
-		endpoint: string,
-		options: RequestInit = {},
-	): Promise<T> {
+	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
 		const headers: Record<string, string> = {
 			'Content-Type': 'application/json',
 			'X-Whop-Access-Token': this.accessToken,
@@ -288,16 +269,16 @@ export class WhopshipAPI {
 		const url = `${this.apiUrl}${endpoint}`
 		const response = await fetch(url, {
 			...options,
-      headers: {
+			headers: {
 				...headers,
 				...options.headers,
-      },
-    })
-  
-    if (!response.ok) {
+			},
+		})
+
+		if (!response.ok) {
 			const errorText = await response.text()
 			let errorMessage = `API error: ${response.status} ${response.statusText}`
-			
+
 			try {
 				const errorJson = JSON.parse(errorText)
 				errorMessage = errorJson.error || errorJson.message || errorMessage
@@ -306,7 +287,7 @@ export class WhopshipAPI {
 					errorMessage = errorText
 				}
 			}
-			
+
 			throw new Error(errorMessage)
 		}
 
@@ -323,7 +304,7 @@ export class WhopshipAPI {
 		source_sha256: string
 	}) {
 		return this.request('/api/deploy/init', {
-      method: 'POST',
+			method: 'POST',
 			body: JSON.stringify(data),
 		})
 	}
@@ -333,20 +314,17 @@ export class WhopshipAPI {
 	}
 
 	async getDeploymentLogs(deploymentId: number) {
-    const response = await fetch(
-			`${this.apiUrl}/api/deployments/${deploymentId}/logs`,
-      {
-        headers: {
-					'X-Whop-Access-Token': this.accessToken,
-					'X-Whop-Refresh-Token': this.refreshToken,
-					'X-Whop-Csrf-Token': this.csrfToken,
-				},
+		const response = await fetch(`${this.apiUrl}/api/deployments/${deploymentId}/logs`, {
+			headers: {
+				'X-Whop-Access-Token': this.accessToken,
+				'X-Whop-Refresh-Token': this.refreshToken,
+				'X-Whop-Csrf-Token': this.csrfToken,
 			},
-		)
-    if (!response.ok) {
+		})
+		if (!response.ok) {
 			if (response.status === 404) return ''
 			throw new Error(`Failed to fetch logs: ${response.statusText}`)
-    }
+		}
 		return response.text()
-  }
+	}
 }

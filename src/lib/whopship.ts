@@ -122,9 +122,7 @@ export class WhopShipClient {
 	 * @param request Deployment creation request
 	 * @returns Deployment details and upload URL
 	 */
-	async createDeployment(
-		request: CreateDeploymentRequest,
-	): Promise<CreateDeploymentResponse> {
+	async createDeployment(request: CreateDeploymentRequest): Promise<CreateDeploymentResponse> {
 		const headers = await this.getAuthHeaders()
 
 		const response = await fetch(`${this.baseUrl}/deployments`, {
@@ -135,9 +133,7 @@ export class WhopShipClient {
 
 		if (!response.ok) {
 			const errorText = await response.text()
-			throw new Error(
-				`Failed to create deployment (${response.status}): ${errorText}`,
-			)
+			throw new Error(`Failed to create deployment (${response.status}): ${errorText}`)
 		}
 
 		return await response.json()
@@ -165,9 +161,7 @@ export class WhopShipClient {
 
 		if (!response.ok) {
 			const errorText = await response.text()
-			throw new Error(
-				`Failed to upload artifact (${response.status}): ${errorText}`,
-			)
+			throw new Error(`Failed to upload artifact (${response.status}): ${errorText}`)
 		}
 	}
 
@@ -180,19 +174,14 @@ export class WhopShipClient {
 	async completeDeployment(deploymentId: number): Promise<void> {
 		const headers = await this.getAuthHeaders()
 
-		const response = await fetch(
-			`${this.baseUrl}/deployments/${deploymentId}/complete`,
-			{
-				method: 'POST',
-				headers,
-			},
-		)
+		const response = await fetch(`${this.baseUrl}/deployments/${deploymentId}/complete`, {
+			method: 'POST',
+			headers,
+		})
 
 		if (!response.ok) {
 			const errorText = await response.text()
-			throw new Error(
-				`Failed to complete deployment (${response.status}): ${errorText}`,
-			)
+			throw new Error(`Failed to complete deployment (${response.status}): ${errorText}`)
 		}
 	}
 
@@ -201,24 +190,17 @@ export class WhopShipClient {
 	 *
 	 * @param deploymentId Deployment ID
 	 */
-	async triggerDeployment(
-		deploymentId: number,
-	): Promise<TriggerDeploymentResponse> {
+	async triggerDeployment(deploymentId: number): Promise<TriggerDeploymentResponse> {
 		const headers = await this.getAuthHeaders()
 
-		const response = await fetch(
-			`${this.baseUrl}/deployments/${deploymentId}/trigger`,
-			{
-				method: 'POST',
-				headers,
-			},
-		)
+		const response = await fetch(`${this.baseUrl}/deployments/${deploymentId}/trigger`, {
+			method: 'POST',
+			headers,
+		})
 
 		if (!response.ok) {
 			const errorText = await response.text()
-			throw new Error(
-				`Failed to trigger deployment (${response.status}): ${errorText}`,
-			)
+			throw new Error(`Failed to trigger deployment (${response.status}): ${errorText}`)
 		}
 
 		return await response.json()
@@ -233,19 +215,14 @@ export class WhopShipClient {
 	async getDeploymentStatus(deploymentId: number): Promise<DeploymentStatus> {
 		const headers = await this.getAuthHeaders()
 
-		const response = await fetch(
-			`${this.baseUrl}/deployments/${deploymentId}`,
-			{
-				method: 'GET',
-				headers,
-			},
-		)
+		const response = await fetch(`${this.baseUrl}/deployments/${deploymentId}`, {
+			method: 'GET',
+			headers,
+		})
 
 		if (!response.ok) {
 			const errorText = await response.text()
-			throw new Error(
-				`Failed to get deployment status (${response.status}): ${errorText}`,
-			)
+			throw new Error(`Failed to get deployment status (${response.status}): ${errorText}`)
 		}
 
 		return await response.json()
@@ -260,13 +237,10 @@ export class WhopShipClient {
 	async getDeploymentLogs(deploymentId: number): Promise<string> {
 		const headers = await this.getAuthHeaders()
 
-		const response = await fetch(
-			`${this.baseUrl}/deployments/${deploymentId}/logs`,
-			{
-				method: 'GET',
-				headers,
-			},
-		)
+		const response = await fetch(`${this.baseUrl}/deployments/${deploymentId}/logs`, {
+			method: 'GET',
+			headers,
+		})
 
 		if (!response.ok) {
 			// 404 is expected if logs aren't available yet
@@ -274,9 +248,7 @@ export class WhopShipClient {
 				return ''
 			}
 			const errorText = await response.text()
-			throw new Error(
-				`Failed to fetch logs (${response.status}): ${errorText}`,
-			)
+			throw new Error(`Failed to fetch logs (${response.status}): ${errorText}`)
 		}
 
 		return await response.text()
@@ -287,4 +259,3 @@ export class WhopShipClient {
  * Shared WhopShip client instance.
  */
 export const whopship = new WhopShipClient()
-

@@ -41,12 +41,8 @@ export async function deployAppCommand(appId: string): Promise<void> {
 		printSuccess(`Artifact created: ${artifactPath}`)
 		if (metadata) {
 			console.log(chalk.dim(`  Next.js: ${metadata.nextVersion || 'unknown'}`))
-			console.log(
-				chalk.dim(`  OpenNext: ${metadata.opennextVersion || 'unknown'}`),
-			)
-			console.log(
-				chalk.dim(`  Build time: ${metadata.buildTime}ms`),
-			)
+			console.log(chalk.dim(`  OpenNext: ${metadata.opennextVersion || 'unknown'}`))
+			console.log(chalk.dim(`  Build time: ${metadata.buildTime}ms`))
 		}
 
 		// Step 3: Create deployment
@@ -123,10 +119,7 @@ async function monitorDeployment(deploymentId: number): Promise<void> {
 				? ` (${formatRolloutStage(statusData.deployment.rolloutStage)})`
 				: ''
 
-			console.log(
-				chalk.blue('⟳'),
-				`Status: ${chalk.bold(status)}${rolloutInfo}`,
-			)
+			console.log(chalk.blue('⟳'), `Status: ${chalk.bold(status)}${rolloutInfo}`)
 
 			// Try to fetch and stream logs
 			try {
@@ -194,9 +187,7 @@ function sleep(ms: number): Promise<void> {
 /**
  * Formats a rollout stage for display.
  */
-function formatRolloutStage(
-	stage: 'stage1_50' | 'stage2_100' | 'complete',
-): string {
+function formatRolloutStage(stage: 'stage1_50' | 'stage2_100' | 'complete'): string {
 	switch (stage) {
 		case 'stage1_50':
 			return '50% traffic'

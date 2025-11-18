@@ -69,4 +69,3 @@ export class CloudWatchLogs {
 		return events.slice(Math.max(events.length - maxEvents, 0))
 	}
 }
-

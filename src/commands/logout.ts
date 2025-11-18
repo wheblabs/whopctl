@@ -12,7 +12,7 @@ import { sessionPath, whop } from '../lib/whop.ts'
  * 3. Notes that a restart may be needed in REPL mode
  *
  * After logout, the user will need to run `login` again to authenticate.
- * 
+ *
  * Note: In REPL mode, the Whop client keeps tokens in memory even after
  * the file is deleted. The user should restart the REPL or the tokens
  * will still be valid until the process ends.
@@ -30,7 +30,7 @@ export async function logoutCommand(): Promise<void> {
 			unlinkSync(sessionPath)
 			printSuccess('Successfully logged out!')
 			printInfo(`Session file removed: ${sessionPath}`)
-			
+
 			// Warn about REPL mode limitation
 			if (isInReplMode()) {
 				printWarning('Note: In REPL mode, you may need to restart (exit and reopen)')

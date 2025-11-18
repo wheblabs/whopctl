@@ -26,7 +26,7 @@ interface TierInfo {
 
 /**
  * Handles the "tier current" command.
- * 
+ *
  * Displays current pricing tier and limits.
  */
 export async function tierCurrentCommand(): Promise<void> {
@@ -75,4 +75,3 @@ export async function tierCurrentCommand(): Promise<void> {
 		process.exit(1)
 	}
 }
-

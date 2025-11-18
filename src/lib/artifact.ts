@@ -105,8 +105,7 @@ export function getPackageVersion(packageName: string): string | undefined {
 
 		// Check dependencies and devDependencies
 		const version =
-			packageJson.dependencies?.[packageName] ||
-			packageJson.devDependencies?.[packageName]
+			packageJson.dependencies?.[packageName] || packageJson.devDependencies?.[packageName]
 
 		if (version) {
 			// Remove ^ or ~ prefix if present
@@ -139,4 +138,3 @@ export function validateOpenNextBuild(openNextDir: string): void {
 		)
 	}
 }
-
