@@ -45,7 +45,7 @@ class WhopShipApiClient {
 
 	constructor() {
 		// Get API URL from environment or default to production
-		this.apiUrl = process.env.WHOPSHIP_API_URL || 'https://api.whopship.com'
+		this.apiUrl = process.env.WHOPSHIP_API_URL || 'https://api.whopship.app'
 	}
 
 	/**
@@ -114,6 +114,12 @@ class WhopShipApiClient {
 				...options.headers,
 			},
 		})
+
+		if (response.status === 401) {
+			throw new Error(
+				'Your session has expired or is invalid. Please run "whopctl login" to authenticate again.',
+			)
+		}
 
 		if (!response.ok) {
 			const errorText = await response.text()
@@ -255,7 +261,7 @@ export class WhopshipAPI {
 		private refreshToken: string,
 		private csrfToken: string,
 	) {
-		this.apiUrl = process.env.WHOPSHIP_API_URL || 'https://api.whopship.com'
+		this.apiUrl = process.env.WHOPSHIP_API_URL || 'https://api.whopship.app'
 	}
 
 	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -274,6 +280,12 @@ export class WhopshipAPI {
 				...options.headers,
 			},
 		})
+
+		if (response.status === 401) {
+			throw new Error(
+				'Your session has expired or is invalid. Please run "whopctl login" to authenticate again.',
+			)
+		}
 
 		if (!response.ok) {
 			const errorText = await response.text()
@@ -333,5 +345,17 @@ export class WhopshipAPI {
 			throw new Error(`Failed to fetch logs: ${response.statusText}`)
 		}
 		return response.text()
+	}
+
+	async getLatestBuildForApp(whopAppId: string) {
+		const response = await this.request<{ builds: any[] }>(`/api/deploy/builds?whop_app_id=${whopAppId}&limit=1`)
+		if (!response.builds || response.builds.length === 0) {
+			throw new Error('No builds found for this app')
+		}
+		return response.builds[0]
+	}
+
+	async getBuildLogs(buildId: string) {
+		return this.request(`/api/deploy/builds/${buildId}/logs`)
 	}
 }
