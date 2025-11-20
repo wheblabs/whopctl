@@ -309,6 +309,13 @@ export class WhopshipAPI {
 		})
 	}
 
+	async deployComplete(buildId: string) {
+		return this.request('/api/deploy/complete', {
+			method: 'POST',
+			body: JSON.stringify({ build_id: buildId }),
+		})
+	}
+
 	async getDeploymentStatus(deploymentId: number) {
 		return this.request(`/api/deployments/${deploymentId}`)
 	}
