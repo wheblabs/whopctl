@@ -5,6 +5,8 @@ import { requireAuth } from '../../lib/auth-guard.ts'
 import { printError, printInfo, printSuccess, printWarning } from '../../lib/output.ts'
 import { whop } from '../../lib/whop.ts'
 import { WhopshipAPI } from '../../lib/whopship-api.ts'
+import { createSpinner } from '../../lib/progress.ts'
+import { aliasManager } from '../../lib/alias-manager.ts'
 
 /**
  * Simple .env reader
@@ -35,20 +37,81 @@ async function readEnvFile(dir: string): Promise<Record<string, string>> {
 }
 
 /**
- * Format status with color
+ * Format status with color and badges
  */
 function formatStatus(status: string): string {
-	const colors: Record<string, (text: string) => string> = {
-		init: chalk.gray,
-		uploading: chalk.blue,
-		uploaded: chalk.cyan,
-		queued: chalk.yellow,
-		building: chalk.yellow,
-		built: chalk.green,
-		failed: chalk.red,
+	switch (status) {
+		case 'init':
+			return chalk.bgGray.white(' INIT ') + chalk.gray(' initializing')
+		case 'uploaded':
+			return chalk.bgBlue.white(' UPLOADED ') + chalk.blue(' source ready')
+		case 'queued':
+			return chalk.bgYellow.black(' QUEUED ') + chalk.yellow(' waiting in queue')
+		case 'building':
+			return chalk.bgYellow.black(' BUILDING ') + chalk.yellow(' in progress')
+		case 'built':
+		case 'completed':
+			return chalk.bgGreen.black(' LIVE ') + chalk.green(' deployment ready')
+		case 'deploying':
+			return chalk.bgCyan.black(' DEPLOYING ') + chalk.cyan(' going live')
+		case 'failed':
+			return chalk.bgRed.white(' FAILED ') + chalk.red(' build error')
+		default:
+			return chalk.bgGray.white(` ${status.toUpperCase()} `)
 	}
-	const colorFn = colors[status] || chalk.white
-	return colorFn(status.toUpperCase())
+}
+
+/**
+ * Get status icon
+ */
+function getStatusIcon(status: string): string {
+	switch (status) {
+		case 'init':
+			return '🔄'
+		case 'uploaded':
+			return '📤'
+		case 'queued':
+			return '⏳'
+		case 'building':
+			return '🔨'
+		case 'built':
+		case 'completed':
+			return '✅'
+		case 'deploying':
+			return '🚀'
+		case 'failed':
+			return '❌'
+		default:
+			return '📦'
+	}
+}
+
+/**
+ * Get estimated completion time
+ */
+function getEstimatedTime(status: string, createdAt: string): string {
+	const created = new Date(createdAt)
+	const now = new Date()
+	const elapsed = now.getTime() - created.getTime()
+	const elapsedMinutes = Math.floor(elapsed / (1000 * 60))
+
+	switch (status) {
+		case 'queued':
+			return 'Usually starts within 2-5 minutes'
+		case 'building':
+			const avgBuildTime = 8 // minutes
+			const remaining = Math.max(0, avgBuildTime - elapsedMinutes)
+			return remaining > 0 ? `~${remaining} minutes remaining` : 'Should complete soon'
+		case 'deploying':
+			return 'Usually completes within 1-2 minutes'
+		case 'built':
+		case 'completed':
+			return `Completed in ${elapsedMinutes} minutes`
+		case 'failed':
+			return `Failed after ${elapsedMinutes} minutes`
+		default:
+			return ''
+	}
 }
 
 /**
@@ -168,19 +231,37 @@ async function displayLogs(
  */
 export async function statusCommand(
 	path: string = '.',
-	options: { showLogs?: boolean; follow?: boolean; lines?: number } = {},
+	options: { showLogs?: boolean; follow?: boolean; lines?: number; project?: string } = {},
 ): Promise<void> {
 	requireAuth()
 	const targetDir = resolve(process.cwd(), path)
 
 	try {
-		// 1. Read .env
-		const env = await readEnvFile(targetDir)
-		const appId = env.NEXT_PUBLIC_WHOP_APP_ID
+		// 1. Resolve project identifier
+		let appId: string
 
-		if (!appId) {
-			printError('NEXT_PUBLIC_WHOP_APP_ID not found in .env file')
-			process.exit(1)
+		if (options.project) {
+			// Use provided project identifier
+			try {
+				const { appId: resolvedAppId } = await aliasManager.resolveProjectId(options.project)
+				appId = resolvedAppId
+			} catch (error) {
+				printError(`Failed to resolve project: ${error}`)
+				process.exit(1)
+			}
+		} else {
+			// Read from .env
+			const env = await readEnvFile(targetDir)
+			appId = env.NEXT_PUBLIC_WHOP_APP_ID
+
+			if (!appId) {
+				printError('NEXT_PUBLIC_WHOP_APP_ID not found in .env file')
+				console.log()
+				console.log(chalk.dim('💡 You can also specify a project:'))
+				console.log(chalk.dim('   whopctl status --project my-app'))
+				console.log(chalk.dim('   whopctl status --project app_abc123'))
+				process.exit(1)
+			}
 		}
 
 		// 2. Get session
@@ -193,47 +274,82 @@ export async function statusCommand(
 		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken)
 
 		// 3. Fetch latest build
-		printInfo(`Fetching latest build for app ${appId}...`)
+		const spinner = createSpinner(`Fetching latest build for app ${appId}...`)
+		spinner.start()
+		
 		const build = await api.getLatestBuildForApp(appId)
+		spinner.succeed('Build information retrieved')
 
-		// 4. Display status
+		// 4. Display enhanced status
 		console.log()
-		printSuccess('📦 Latest Build Status')
+		console.log(chalk.bold(`${getStatusIcon(build.status)} Build Status`))
+		console.log(chalk.gray('─'.repeat(60)))
 		console.log()
-		console.log(`  App:        ${chalk.bold(build.app.whop_app_name)} (${build.app.whop_app_id})`)
-		console.log(`  Subdomain:  ${build.app.subdomain}`)
-		console.log(`  Build ID:   ${build.build_id}`)
-		console.log(`  Status:     ${formatStatus(build.status)}`)
-		console.log(`  Created:    ${build.created_at.toLocaleString()}`)
-		console.log(`  Updated:    ${build.updated_at.toLocaleString()}`)
+		console.log(chalk.bold('App Details:'))
+		console.log(`  ${chalk.cyan('Name:')}        ${chalk.bold(build.app.whop_app_name)}`)
+		console.log(`  ${chalk.cyan('App ID:')}      ${build.app.whop_app_id}`)
+		console.log(`  ${chalk.cyan('Subdomain:')}   ${build.app.subdomain}`)
+		console.log()
+		console.log(chalk.bold('Build Information:'))
+		console.log(`  ${chalk.cyan('Build ID:')}    ${build.build_id}`)
+		console.log(`  ${chalk.cyan('Status:')}      ${formatStatus(build.status)}`)
+		console.log(`  ${chalk.cyan('Created:')}     ${new Date(build.created_at).toLocaleString()}`)
+		console.log(`  ${chalk.cyan('Updated:')}     ${new Date(build.updated_at).toLocaleString()}`)
+		
+		const estimatedTime = getEstimatedTime(build.status, build.created_at)
+		if (estimatedTime) {
+			console.log(`  ${chalk.cyan('Timeline:')}    ${chalk.dim(estimatedTime)}`)
+		}
 		console.log()
 
 		// Show deployment URLs if built
-		if (build.status === 'built') {
+		if (build.status === 'built' || build.status === 'completed') {
 			const normalizedSubdomain = build.app.subdomain.toLowerCase()
 			const appUrl = `https://${normalizedSubdomain}.whopship.app`
 
-			console.log(chalk.bold.cyan('🌐 Deployed App URL:'))
-			console.log(chalk.cyan(`   ${appUrl}`))
+			console.log(chalk.bold.green('🚀 Your App is Live!'))
+			console.log(chalk.gray('─'.repeat(60)))
 			console.log()
-			console.log(chalk.dim('To use this app in Whop:'))
-			console.log(chalk.dim(`   1. Go to https://whop.com/apps/${build.app.whop_app_id}/settings`))
-			console.log(chalk.dim(`   2. Set the App URL to: ${appUrl}`))
-			console.log(chalk.dim(`   3. Install the app in your company to test`))
+			console.log(`${chalk.bold.cyan('Production URL:')} ${chalk.underline.cyan(appUrl)}`)
+			console.log(`${chalk.bold.cyan('Short URL:')}     ${chalk.underline.cyan(`https://app-${build.app.id}.whopship.app`)}`)
 			console.log()
-			console.log(chalk.yellow('📋 View runtime logs:'))
-			console.log(chalk.dim(`   whopctl logs app ${build.app.whop_app_id}`))
+			console.log(chalk.bold('Next Steps:'))
+			console.log(`  ${chalk.green('1.')} Configure your app settings:`)
+			console.log(`     ${chalk.dim(`https://whop.com/apps/${build.app.whop_app_id}/settings`)}`)
+			console.log(`  ${chalk.green('2.')} Set your App URL to: ${chalk.cyan(appUrl)}`)
+			console.log(`  ${chalk.green('3.')} Install and test in your company`)
+			console.log()
+			console.log(chalk.bold('Monitoring:'))
+			console.log(`  ${chalk.yellow('•')} View runtime logs: ${chalk.dim(`whopctl logs ${build.app.whop_app_id}`)}`)
+			console.log(`  ${chalk.yellow('•')} Check usage: ${chalk.dim('whopctl usage')}`)
+			console.log(`  ${chalk.yellow('•')} Redeploy: ${chalk.dim(`whopctl redeploy ${build.build_id}`)}`)
 			console.log()
 		}
 
-		// Show hint for active/failed builds
-		if ((build.status === 'building' || build.status === 'failed') && !options.showLogs) {
-			console.log(chalk.yellow('💡 Tip: Run `whopctl status --logs` to view build logs'))
+		// Show contextual actions based on status
+		if (build.status === 'building' || build.status === 'queued') {
+			console.log(chalk.bold.yellow('⏳ Build in Progress'))
+			console.log(chalk.gray('─'.repeat(60)))
 			console.log()
-		}
-
-		if (build.error_message) {
-			printError(`Error: ${build.error_message}`)
+			console.log(chalk.yellow('Your build is currently processing. You can:'))
+			console.log(`  ${chalk.blue('•')} Watch live logs: ${chalk.dim('whopctl status --logs --follow')}`)
+			console.log(`  ${chalk.blue('•')} Check again: ${chalk.dim('whopctl status')}`)
+			console.log()
+		} else if (build.status === 'failed') {
+			console.log(chalk.bold.red('❌ Build Failed'))
+			console.log(chalk.gray('─'.repeat(60)))
+			console.log()
+			if (build.error_message) {
+				console.log(chalk.red(`Error: ${build.error_message}`))
+				console.log()
+			}
+			console.log(chalk.red('Your build encountered an error. Try these steps:'))
+			console.log(`  ${chalk.yellow('1.')} Check build logs: ${chalk.dim('whopctl status --logs')}`)
+			console.log(`  ${chalk.yellow('2.')} Test locally: ${chalk.dim('npm run build')}`)
+			console.log(`  ${chalk.yellow('3.')} Fix issues and redeploy: ${chalk.dim('whopctl deploy')}`)
+			console.log()
+		} else if (!options.showLogs && (build.status === 'building' || build.status === 'failed')) {
+			console.log(chalk.yellow('💡 Tip: Add --logs to see detailed build information'))
 			console.log()
 		}
 

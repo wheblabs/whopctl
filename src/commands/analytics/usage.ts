@@ -1,6 +1,41 @@
+import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import chalk from 'chalk'
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
 import { whopshipApi } from '../../lib/whopship-api.ts'
+
+/**
+ * Reads environment variables from .env file
+ */
+async function readEnvFile(dir: string): Promise<Record<string, string>> {
+	const envPath = resolve(dir, '.env')
+
+	try {
+		const content = await readFile(envPath, 'utf-8')
+		const env: Record<string, string> = {}
+
+		for (const line of content.split('\n')) {
+			const trimmed = line.trim()
+			if (!trimmed || trimmed.startsWith('#')) continue
+
+			const [key, ...valueParts] = trimmed.split('=')
+			if (key && valueParts.length > 0) {
+				let value = valueParts.join('=').trim()
+				if (
+					(value.startsWith('"') && value.endsWith('"')) ||
+					(value.startsWith("'") && value.endsWith("'"))
+				) {
+					value = value.slice(1, -1)
+				}
+				env[key.trim()] = value
+			}
+		}
+
+		return env
+	} catch (error) {
+		return {}
+	}
+}
 
 /**
  * Handles the "analytics usage" command.
@@ -13,13 +48,31 @@ export async function analyticsUsageCommand(
 	endDate?: string,
 ): Promise<void> {
 	try {
+		let targetAppId = appId
+
+		// Try to infer App ID from .env if not provided
+		if (!targetAppId) {
+			const env = await readEnvFile(process.cwd())
+			const whopAppId = env.NEXT_PUBLIC_WHOP_APP_ID
+
+			if (whopAppId) {
+				try {
+					const app = await whopshipApi.getAppByWhopId(whopAppId)
+					targetAppId = app.id
+					printInfo(`Context: ${chalk.bold(app.whop_app_name)} (${whopAppId})`)
+				} catch {
+					// Ignore if app not found or API error, fall back to global usage
+				}
+			}
+		}
+
 		printInfo('Fetching usage analytics...')
 
-		const data = await whopshipApi.getUsage({
-			appId,
+		const data = (await whopshipApi.getUsage({
+			appId: targetAppId,
 			startDate,
 			endDate,
-		}) as any
+		})) as any
 
 		if (!data.usage) {
 			printInfo('No usage data found for the specified period.')

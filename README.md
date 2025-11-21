@@ -1,100 +1,86 @@
-# Whopctl CLI
+# Whopctl
 
-A command-line interface for managing Whop apps and WhopShip deployments.
+The command-line interface for WhopShip. Build, deploy, and manage your Whop Apps directly from your terminal.
 
-## Features
+## The WhopShip Workflow
 
-- **Authentication**: Login with Whop account using email/OTP
-- **App Management**: List and deploy Whop apps
-- **Analytics**: View usage analytics and summaries
-- **Billing**: Check current usage, history, and billing periods
-- **Tier Management**: View and manage pricing tiers
-- **Build Management**: List builds, view logs, redeploy
-- **Interactive REPL**: Command-line interface with auto-completion
+Experience a Vercel-like workflow for your Whop Apps.
+
+### 1. Deploy
+Deploy your app with a single command. `whopctl` automatically detects your app configuration from `.env`, builds your project, and pushes it to the edge.
+
+```bash
+whopctl deploy
+```
+
+**Output:**
+```
+✓ Deployment complete!
+
+Production: https://my-app.whopship.app
+Build ID:   build_xyz123
+Status:     BUILT
+```
+
+### 2. Check Status & Logs
+Monitor your build progress and view runtime logs.
+
+```bash
+# Check status
+whopctl status
+
+# Follow logs
+whopctl status --logs --follow
+```
+
+### 3. View Usage
+Check real-time analytics for your current project without leaving your terminal.
+
+```bash
+whopctl usage
+```
+
+### 4. Rollback
+Instantly revert to a previous build if something goes wrong.
+
+```bash
+whopctl redeploy <build-id>
+```
 
 ## Installation
 
 ```bash
-# Install from npm (once published)
-npm install -g whopctl
-
-# Or using bun
-bun install -g whopctl
+npm install -g @whoplabs/whopctl
+# or
+bun install -g @whoplabs/whopctl
 ```
 
-## Quick Start
+## Authentication
+
+Login with your Whop account:
 
 ```bash
-# Login with your Whop account
 whopctl login
-
-# List your apps
-whopctl apps list
-
-# View analytics
-whopctl analytics usage
-
-# Check billing
-whopctl billing current
 ```
 
-## Development
+## All Commands
 
-For local development:
-
-```bash
-# Install dependencies
-bun install
-
-# Build the CLI
-bun run build
-
-# Run locally
-./dist/index.js login
-```
-
-## Commands
-
-### Authentication
-- `login` - Authenticate with Whop account
-- `logout` - Clear authentication session
-- `auth check` - Check authentication status
-
-### Apps
+### Apps & Builds
+- `deploy` - Deploy the current app
+- `status` - Check deployment status
+- `redeploy <buildId>` - Rollback/Redeploy a specific build
 - `apps list` - List all your apps
-- `apps deploy <appId>` - Deploy an app
 
-### Analytics
-- `analytics usage` - Get usage data for a time period
-- `analytics summary` - Get usage summary for a month
-
-### Billing
-- `billing current` - Get current period usage
-- `billing history` - Get usage history
-- `billing periods` - List billing periods
-
-### Tier Management
-- `tier current` - Show current tier
-- `tier update <tier>` - Update tier
-- `tier upgrade <tier>` - Upgrade tier
-- `tier downgrade <tier>` - Downgrade tier
-
-See [USAGE.md](./USAGE.md) for detailed command documentation.
+### Analytics & Billing
+- `usage` - View usage analytics (context-aware)
+- `billing current` - Check current billing period
+- `billing history` - View past invoices
 
 ## Configuration
 
-The CLI connects to the WhopShip API at `https://api.whopship.com` by default.
+The CLI connects to `https://api.whopship.app` by default.
 
-For local development, you can override the API URL using the `WHOPSHIP_API_URL` environment variable:
-
+For local development:
 ```bash
-export WHOPSHIP_API_URL=http://localhost:3000
+export WHOPSHIP_API_URL=http://localhost:3001
 ```
-
-This allows you to test against a local API server during development.
-
-## TODOS
-
-- Show which apps are managed by whopctl
-- Add JSON output format
-- Add pagination for large lists

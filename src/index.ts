@@ -20,6 +20,10 @@ import { listBuildsCommand } from './commands/builds/list.ts'
 import { logsCommand } from './commands/logs.ts'
 import { analyticsUsageCommand } from './commands/analytics/usage.ts'
 import { analyticsSummaryCommand } from './commands/analytics/summary.ts'
+import { historyCommand } from './commands/history.ts'
+import { quickDeployCommand, quickStatusCommand, quickCheckCommand } from './commands/quick.ts'
+import { setAliasCommand, removeAliasCommand, listAliasesCommand, showAliasCommand, discoverAliasesCommand } from './commands/alias.ts'
+import { checkUrlCommand, reserveUrlCommand, releaseUrlCommand, listUrlsCommand, suggestUrlCommand } from './commands/url.ts'
 import { billingCurrentCommand } from './commands/billing/current.ts'
 import { billingHistoryCommand } from './commands/billing/history.ts'
 import { billingPeriodsCommand } from './commands/billing/periods.ts'
@@ -60,7 +64,17 @@ async function main() {
 
 	await yargs(argv)
 		.scriptName('whopctl')
-		.usage('$0 <command> [options]')
+		.usage(chalk.bold('WhopShip CLI - Deploy and manage your Whop apps\n\n') + 
+			   chalk.cyan('Usage: ') + '$0 <command> [options]\n\n' +
+			   chalk.bold('Quick Start:\n') +
+			   chalk.dim('  whopctl login              # Authenticate with Whop\n') +
+			   chalk.dim('  whopctl deploy             # Deploy your app\n') +
+			   chalk.dim('  whopctl status             # Check deployment status\n') +
+			   chalk.dim('  whopctl usage              # View usage analytics\n\n') +
+			   chalk.bold('Common Workflows:\n') +
+			   chalk.dim('  whopctl quick deploy       # Deploy with real-time progress\n') +
+			   chalk.dim('  whopctl quick status       # Full status overview\n') +
+			   chalk.dim('  whopctl quick check        # Validate project setup\n'))
 		.command('login', 'Authenticate with your Whop account', {}, async () => {
 			await loginCommand()
 		})
@@ -101,19 +115,208 @@ async function main() {
 				.help()
 		})
 		.command(
-			'deploy [path]',
+			['deploy [path] [project]', 'd [path] [project]'],
 			'Deploy a whop app from a directory',
 			(yargs) => {
-				return yargs.positional('path', {
+				return yargs
+					.positional('path', {
+						describe: 'Path to the app directory (defaults to current directory)',
+						type: 'string',
+						default: '.',
+					})
+					.positional('project', {
+						describe: 'Project name/alias or app ID (defaults to .env)',
+						type: 'string',
+					})
+			},
+			async (argv) => {
+				await deployCommand(argv.path as string, argv.project as string | undefined)
+			},
+		)
+		.command(
+			['redeploy <buildId>', 'rd <buildId>'],
+			'Redeploy a previous build',
+			(yargs) => {
+				return yargs.positional('buildId', {
+					describe: 'Build ID to redeploy',
+					type: 'string',
+					demandOption: true,
+				})
+			},
+			async (argv) => {
+				await redeployBuildCommand(argv.buildId as string)
+			},
+		)
+		.command(['usage', 'u'], 'View usage analytics', (yargs) => {
+			return yargs
+				.option('app-id', {
+					type: 'number',
+					describe: 'Filter by app ID',
+				})
+				.option('start-date', {
+					type: 'string',
+					describe: 'Start date (ISO format)',
+				})
+				.option('end-date', {
+					type: 'string',
+					describe: 'End date (ISO format)',
+				})
+		}, async (argv) => {
+			await analyticsUsageCommand(
+				argv['app-id'] as number | undefined,
+				argv['start-date'] as string | undefined,
+				argv['end-date'] as string | undefined,
+			)
+		})
+		.command(['history [path]', 'h [path]'], 'View deployment history', (yargs) => {
+			return yargs
+				.positional('path', {
 					describe: 'Path to the app directory (defaults to current directory)',
 					type: 'string',
 					default: '.',
 				})
-			},
-			async (argv) => {
-				await deployCommand(argv.path as string)
-			},
-		)
+				.option('limit', {
+					type: 'number',
+					describe: 'Number of deployments to show',
+					default: 10,
+				})
+				.option('all', {
+					type: 'boolean',
+					describe: 'Show all deployments',
+					default: false,
+				})
+		}, async (argv) => {
+			await historyCommand(argv.path as string, {
+				limit: argv.limit as number,
+				all: argv.all as boolean,
+			})
+		})
+		.command('quick', 'Quick commands for common workflows', (yargs) => {
+			return yargs
+				.command(['deploy [path]', 'd [path]'], 'Quick deploy with status check', (yargs) => {
+					return yargs.positional('path', {
+						describe: 'Path to the app directory',
+						type: 'string',
+						default: '.',
+					})
+				}, async (argv) => {
+					await quickDeployCommand(argv.path as string)
+				})
+				.command(['status [path]', 's [path]'], 'Quick status overview', (yargs) => {
+					return yargs.positional('path', {
+						describe: 'Path to the app directory',
+						type: 'string',
+						default: '.',
+					})
+				}, async (argv) => {
+					await quickStatusCommand(argv.path as string)
+				})
+				.command(['check [path]', 'c [path]'], 'Quick project validation', (yargs) => {
+					return yargs.positional('path', {
+						describe: 'Path to the app directory',
+						type: 'string',
+						default: '.',
+					})
+				}, async (argv) => {
+					await quickCheckCommand(argv.path as string)
+				})
+				.demandCommand(1, 'Please specify a quick command (deploy, status, check)')
+				.help()
+		})
+		.command('alias', 'Manage project name aliases', (yargs) => {
+			return yargs
+				.command(['set <name> <appId>', 's <name> <appId>'], 'Create a project alias', (yargs) => {
+					return yargs
+						.positional('name', {
+							describe: 'Alias name (letters, numbers, hyphens, underscores)',
+							type: 'string',
+							demandOption: true,
+						})
+						.positional('appId', {
+							describe: 'Whop app ID (app_xxx)',
+							type: 'string',
+							demandOption: true,
+						})
+				}, async (argv) => {
+					await setAliasCommand(argv.name as string, argv.appId as string)
+				})
+				.command(['remove <name>', 'rm <name>', 'delete <name>'], 'Remove a project alias', (yargs) => {
+					return yargs.positional('name', {
+						describe: 'Alias name to remove',
+						type: 'string',
+						demandOption: true,
+					})
+				}, async (argv) => {
+					await removeAliasCommand(argv.name as string)
+				})
+				.command(['list', 'ls'], 'List all project aliases', {}, async () => {
+					await listAliasesCommand()
+				})
+				.command(['show <name>', 'info <name>'], 'Show details of a project alias', (yargs) => {
+					return yargs.positional('name', {
+						describe: 'Alias name to show',
+						type: 'string',
+						demandOption: true,
+					})
+				}, async (argv) => {
+					await showAliasCommand(argv.name as string)
+				})
+				.command('discover', 'Auto-discover and suggest aliases for your apps', {}, async () => {
+					await discoverAliasesCommand()
+				})
+				.demandCommand(1, 'Please specify an alias command (set, remove, list, show, discover)')
+				.help()
+		})
+		.command('url', 'Manage custom subdomain URLs', (yargs) => {
+			return yargs
+				.command(['check <subdomain>', 'c <subdomain>'], 'Check if a subdomain is available', (yargs) => {
+					return yargs.positional('subdomain', {
+						describe: 'Subdomain to check (without .whopship.app)',
+						type: 'string',
+						demandOption: true,
+					})
+				}, async (argv) => {
+					await checkUrlCommand(argv.subdomain as string)
+				})
+				.command(['reserve <subdomain> <project>', 'r <subdomain> <project>'], 'Reserve a custom subdomain', (yargs) => {
+					return yargs
+						.positional('subdomain', {
+							describe: 'Subdomain to reserve (without .whopship.app)',
+							type: 'string',
+							demandOption: true,
+						})
+						.positional('project', {
+							describe: 'Project name/alias or app ID',
+							type: 'string',
+							demandOption: true,
+						})
+				}, async (argv) => {
+					await reserveUrlCommand(argv.subdomain as string, argv.project as string)
+				})
+				.command(['release <subdomain>', 'rm <subdomain>'], 'Release a reserved subdomain', (yargs) => {
+					return yargs.positional('subdomain', {
+						describe: 'Subdomain to release',
+						type: 'string',
+						demandOption: true,
+					})
+				}, async (argv) => {
+					await releaseUrlCommand(argv.subdomain as string)
+				})
+				.command(['list', 'ls'], 'List your reserved subdomains', {}, async () => {
+					await listUrlsCommand()
+				})
+				.command(['suggest <name>', 's <name>'], 'Suggest available subdomains', (yargs) => {
+					return yargs.positional('name', {
+						describe: 'Base name for subdomain suggestions',
+						type: 'string',
+						demandOption: true,
+					})
+				}, async (argv) => {
+					await suggestUrlCommand(argv.name as string)
+				})
+				.demandCommand(1, 'Please specify a URL command (check, reserve, release, list, suggest)')
+				.help()
+		})
 		.command('status', 'Check deployment status', (yargs) => {
 			return yargs
 				.command(
@@ -174,9 +377,15 @@ async function main() {
 								default: 30,
 								describe: 'Number of log lines to show when using --logs (default: 30)',
 							})
+							.option('project', {
+								alias: 'p',
+								type: 'string',
+								describe: 'Project name/alias or app ID',
+							})
 					},
 					async (argv) => {
 						await statusCommand(argv.path as string, {
+							project: argv.project as string | undefined,
 							showLogs: argv.logs as boolean,
 							follow: argv.follow as boolean,
 							lines: argv.lines as number,
@@ -239,74 +448,64 @@ async function main() {
 				.demandCommand(0)
 				.help()
 		})
-		.command('logs', 'View runtime logs', (yargs) => {
+		.command(['logs [project]', 'l [project]'], 'View runtime logs with live streaming', (yargs) => {
 			return yargs
-				.command(
-					'deploy-runner [buildId]',
-					'View deploy-runner Lambda logs',
-					(yargs) => {
-						return yargs
-							.positional('buildId', {
-								describe: 'Filter logs for specific build ID',
-								type: 'string',
-							})
-							.option('hours', {
-								type: 'number',
-								default: 1,
-								describe: 'Hours of logs to fetch',
-							})
-					},
-					async (argv) => {
-						await logsCommand({
-							type: 'deploy-runner',
-							buildId: argv.buildId as string | undefined,
-							hours: argv.hours,
-						})
-					},
-				)
-				.command(
-					'router',
-					'View router Lambda logs',
-					(yargs) => {
-						return yargs.option('hours', {
-							type: 'number',
-							default: 1,
-							describe: 'Hours of logs to fetch',
-						})
-					},
-					async (argv) => {
-						await logsCommand({
-							type: 'router',
-							hours: argv.hours,
-						})
-					},
-				)
-				.command(
-					'app <appId>',
-					'View app runtime logs',
-					(yargs) => {
-						return yargs
-							.positional('appId', {
-								describe: 'Whop app ID (e.g., app_xxx)',
-								type: 'string',
-								demandOption: true,
-							})
-							.option('hours', {
-								type: 'number',
-								default: 1,
-								describe: 'Hours of logs to fetch',
-							})
-					},
-					async (argv) => {
-						await logsCommand({
-							type: 'app',
-							appId: argv.appId as string,
-							hours: argv.hours,
-						})
-					},
-				)
-				.demandCommand(1, 'Please specify log type (deploy-runner, router, app)')
-				.help()
+				.positional('project', {
+					describe: 'Project name or app ID (defaults to current directory)',
+					type: 'string',
+				})
+				.option('type', {
+					type: 'string',
+					choices: ['deploy-runner', 'router', 'app'],
+					describe: 'Type of logs to view',
+					default: 'app',
+				})
+				.option('app-id', {
+					type: 'string',
+					describe: 'App ID for app logs',
+				})
+				.option('build-id', {
+					type: 'string',
+					describe: 'Filter by build ID',
+				})
+				.option('hours', {
+					type: 'number',
+					describe: 'Hours of logs to fetch',
+					default: 1,
+				})
+				.option('follow', {
+					alias: 'f',
+					type: 'boolean',
+					describe: 'Stream logs in real-time',
+					default: false,
+				})
+				.option('filter', {
+					type: 'string',
+					describe: 'Filter logs by text content',
+				})
+				.option('level', {
+					type: 'string',
+					choices: ['error', 'warn', 'info', 'debug'],
+					describe: 'Filter by log level',
+				})
+				.option('lines', {
+					alias: 'n',
+					type: 'number',
+					describe: 'Number of lines to show',
+					default: 100,
+				})
+		}, async (argv) => {
+			await logsCommand({
+				type: argv.type as 'deploy-runner' | 'router' | 'app',
+				projectName: argv.project as string | undefined,
+				appId: argv['app-id'] as string | undefined,
+				buildId: argv['build-id'] as string | undefined,
+				hours: argv.hours as number,
+				follow: argv.follow as boolean,
+				filter: argv.filter as string | undefined,
+				level: argv.level as 'error' | 'warn' | 'info' | 'debug' | undefined,
+				lines: argv.lines as number,
+			})
 		})
 		.command('analytics', 'View usage analytics', (yargs) => {
 			return yargs
@@ -472,6 +671,17 @@ async function main() {
 		.alias('h', 'help')
 		.version(pkg.version)
 		.alias('v', 'version')
+		.example('whopctl login', 'Authenticate with your Whop account')
+		.example('whopctl deploy', 'Deploy your Next.js app to WhopShip')
+		.example('whopctl status --logs', 'Check deployment status with build logs')
+		.example('whopctl usage', 'View your app usage and analytics')
+		.example('whopctl history', 'See your deployment history')
+		.example('whopctl redeploy abc123', 'Redeploy a previous build')
+		.example('whopctl quick deploy', 'Deploy with progress tracking')
+		.epilogue(chalk.bold('Need help?\n') +
+			chalk.cyan('  Documentation: ') + chalk.underline('https://docs.whopship.app\n') +
+			chalk.cyan('  Support: ') + chalk.underline('https://whop.com/support\n') +
+			chalk.cyan('  GitHub: ') + chalk.underline('https://github.com/whoplabs/whopship'))
 		.strict()
 		.parse()
 }

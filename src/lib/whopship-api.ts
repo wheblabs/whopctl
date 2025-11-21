@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 import { printError } from './output.ts'
+import { retryableRequest, createContextualError } from './retry.ts'
 
 const whoplabsDir = join(homedir(), '.whoplabs')
 const sessionPath = join(whoplabsDir, 'whop-session.json')
@@ -101,44 +102,50 @@ class WhopShipApiClient {
 	}
 
 	/**
-	 * Make an authenticated request to WhopShip API
+	 * Make an authenticated request to WhopShip API with retry logic
 	 */
 	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-		const headers = await this.getAuthHeaders()
+		return retryableRequest(async () => {
+			const headers = await this.getAuthHeaders()
 
-		const url = `${this.apiUrl}${endpoint}`
-		const response = await fetch(url, {
-			...options,
-			headers: {
-				...headers,
-				...options.headers,
-			},
-		})
+			const url = `${this.apiUrl}${endpoint}`
+			const response = await fetch(url, {
+				...options,
+				headers: {
+					...headers,
+					...options.headers,
+				},
+			})
 
-		if (response.status === 401) {
-			throw new Error(
-				'Your session has expired or is invalid. Please run "whopctl login" to authenticate again.',
-			)
-		}
-
-		if (!response.ok) {
-			const errorText = await response.text()
-			let errorMessage = `API error: ${response.status} ${response.statusText}`
-
-			try {
-				const errorJson = JSON.parse(errorText)
-				errorMessage = errorJson.error || errorJson.message || errorMessage
-			} catch {
-				// If not JSON, use the text as-is
-				if (errorText) {
-					errorMessage = errorText
-				}
+			if (response.status === 401) {
+				const error = new Error(
+					'Your session has expired or is invalid. Please run "whopctl login" to authenticate again.',
+				)
+				;(error as any).status = 401
+				throw error
 			}
 
-			throw new Error(errorMessage)
-		}
+			if (!response.ok) {
+				const errorText = await response.text()
+				let errorMessage = `API error: ${response.status} ${response.statusText}`
 
-		return response.json()
+				try {
+					const errorJson = JSON.parse(errorText)
+					errorMessage = errorJson.error || errorJson.message || errorMessage
+				} catch {
+					// If not JSON, use the text as-is
+					if (errorText) {
+						errorMessage = errorText
+					}
+				}
+
+				const error = new Error(errorMessage)
+				;(error as any).status = response.status
+				throw error
+			}
+
+			return response.json()
+		}, 'network')
 	}
 
 	/**
@@ -347,6 +354,12 @@ export class WhopshipAPI {
 		return response.text()
 	}
 
+	async getBuilds(whopAppId: string, limit: number = 10) {
+		return this.request<{ builds: any[] }>(
+			`/api/deploy/builds?whop_app_id=${whopAppId}&limit=${limit}`,
+		)
+	}
+
 	async getLatestBuildForApp(whopAppId: string) {
 		const response = await this.request<{ builds: any[] }>(`/api/deploy/builds?whop_app_id=${whopAppId}&limit=1`)
 		if (!response.builds || response.builds.length === 0) {
@@ -357,5 +370,45 @@ export class WhopshipAPI {
 
 	async getBuildLogs(buildId: string) {
 		return this.request(`/api/deploy/builds/${buildId}/logs`)
+	}
+
+	async getBuildStatus(buildId: string) {
+		return this.request(`/api/deploy/status/${buildId}`)
+	}
+
+	async getAppByWhopId(whopAppId: string) {
+		return this.request<{ id: number; uuid: string; whop_app_id: string; whop_app_name: string }>(
+			`/api/deploy/apps/${whopAppId}`,
+		)
+	}
+
+	async redeploy(buildId: string) {
+		return this.request('/api/deploy/redeploy', {
+			method: 'POST',
+			body: JSON.stringify({ build_id: buildId }),
+		})
+	}
+
+	// URL Management methods
+	async checkSubdomainAvailability(subdomain: string) {
+		return this.request<{ available: boolean; suggestions?: string[] }>(`/api/subdomains/check/${subdomain}`)
+	}
+
+	async reserveSubdomain(subdomain: string, appId: string) {
+		return this.request('/api/subdomains/reserve', {
+			method: 'POST',
+			body: JSON.stringify({ subdomain, app_id: appId }),
+		})
+	}
+
+	async releaseSubdomain(subdomain: string) {
+		return this.request('/api/subdomains/release', {
+			method: 'POST',
+			body: JSON.stringify({ subdomain }),
+		})
+	}
+
+	async listUserSubdomains() {
+		return this.request<{ subdomains: Array<{ subdomain: string; app_id: string; app_name: string; reserved_at: string }> }>('/api/subdomains/list')
 	}
 }
