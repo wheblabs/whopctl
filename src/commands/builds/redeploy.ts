@@ -13,7 +13,11 @@ export async function redeployBuildCommand(buildId: string): Promise<void> {
 			process.exit(1)
 		}
 
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken)
+	const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+		uidToken: session.uidToken,
+		ssk: session.ssk,
+		userId: session.userId,
+	})
 
 		printInfo(`Redeploying build ${buildId}...`)
 		const response = (await api.redeploy(buildId)) as { build_id: string }

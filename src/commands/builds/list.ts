@@ -64,7 +64,11 @@ export async function listBuildsCommand(path: string = '.', limit: number = 10):
 			process.exit(1)
 		}
 
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken)
+	const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+		uidToken: session.uidToken,
+		ssk: session.ssk,
+		userId: session.userId,
+	})
 
 		printInfo(`Fetching builds for app ${appId}...`)
 		const response = (await api.getBuilds(appId, limit)) as { builds: BuildStatus[] }

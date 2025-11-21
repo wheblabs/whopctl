@@ -14,6 +14,8 @@ interface WhopSession {
 	accessToken?: string
 	refreshToken?: string
 	csrfToken?: string
+	uidToken?: string
+	ssk?: string
 	userId?: string
 	expiresAt?: number
 	tokens?: {
@@ -63,6 +65,8 @@ class WhopShipApiClient {
 					accessToken: session.tokens.accessToken,
 					refreshToken: session.tokens.refreshToken,
 					csrfToken: session.tokens.csrfToken,
+					uidToken: session.tokens.uidToken,
+					ssk: session.tokens.ssk,
 					userId: session.tokens.userId,
 				}
 			}
@@ -97,6 +101,15 @@ class WhopShipApiClient {
 		if (session.csrfToken) {
 			headers['X-Whop-Csrf-Token'] = session.csrfToken
 		}
+		if (session.uidToken) {
+			headers['X-Whop-Uid-Token'] = session.uidToken
+		}
+		if (session.ssk) {
+			headers['X-Whop-Ssk'] = session.ssk
+		}
+		if (session.userId) {
+			headers['X-Whop-User-Id'] = session.userId
+		}
 
 		return headers
 	}
@@ -104,7 +117,7 @@ class WhopShipApiClient {
 	/**
 	 * Make an authenticated request to WhopShip API with retry logic
 	 */
-	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+	private async request<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
 		return retryableRequest(async () => {
 			const headers = await this.getAuthHeaders()
 
@@ -144,7 +157,8 @@ class WhopShipApiClient {
 				throw error
 			}
 
-			return response.json()
+			const data = (await response.json()) as T
+			return data
 		}, 'network')
 	}
 
@@ -267,16 +281,31 @@ export class WhopshipAPI {
 		private accessToken: string,
 		private refreshToken: string,
 		private csrfToken: string,
+		private extraTokens?: {
+			uidToken?: string
+			ssk?: string
+			userId?: string
+		},
 	) {
 		this.apiUrl = process.env.WHOPSHIP_API_URL || 'https://api.whopship.app'
 	}
 
-	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+	private async request<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
 		const headers: Record<string, string> = {
 			'Content-Type': 'application/json',
 			'X-Whop-Access-Token': this.accessToken,
 			'X-Whop-Refresh-Token': this.refreshToken,
 			'X-Whop-Csrf-Token': this.csrfToken,
+		}
+
+		if (this.extraTokens?.uidToken) {
+			headers['X-Whop-Uid-Token'] = this.extraTokens.uidToken
+		}
+		if (this.extraTokens?.ssk) {
+			headers['X-Whop-Ssk'] = this.extraTokens.ssk
+		}
+		if (this.extraTokens?.userId) {
+			headers['X-Whop-User-Id'] = this.extraTokens.userId
 		}
 
 		const url = `${this.apiUrl}${endpoint}`
@@ -310,7 +339,8 @@ export class WhopshipAPI {
 			throw new Error(errorMessage)
 		}
 
-		return response.json()
+		const data = (await response.json()) as T
+		return data
 	}
 
 	async getMe() {

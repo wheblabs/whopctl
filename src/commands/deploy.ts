@@ -345,11 +345,12 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 				
 				// Still need company ID from .env for now
 				const env = await readEnvFile(targetDir)
-				companyId = env.NEXT_PUBLIC_WHOP_COMPANY_ID
-				if (!companyId) {
+				const envCompanyId = env.NEXT_PUBLIC_WHOP_COMPANY_ID
+				if (!envCompanyId) {
 					printError('NEXT_PUBLIC_WHOP_COMPANY_ID required in .env file')
 					process.exit(1)
 				}
+				companyId = envCompanyId
 				printInfo(`  Company ID: ${companyId}`)
 			} catch (error) {
 				printError(`Failed to resolve project: ${error}`)
@@ -360,8 +361,21 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 			printInfo('📄 Reading configuration from .env...')
 			const env = await readEnvFile(targetDir)
 
-			appId = env.NEXT_PUBLIC_WHOP_APP_ID
-			companyId = env.NEXT_PUBLIC_WHOP_COMPANY_ID
+			const envAppId = env.NEXT_PUBLIC_WHOP_APP_ID
+			const envCompanyId = env.NEXT_PUBLIC_WHOP_COMPANY_ID
+
+			if (!envAppId) {
+				printError('NEXT_PUBLIC_WHOP_APP_ID not found in .env file')
+				process.exit(1)
+			}
+
+			if (!envCompanyId) {
+				printError('NEXT_PUBLIC_WHOP_COMPANY_ID not found in .env file')
+				process.exit(1)
+			}
+
+			appId = envAppId
+			companyId = envCompanyId
 
 			printSuccess(`✓ App ID: ${appId}`)
 			printInfo(`  Company ID: ${companyId}`)
@@ -386,7 +400,11 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 			process.exit(1)
 		}
 
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken)
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 
 		printInfo('\nInitializing deployment...')
 		const response = await api.deployInit({

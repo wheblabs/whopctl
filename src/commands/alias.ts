@@ -19,7 +19,11 @@ export async function setAliasCommand(name: string, appId: string): Promise<void
 			process.exit(1)
 		}
 
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken)
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 		
 		// Validate that the app ID exists and get app info
 		const spinner = createSpinner(`Validating app ID: ${appId}`)
@@ -165,7 +169,11 @@ export async function discoverAliasesCommand(): Promise<void> {
 			process.exit(1)
 		}
 
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken)
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 		const spinner = createSpinner('Discovering your apps...')
 		spinner.start()
 

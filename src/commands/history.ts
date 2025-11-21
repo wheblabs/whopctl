@@ -111,7 +111,11 @@ export async function historyCommand(
 			process.exit(1)
 		}
 
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken)
+	const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+		uidToken: session.uidToken,
+		ssk: session.ssk,
+		userId: session.userId,
+	})
 
 		// 3. Fetch build history
 		const spinner = createSpinner(`Fetching deployment history for ${appId}...`)

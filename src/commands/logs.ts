@@ -112,7 +112,11 @@ export async function logsCommand(options: {
 			process.exit(1)
 		}
 
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken)
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 		const cw = new CloudWatchLogs()
 		let logGroupName: string
 		let logDescription: string

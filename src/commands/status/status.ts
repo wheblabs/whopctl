@@ -252,9 +252,9 @@ export async function statusCommand(
 		} else {
 			// Read from .env
 			const env = await readEnvFile(targetDir)
-			appId = env.NEXT_PUBLIC_WHOP_APP_ID
+			const envAppId = env.NEXT_PUBLIC_WHOP_APP_ID
 
-			if (!appId) {
+			if (!envAppId) {
 				printError('NEXT_PUBLIC_WHOP_APP_ID not found in .env file')
 				console.log()
 				console.log(chalk.dim('💡 You can also specify a project:'))
@@ -262,6 +262,8 @@ export async function statusCommand(
 				console.log(chalk.dim('   whopctl status --project app_abc123'))
 				process.exit(1)
 			}
+
+			appId = envAppId
 		}
 
 		// 2. Get session
@@ -271,7 +273,11 @@ export async function statusCommand(
 			process.exit(1)
 		}
 
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken)
+	const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+		uidToken: session.uidToken,
+		ssk: session.ssk,
+		userId: session.userId,
+	})
 
 		// 3. Fetch latest build
 		const spinner = createSpinner(`Fetching latest build for app ${appId}...`)

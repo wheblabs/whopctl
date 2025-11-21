@@ -19,7 +19,11 @@ export async function checkUrlCommand(subdomain: string): Promise<void> {
 			process.exit(1)
 		}
 
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken)
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 		
 		// Validate subdomain format
 		if (!isValidSubdomain(subdomain)) {
@@ -75,7 +79,11 @@ export async function reserveUrlCommand(subdomain: string, projectIdentifier: st
 			process.exit(1)
 		}
 
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken)
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 		
 		// Validate subdomain format
 		if (!isValidSubdomain(subdomain)) {
@@ -179,7 +187,11 @@ export async function releaseUrlCommand(subdomain: string): Promise<void> {
 			process.exit(1)
 		}
 
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken)
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 		
 		const spinner = createSpinner(`Releasing ${subdomain}.whopship.app...`)
 		spinner.start()
@@ -220,7 +232,11 @@ export async function listUrlsCommand(): Promise<void> {
 			process.exit(1)
 		}
 
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken)
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 		
 		const spinner = createSpinner('Fetching your reserved URLs...')
 		spinner.start()
@@ -291,7 +307,11 @@ export async function suggestUrlCommand(baseName: string): Promise<void> {
 			process.exit(1)
 		}
 
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken)
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 		
 		// Generate variations of the base name
 		const variations = generateSubdomainVariations(baseName)
