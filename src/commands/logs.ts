@@ -129,7 +129,16 @@ export async function logsCommand(options: {
 			logDescription = 'router'
 		} else {
 			// Default to app logs
-			const projectIdentifier = options.projectName || options.appId
+			let projectIdentifier = options.projectName || options.appId
+			
+			// Try to read from .env if not specified
+			if (!projectIdentifier) {
+				const env = await readEnvFile(process.cwd())
+				if (env.NEXT_PUBLIC_WHOP_APP_ID) {
+					projectIdentifier = env.NEXT_PUBLIC_WHOP_APP_ID
+				}
+			}
+
 			if (!projectIdentifier) {
 				printError('No project specified. Use --app-id, --project-name, or run from a project directory.')
 				process.exit(1)
@@ -197,10 +206,11 @@ export async function logsCommand(options: {
 		
 		console.log()
 
+		const lineCap = options.lines || (options.follow ? 200 : 1000)
 		if (options.follow) {
-			await streamLogs(cw, logGroupName, filterPattern, options.lines || 50)
+			await streamLogs(cw, logGroupName, filterPattern, lineCap)
 		} else {
-			await fetchRecentLogs(cw, logGroupName, filterPattern, options.hours || 1, options.lines || 100)
+			await fetchRecentLogs(cw, logGroupName, filterPattern, options.hours || 1, lineCap)
 		}
 
 	} catch (error) {
@@ -267,7 +277,17 @@ async function streamLogs(
 	const spinner = createSpinner(`Loading last ${initialLines} log entries...`)
 	spinner.start()
 
+	let interrupted = false
+	const interruptHandler = () => {
+		interrupted = true
+		console.log()
+		printInfo('Stopped streaming logs.')
+		process.exit(0)
+	}
+
 	try {
+		process.on('SIGINT', interruptHandler)
+
 		const recentEvents = await cw.getRecentLogs(logGroupName, 0.5, filterPattern, initialLines)
 		spinner.succeed(`Loaded ${recentEvents.length} recent entries`)
 
@@ -293,16 +313,6 @@ async function streamLogs(
 		let lastTimestamp = recentEvents.length > 0 ? 
 			Math.max(...recentEvents.map(e => e.timestamp || 0)) : 
 			Date.now() - 1000
-
-		// Handle Ctrl+C gracefully
-		let interrupted = false
-		const interruptHandler = () => {
-			interrupted = true
-			console.log()
-			printInfo('Stopped streaming logs.')
-			process.exit(0)
-		}
-		process.on('SIGINT', interruptHandler)
 
 		// Poll for new logs every 2 seconds
 		while (!interrupted) {

@@ -128,9 +128,17 @@ async function main() {
 						describe: 'Project name/alias or app ID (defaults to .env)',
 						type: 'string',
 					})
+					.option('background', {
+						alias: 'b',
+						type: 'boolean',
+						describe: 'Run deployment in background (don\'t wait for build completion)',
+						default: false,
+					})
 			},
 			async (argv) => {
-				await deployCommand(argv.path as string, argv.project as string | undefined)
+				await deployCommand(argv.path as string, argv.project as string | undefined, {
+					background: argv.background as boolean,
+				})
 			},
 		)
 		.command(

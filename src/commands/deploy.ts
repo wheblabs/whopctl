@@ -154,6 +154,90 @@ async function readEnvFile(dir: string): Promise<Record<string, string>> {
 }
 
 /**
+ * Build the project based on its type
+ */
+async function buildProject(dir: string, projectType: string): Promise<void> {
+	const spinner = createSpinner('Building project...')
+	spinner.start()
+
+	try {
+		const { spawn } = await import('node:child_process')
+		const { promisify } = await import('node:util')
+		
+		let buildCommand: string
+		let buildArgs: string[]
+
+		// Determine build command based on project type
+		switch (projectType) {
+			case 'nextjs':
+				// Check for package manager
+				try {
+					await readFile(join(dir, 'bun.lockb'))
+					buildCommand = 'bun'
+					buildArgs = ['run', 'build']
+				} catch {
+					try {
+						await readFile(join(dir, 'pnpm-lock.yaml'))
+						buildCommand = 'pnpm'
+						buildArgs = ['run', 'build']
+					} catch {
+						try {
+							await readFile(join(dir, 'yarn.lock'))
+							buildCommand = 'yarn'
+							buildArgs = ['build']
+						} catch {
+							buildCommand = 'npm'
+							buildArgs = ['run', 'build']
+						}
+					}
+				}
+				break
+			default:
+				spinner.warn(`Unknown project type: ${projectType}, skipping build`)
+				return
+		}
+
+		// Run the build command
+		const child = spawn(buildCommand, buildArgs, {
+			cwd: dir,
+			stdio: 'pipe',
+		})
+
+		let output = ''
+		let errorOutput = ''
+
+		child.stdout?.on('data', (data) => {
+			output += data.toString()
+		})
+
+		child.stderr?.on('data', (data) => {
+			errorOutput += data.toString()
+		})
+
+		const exitCode = await new Promise<number>((resolve) => {
+			child.on('exit', (code) => resolve(code || 0))
+		})
+
+		if (exitCode !== 0) {
+			spinner.fail('Build failed')
+			console.log()
+			printError('Build output:')
+			console.log(chalk.dim(output))
+			if (errorOutput) {
+				printError('Build errors:')
+				console.log(chalk.red(errorOutput))
+			}
+			throw new Error(`Build command failed with exit code ${exitCode}`)
+		}
+
+		spinner.succeed('✓ Project built successfully')
+	} catch (error) {
+		spinner.fail('Build failed')
+		throw error
+	}
+}
+
+/**
  * Ensure Next.js config has standalone output
  */
 async function ensureStandaloneOutput(dir: string): Promise<void> {
@@ -200,8 +284,9 @@ async function ensureStandaloneOutput(dir: string): Promise<void> {
  *
  * @param path Optional path to the project directory (defaults to current directory)
  * @param projectIdentifier Optional project name/alias or app ID to deploy
+ * @param options Optional deployment options
  */
-export async function deployCommand(path: string = '.', projectIdentifier?: string): Promise<void> {
+export async function deployCommand(path: string = '.', projectIdentifier?: string, options: { background?: boolean } = {}): Promise<void> {
 	requireAuth()
 	const targetDir = resolve(process.cwd(), path)
 
@@ -287,11 +372,14 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 			await ensureStandaloneOutput(targetDir)
 		}
 
-		// 3. Create archive
+		// 3. Build the project
+		await buildProject(targetDir, validationResult.projectType)
+
+		// 4. Create archive
 		const { path: archivePath, sha256 } = await createArchive(targetDir)
 		printInfo(`  Source SHA256: ${sha256}`)
 
-		// 3. Get presigned URL
+		// 5. Get presigned URL
 		const session = whop.getTokens()
 		if (!session) {
 			printError('No session found. Please run "whopctl login" first.')
@@ -310,23 +398,37 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 		printSuccess('✓ Deployment initialized')
 		printInfo(`  Build ID: ${response.build_id}`)
 
-		// 4. Upload to S3
+		// 6. Upload to S3
 		await uploadToS3(archivePath, response.upload.url, sha256)
 
-		// 5. Clean up archive
+		// 7. Clean up archive
 		await unlink(archivePath)
 
-		// 6. Mark upload as complete
+		// 8. Mark upload as complete
 		const spinner = createSpinner('Finalizing deployment...')
 		spinner.start()
 		
 		const completeResponse = await api.deployComplete(response.build_id)
 		spinner.succeed(`Build queued as ${completeResponse.status}`)
 
-		// 7. Track build progress in real-time
+		if (options.background) {
+			// Background mode - just show the build ID and exit
+			console.log()
+			printSuccess('✅ Deployment queued successfully!')
+			printInfo(`📋 Build ID: ${chalk.cyan(response.build_id)}`)
+			console.log()
+			printInfo('💡 Check progress with:')
+			console.log(chalk.dim(`   whopctl status`))
+			console.log(chalk.dim(`   whopctl logs app --follow`))
+			console.log()
+			return
+		}
+
+		// 9. Track build progress in real-time
 		console.log()
 		printInfo('🔨 Starting build process...')
 		console.log(chalk.dim('This may take several minutes depending on your app size'))
+		console.log(chalk.dim('💡 Press Ctrl+C to run in background, then use `whopctl status` to check progress'))
 		console.log()
 
 		const buildTracker = createBuildTracker(api, response.build_id, {

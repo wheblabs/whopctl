@@ -1,6 +1,6 @@
 {
 	"name": "@whoplabs/whopctl",
-	"version": "0.6.7-1",
+	"version": "1.6.7",
 	"author": "Whop Labs",
 	"repository": {
 		"type": "git",
@@ -39,7 +39,7 @@
 	"homepage": "https://github.com/wheblabs/cli#readme",
 	"license": "MIT",
 	"publishConfig": {
-		"access": "restricted"
+		"access": "public"
 	},
 	"type": "module",
 	"dependencies": {
