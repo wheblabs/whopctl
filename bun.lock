@@ -1,11 +1,12 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "whopctl",
       "dependencies": {
         "@aws-sdk/client-cloudwatch-logs": "^3.929.0",
-        "@whoplabs/whop-client": "0.5.0",
+        "@whoplabs/whop-client": "0.5.1",
         "adm-zip": "^0.5.16",
         "tar": "^7.5.1",
       },
@@ -207,7 +208,7 @@
 
     "@types/yargs-parser": ["@types/yargs-parser@21.0.3", "", {}, "sha512-I4q9QU9MQv4oEOz4tAHJtNz1cwuLxn2F3xcc2iV5WdqLPpUnj30aUuxt1mAxYTG+oe8CZMV/+6rU4S4gRDzqtQ=="],
 
-    "@whoplabs/whop-client": ["@whoplabs/whop-client@0.5.0", "", { "peerDependencies": { "typescript": ">=4.5.0" }, "optionalPeers": ["typescript"] }, "sha512-K5b7q2jcGnmT5WVwat8IVAAlnX4RGn/mvtolYEsj1NJ9LW2juN2EspA9+/8qPnIjvsC1WT8NKyGI/DIusX1wxQ=="],
+    "@whoplabs/whop-client": ["@whoplabs/whop-client@0.5.1", "", { "peerDependencies": { "typescript": ">=4.5.0" }, "optionalPeers": ["typescript"] }, "sha512-rpZI3NcwFnGq/q5GHEEvnv4bdElHitBtBCFhhjYS5nhBNcPob0bubfQ3M14t51mpYhQlmNwQBu+CRfj8HgIZZw=="],
 
     "adm-zip": ["adm-zip@0.5.16", "", {}, "sha512-TGw5yVi4saajsSEgz25grObGHEUaDrniwvA2qwSC060KfqGPdglhvPMA2lPIoxs3PQIItj2iag35fONcQqgUaQ=="],
 
