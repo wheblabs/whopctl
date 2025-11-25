@@ -340,14 +340,22 @@ export class WhopshipAPI {
 
 			try {
 				const errorJson = JSON.parse(errorText)
-				errorMessage = errorJson.error || errorJson.message || errorMessage
+				// Prefer message over error, as message usually contains more detailed information
+				if (errorJson.message) {
+					errorMessage = errorJson.message
+				} else if (errorJson.error) {
+					errorMessage = errorJson.error
+				}
 			} catch {
 				if (errorText) {
 					errorMessage = errorText
 				}
 			}
 
-			throw new Error(errorMessage)
+			const error = new Error(errorMessage)
+			;(error as any).status = response.status
+			;(error as any).responseBody = errorText
+			throw error
 		}
 
 		const data = (await response.json()) as T

@@ -91,11 +91,28 @@ export async function billingSubscribeCommand(tier?: 'free' | 'hobby' | 'pro'): 
 			printInfo('After completing payment, your subscription will be activated automatically.')
 			console.log()
 		}
-	} catch (error) {
+	} catch (error: any) {
 		printError('Failed to create checkout session')
-		if (error instanceof Error) {
+		if (error?.message) {
 			console.error(chalk.red(error.message))
+		} else if (error instanceof Error) {
+			console.error(chalk.red(error.message))
+		} else {
+			console.error(chalk.red(String(error)))
 		}
+		
+		// Log additional error details if available
+		if (error?.responseBody) {
+			try {
+				const errorJson = JSON.parse(error.responseBody)
+				if (errorJson.error && errorJson.error !== error.message) {
+					console.error(chalk.dim(`Error: ${errorJson.error}`))
+				}
+			} catch {
+				// Ignore parse errors
+			}
+		}
+		
 		process.exit(1)
 	}
 }
