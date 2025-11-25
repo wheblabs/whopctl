@@ -1,0 +1,183 @@
+{
+  "timestamp": "2025-11-25T00:44:09.943Z",
+  "summary": {
+    "total": 17,
+    "passed": 15,
+    "failed": 2,
+    "skipped": 3,
+    "successRate": 88.24,
+    "totalDuration": 6482
+  },
+  "results": [
+    {
+      "id": "TEST-1",
+      "name": "Main help command",
+      "category": "command-registration",
+      "status": "passed",
+      "duration": 117,
+      "error": null,
+      "output": "\u001b[1mWhopShip CLI - Deploy and manage your Whop apps\u001b[22m\n\u001b[1m\u001b[22m\n\u001b[1m\u001b[22m\u001b[36mUsage: \u001b[39mwhopctl <command> [options]\n\n\u001b[1mQuick Start:\u001b[22m\n\u001b[1m\u001b[22m\u001b[2mwhopctl login              # Authenticate with Whop\u001b[22m\n\u001b[2m\u001b[22m\u001b[2mwhopctl deploy             # Deploy your app\u001b[22m\n\u001b[2m\u001b[22m\u001b[2mwhopctl status             # Check deployment status\u001b[22m\n\u001b[2m\u001b[22m\u001b[2mwhopctl usage              # View usage analytics\u001b[22m\n\u001b[2m\u001b[22m\n\u001b[2m\u001b[22m\u001b[1mCommon Workflows:\u001b[22m\n\u001b[1m\u001b[22m\u001b[2mwhopctl quick deploy       # Deploy with real-time progress\u001b[22m\n\u001b[2m\u001b[22m\u001b[2mwhopctl quick status       # Full status overview\u001b[22m\n\u001b[2m\u001b[22m\u001b[2mwhopctl quick check        # Validate project setup\u001b[22m\n\u001b[2m\u001b[22m\n\nCommands:\n  whopctl login                    Authenticate with your Whop account\n  whopctl logout                   Clear authentication session\n  whopctl auth                     Manage authentication\n  whopctl repl                     Start interactive mode\n  whopctl apps                     Manage Whop apps\n  whopctl deploy [path] [project]  Deploy a whop app from a directory\n                                                                    [aliases: d]\n  whopctl redeploy <buildId>       Redeploy a previous build       [aliases: rd]\n  whopctl cancel <buildId>         Cancel a build                [aliases: stop]\n  whopctl queue [path]             Show build queue status          [aliases: q]\n  whopctl usage                    View usage analytics             [aliases: u]\n  whopctl history [path]           View deployment history          [aliases: h]\n  whopctl quick                    Quick commands for common workflows\n  whopctl alias                    Manage project name aliases\n  whopctl url                      Manage custom subdomain URLs\n  whopctl status                   Check deployment status\n  whopctl builds                   Manage builds\n  whopctl logs [project]           View runtime logs with live streaming\n                                                                    [aliases: l]\n  whopctl analytics                View usage analytics\n  whopctl billing                  View billing information\n  whopctl tier                     Manage pricing tier\n\nOptions:\n  -h, --help     Show help                                             [boolean]\n  -v, --version  Show version number                                   [boolean]\n\nExamples:\n  whopctl login            Authenticate with your Whop account\n  whopctl deploy           Deploy your Next.js app to WhopShip\n  whopctl status --logs    Check deployment status with build logs\n  whopctl usage            View your app usage and analytics\n  whopctl history          See your deployment history\n  whopctl redeploy abc123  Redeploy a previous build\n  whopctl quick deploy     Deploy with progress tracking\n\n\u001b[1mNeed help?\u001b[22m\n  \u001b[1m\u001b[22m\u001b[36mDocumentation: \u001b[39m\u001b[4mhttps://docs.whopship.app\u001b[24m\n  \u001b[4m\u001b[24m\u001b[36mSupport: \u001b[39m\u001b[4mhttps://whop.com/support\u001b[24m\n  \u001b[4m\u001b[24m\u001b[36mGitHub: \u001b[39m\u001b[4mhttps://github.com/whoplabs/whopship\u001b[24m\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-2",
+      "name": "Builds help command",
+      "category": "command-registration",
+      "status": "passed",
+      "duration": 109,
+      "error": null,
+      "output": "whopctl builds\n\nManage builds\n\nCommands:\n  whopctl builds list [path]       List recent builds\n  whopctl builds deploy <buildId>  Deploy a build\n  whopctl builds cancel <buildId>  Cancel a build                [aliases: stop]\n  whopctl builds queue [path]      Show build queue status          [aliases: q]\n  whopctl builds [path]            List recent builds (default)        [default]\n\nPositionals:\n  path  Path to the app directory                        [string] [default: \".\"]\n\nOptions:\n  -h, --help     Show help                                             [boolean]\n  -v, --version  Show version number                                   [boolean]\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-3",
+      "name": "Cancel command registered",
+      "category": "command-registration",
+      "status": "passed",
+      "duration": 110,
+      "error": null,
+      "output": "whopctl builds\n\nManage builds\n\nCommands:\n  whopctl builds list [path]       List recent builds\n  whopctl builds deploy <buildId>  Deploy a build\n  whopctl builds cancel <buildId>  Cancel a build                [aliases: stop]\n  whopctl builds queue [path]      Show build queue status          [aliases: q]\n  whopctl builds [path]            List recent builds (default)        [default]\n\nPositionals:\n  path  Path to the app directory                        [string] [default: \".\"]\n\nOptions:\n  -h, --help     Show help                                             [boolean]\n  -v, --version  Show version number                                   [boolean]\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-4",
+      "name": "Queue command registered",
+      "category": "command-registration",
+      "status": "passed",
+      "duration": 108,
+      "error": null,
+      "output": "whopctl builds\n\nManage builds\n\nCommands:\n  whopctl builds list [path]       List recent builds\n  whopctl builds deploy <buildId>  Deploy a build\n  whopctl builds cancel <buildId>  Cancel a build                [aliases: stop]\n  whopctl builds queue [path]      Show build queue status          [aliases: q]\n  whopctl builds [path]            List recent builds (default)        [default]\n\nPositionals:\n  path  Path to the app directory                        [string] [default: \".\"]\n\nOptions:\n  -h, --help     Show help                                             [boolean]\n  -v, --version  Show version number                                   [boolean]\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-5",
+      "name": "Check authentication status",
+      "category": "authentication",
+      "status": "passed",
+      "duration": 466,
+      "error": null,
+      "output": "\u001b[34mℹ\u001b[39m Checking authentication status...\n\u001b[32m✓\u001b[39m ✓ Authentication valid\n\n\u001b[34mℹ\u001b[39m User Information:\n  Username:     undefined\n  Display Name: undefined\n  Email:        undefined\n  User ID:      undefined\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-6",
+      "name": "Cancel command help",
+      "category": "build-cancellation",
+      "status": "passed",
+      "duration": 109,
+      "error": null,
+      "output": "whopctl builds cancel <buildId>\n\nCancel a build\n\nPositionals:\n  buildId  Build ID to cancel                                [string] [required]\n\nOptions:\n      --path     Path to the app directory               [string] [default: \".\"]\n  -h, --help     Show help                                             [boolean]\n  -v, --version  Show version number                                   [boolean]\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-7",
+      "name": "Get build list for cancellation test",
+      "category": "build-cancellation",
+      "status": "failed",
+      "duration": 107,
+      "error": "Assertion failed: Should successfully list builds",
+      "output": "",
+      "assertions": []
+    },
+    {
+      "id": "TEST-8",
+      "name": "Cancel invalid build ID (should fail)",
+      "category": "build-cancellation",
+      "status": "failed",
+      "duration": 432,
+      "error": "Assertion failed: Should show build not found error",
+      "output": "",
+      "assertions": []
+    },
+    {
+      "id": "TEST-9",
+      "name": "Queue command help",
+      "category": "queue-management",
+      "status": "passed",
+      "duration": 112,
+      "error": null,
+      "output": "whopctl builds queue [path]\n\nShow build queue status\n\nPositionals:\n  path  Path to the app directory                        [string] [default: \".\"]\n\nOptions:\n      --app-id   Filter by app ID                                       [string]\n  -h, --help     Show help                                             [boolean]\n  -v, --version  Show version number                                   [boolean]\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-10",
+      "name": "View queue status",
+      "category": "queue-management",
+      "status": "passed",
+      "duration": 470,
+      "error": null,
+      "output": "\u001b[34mℹ\u001b[39m Fetching queue status...\n\n\u001b[32m✓\u001b[39m 📊 Build Queue Status\n\n\u001b[1mSummary:\u001b[22m\n  Queued builds: \u001b[33m8\u001b[39m\n  Building: \u001b[34m1\u001b[39m\n\n\u001b[1mQueue:\u001b[22m\n\n  1. \u001b[33mQUEUED\u001b[39m test-app-joe\n     Build ID: 11342c68-b362-4545-a469-a2d4474325e6\n     Created: 11/5/2025, 7:09:02 PM\n\n  2. \u001b[33mQUEUED\u001b[39m test-app-joe\n     Build ID: 2eff78c0-bb22-4968-bcbb-1067af758a70\n     Created: 11/5/2025, 7:10:06 PM\n     Estimated wait: ~3 minutes\n\n  3. \u001b[33mQUEUED\u001b[39m e2e2\n     Build ID: 29149398-991b-49a7-b3d2-37a85a40ee26\n     Created: 11/20/2025, 10:06:47 PM\n     Estimated wait: ~6 minutes\n\n  4. \u001b[33mQUEUED\u001b[39m e2e2\n     Build ID: 5697200a-ed60-4926-8bd1-494a84767ae2\n     Created: 11/20/2025, 10:24:04 PM\n     Estimated wait: ~9 minutes\n\n  5. \u001b[33mQUEUED\u001b[39m e2e2\n     Build ID: 2914e535-5814-434d-8677-d51ce52729ab\n     Created: 11/20/2025, 10:33:51 PM\n     Estimated wait: ~12 minutes\n\n  6. \u001b[33mQUEUED\u001b[39m e2e2\n     Build ID: 02009967-4edb-42f7-8cb2-ccf16d9accc7\n     Created: 11/20/2025, 10:37:57 PM\n     Estimated wait: ~15 minutes\n\n  7. \u001b[33mQUEUED\u001b[39m e2e2\n     Build ID: e076698a-4b91-4c50-95d3-23b990f04f46\n     Created: 11/20/2025, 10:39:40 PM\n     Estimated wait: ~18 minutes\n\n  8. \u001b[33mQUEUED\u001b[39m e2e2\n     Build ID: 24a8102c-8755-4572-b566-0757ca52b2fa\n     Created: 11/20/2025, 10:44:22 PM\n     Estimated wait: ~21 minutes\n\n\u001b[34mℹ\u001b[39m Use \"whopctl builds cancel <build-id>\" to cancel a queued build\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-11",
+      "name": "Queue command alias (q)",
+      "category": "queue-management",
+      "status": "passed",
+      "duration": 474,
+      "error": null,
+      "output": "\u001b[34mℹ\u001b[39m Fetching queue status...\n\n\u001b[32m✓\u001b[39m 📊 Build Queue Status\n\n\u001b[1mSummary:\u001b[22m\n  Queued builds: \u001b[33m8\u001b[39m\n  Building: \u001b[34m1\u001b[39m\n\n\u001b[1mQueue:\u001b[22m\n\n  1. \u001b[33mQUEUED\u001b[39m test-app-joe\n     Build ID: 11342c68-b362-4545-a469-a2d4474325e6\n     Created: 11/5/2025, 7:09:02 PM\n\n  2. \u001b[33mQUEUED\u001b[39m test-app-joe\n     Build ID: 2eff78c0-bb22-4968-bcbb-1067af758a70\n     Created: 11/5/2025, 7:10:06 PM\n     Estimated wait: ~3 minutes\n\n  3. \u001b[33mQUEUED\u001b[39m e2e2\n     Build ID: 29149398-991b-49a7-b3d2-37a85a40ee26\n     Created: 11/20/2025, 10:06:47 PM\n     Estimated wait: ~6 minutes\n\n  4. \u001b[33mQUEUED\u001b[39m e2e2\n     Build ID: 5697200a-ed60-4926-8bd1-494a84767ae2\n     Created: 11/20/2025, 10:24:04 PM\n     Estimated wait: ~9 minutes\n\n  5. \u001b[33mQUEUED\u001b[39m e2e2\n     Build ID: 2914e535-5814-434d-8677-d51ce52729ab\n     Created: 11/20/2025, 10:33:51 PM\n     Estimated wait: ~12 minutes\n\n  6. \u001b[33mQUEUED\u001b[39m e2e2\n     Build ID: 02009967-4edb-42f7-8cb2-ccf16d9accc7\n     Created: 11/20/2025, 10:37:57 PM\n     Estimated wait: ~15 minutes\n\n  7. \u001b[33mQUEUED\u001b[39m e2e2\n     Build ID: e076698a-4b91-4c50-95d3-23b990f04f46\n     Created: 11/20/2025, 10:39:40 PM\n     Estimated wait: ~18 minutes\n\n  8. \u001b[33mQUEUED\u001b[39m e2e2\n     Build ID: 24a8102c-8755-4572-b566-0757ca52b2fa\n     Created: 11/20/2025, 10:44:22 PM\n     Estimated wait: ~21 minutes\n\n\u001b[34mℹ\u001b[39m Use \"whopctl builds cancel <build-id>\" to cancel a queued build\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-12",
+      "name": "Queue status with app filter",
+      "category": "queue-management",
+      "status": "passed",
+      "duration": 115,
+      "error": null,
+      "output": "",
+      "assertions": []
+    },
+    {
+      "id": "TEST-13",
+      "name": "View current billing status",
+      "category": "overage-billing",
+      "status": "passed",
+      "duration": 881,
+      "error": null,
+      "output": "\u001b[34mℹ\u001b[39m Fetching billing information...\n\n\u001b[32m✓\u001b[39m Billing Status\n\n\u001b[1mSubscription:\u001b[22m\n  Tier: \u001b[36mFree\u001b[39m\n  Price: \u001b[36m$0.00\u001b[39m/month\n  Status: \u001b[33mfree\u001b[39m\n\n\u001b[1mCurrent Period Usage:\u001b[22m\n\n\u001b[1mFunction Invocations:\u001b[22m\n  \u001b[31m2,765 / 100\u001b[39m\n\n\u001b[1mBandwidth:\u001b[22m\n  \u001b[31m6.00 / 1 GB\u001b[39m\n\n\u001b[1mBuild Minutes:\u001b[22m\n  \u001b[31m45.00 / 10\u001b[39m\n\n\u001b[1mStorage:\u001b[22m\n  \u001b[31m2.00 / 1 GB\u001b[39m\n\n\u001b[1mDeployments:\u001b[22m\n  \u001b[36m5 / 10\u001b[39m\n\n\u001b[1m\u001b[33m⚠️  Usage Overages:\u001b[39m\u001b[22m\n\n  Function Invocations: \u001b[31m+2,665\u001b[39m ($0.0053)\n  Bandwidth: \u001b[31m+5.00 GB\u001b[39m ($0.50)\n  Build Minutes: \u001b[31m+35.00\u001b[39m ($1.75)\n  Storage: \u001b[31m+1.00 GB\u001b[39m ($0.05)\n\n\u001b[1m\u001b[31m  Total Overage Cost: $2.3053\u001b[39m\u001b[22m\n\n\u001b[33m  ⏰ Grace period ends in 3 days (11/27/2025)\u001b[39m\n\n\u001b[1m\u001b[33m⚠️  Warnings:\u001b[39m\u001b[22m\n\u001b[33m  • Function invocations exceeded limit by 2,665 (0.0053 overage cost)\u001b[39m\n\u001b[33m  • Bandwidth exceeded limit by 5.00 GB ($0.50 overage cost)\u001b[39m\n\u001b[33m  • Build minutes exceeded limit by 35.00 minutes ($1.75 overage cost)\u001b[39m\n\u001b[33m  • Storage exceeded limit by 1.00 GB ($0.05 overage cost)\u001b[39m\n\n\u001b[1mCost:\u001b[22m\n  \u001b[32m$0.98\u001b[39m\n  \u001b[33mOverage: $2.3053\u001b[39m\n\n\n\u001b[34mℹ\u001b[39m 💡 Upgrade to unlock more resources:\n\u001b[2m   whopctl billing subscribe hobby\u001b[22m\n\u001b[2m   whopctl billing subscribe pro\u001b[22m\n\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-14",
+      "name": "View billing history",
+      "category": "overage-billing",
+      "status": "passed",
+      "duration": 569,
+      "error": null,
+      "output": "\u001b[34mℹ\u001b[39m Fetching billing history...\n\n\u001b[32m✓\u001b[39m Billing History (1 periods)\n\n\u001b[1mPeriod 1: 2025-11\u001b[22m\n  Function Invocations: \u001b[36m2,765\u001b[39m\n  Bandwidth: \u001b[36m6.00\u001b[39m GB\n  Build Minutes: \u001b[36m45.00\u001b[39m\n  Storage: \u001b[36m2.00\u001b[39m GB\n  Deployments: \u001b[36m5\u001b[39m\n  Cost: \u001b[32m$0.98\u001b[39m\n\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-15",
+      "name": "View billing periods",
+      "category": "overage-billing",
+      "status": "passed",
+      "duration": 463,
+      "error": null,
+      "output": "\u001b[34mℹ\u001b[39m Fetching billing periods...\n\u001b[34mℹ\u001b[39m No billing periods found.\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-16",
+      "name": "Verify overage information display",
+      "category": "overage-billing",
+      "status": "passed",
+      "duration": 959,
+      "error": null,
+      "output": "\u001b[34mℹ\u001b[39m Fetching billing information...\n\n\u001b[32m✓\u001b[39m Billing Status\n\n\u001b[1mSubscription:\u001b[22m\n  Tier: \u001b[36mFree\u001b[39m\n  Price: \u001b[36m$0.00\u001b[39m/month\n  Status: \u001b[33mfree\u001b[39m\n\n\u001b[1mCurrent Period Usage:\u001b[22m\n\n\u001b[1mFunction Invocations:\u001b[22m\n  \u001b[31m2,765 / 100\u001b[39m\n\n\u001b[1mBandwidth:\u001b[22m\n  \u001b[31m6.00 / 1 GB\u001b[39m\n\n\u001b[1mBuild Minutes:\u001b[22m\n  \u001b[31m45.00 / 10\u001b[39m\n\n\u001b[1mStorage:\u001b[22m\n  \u001b[31m2.00 / 1 GB\u001b[39m\n\n\u001b[1mDeployments:\u001b[22m\n  \u001b[36m5 / 10\u001b[39m\n\n\u001b[1m\u001b[33m⚠️  Usage Overages:\u001b[39m\u001b[22m\n\n  Function Invocations: \u001b[31m+2,665\u001b[39m ($0.0053)\n  Bandwidth: \u001b[31m+5.00 GB\u001b[39m ($0.50)\n  Build Minutes: \u001b[31m+35.00\u001b[39m ($1.75)\n  Storage: \u001b[31m+1.00 GB\u001b[39m ($0.05)\n\n\u001b[1m\u001b[31m  Total Overage Cost: $2.3053\u001b[39m\u001b[22m\n\n\u001b[33m  ⏰ Grace period ends in 3 days (11/27/2025)\u001b[39m\n\n\u001b[1m\u001b[33m⚠️  Warnings:\u001b[39m\u001b[22m\n\u001b[33m  • Function invocations exceeded limit by 2,665 (0.0053 overage cost)\u001b[39m\n\u001b[33m  • Bandwidth exceeded limit by 5.00 GB ($0.50 overage cost)\u001b[39m\n\u001b[33m  • Build minutes exceeded limit by 35.00 minutes ($1.75 overage cost)\u001b[39m\n\u001b[33m  • Storage exceeded limit by 1.00 GB ($0.05 overage cost)\u001b[39m\n\n\u001b[1mCost:\u001b[22m\n  \u001b[32m$0.98\u001b[39m\n  \u001b[33mOverage: $2.3053\u001b[39m\n\n\n\u001b[34mℹ\u001b[39m 💡 Upgrade to unlock more resources:\n\u001b[2m   whopctl billing subscribe hobby\u001b[22m\n\u001b[2m   whopctl billing subscribe pro\u001b[22m\n\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-17",
+      "name": "Verify billing display format",
+      "category": "overage-billing",
+      "status": "passed",
+      "duration": 881,
+      "error": null,
+      "output": "\u001b[34mℹ\u001b[39m Fetching billing information...\n\n\u001b[32m✓\u001b[39m Billing Status\n\n\u001b[1mSubscription:\u001b[22m\n  Tier: \u001b[36mFree\u001b[39m\n  Price: \u001b[36m$0.00\u001b[39m/month\n  Status: \u001b[33mfree\u001b[39m\n\n\u001b[1mCurrent Period Usage:\u001b[22m\n\n\u001b[1mFunction Invocations:\u001b[22m\n  \u001b[31m2,765 / 100\u001b[39m\n\n\u001b[1mBandwidth:\u001b[22m\n  \u001b[31m6.00 / 1 GB\u001b[39m\n\n\u001b[1mBuild Minutes:\u001b[22m\n  \u001b[31m45.00 / 10\u001b[39m\n\n\u001b[1mStorage:\u001b[22m\n  \u001b[31m2.00 / 1 GB\u001b[39m\n\n\u001b[1mDeployments:\u001b[22m\n  \u001b[36m5 / 10\u001b[39m\n\n\u001b[1m\u001b[33m⚠️  Usage Overages:\u001b[39m\u001b[22m\n\n  Function Invocations: \u001b[31m+2,665\u001b[39m ($0.0053)\n  Bandwidth: \u001b[31m+5.00 GB\u001b[39m ($0.50)\n  Build Minutes: \u001b[31m+35.00\u001b[39m ($1.75)\n  Storage: \u001b[31m+1.00 GB\u001b[39m ($0.05)\n\n\u001b[1m\u001b[31m  Total Overage Cost: $2.3053\u001b[39m\u001b[22m\n\n\u001b[33m  ⏰ Grace period ends in 3 days (11/27/2025)\u001b[39m\n\n\u001b[1m\u001b[33m⚠️  Warnings:\u001b[39m\u001b[22m\n\u001b[33m  • Function invocations exceeded limit by 2,665 (0.0053 overage cost)\u001b[39m\n\u001b[33m  • Bandwidth exceeded limit by 5.00 GB ($0.50 overage cost)\u001b[39m\n\u001b[33m  • Build minutes exceeded limit by 35.00 minutes ($1.75 overage cost)\u001b[39m\n\u001b[33m  • Storage exceeded limit by 1.00 GB ($0.05 overage cost)\u001b[39m\n\n\u001b[1mCost:\u001b[22m\n  \u001b[32m$0.98\u001b[39m\n  \u001b[33mOverage: $2.3053\u001b[39m\n\n\n\u001b[34mℹ\u001b[39m 💡 Upgrade to unlock more resources:\n\u001b[2m   whopctl billing subscribe hobby\u001b[22m\n\u001b[2m   whopctl billing subscribe pro\u001b[22m\n\n",
+      "assertions": []
+    }
+  ]
+}

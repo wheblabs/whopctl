@@ -1,0 +1,588 @@
+[2025-11-25T00:19:58.340Z] [INFO] Starting WhopShip CLI Test Harness
+[2025-11-25T00:19:58.342Z] [INFO] CLI Binary: /Users/krisciu/workspace/cli/dist/index.js
+[2025-11-25T00:19:58.342Z] [INFO] Results Directory: /Users/krisciu/workspace/cli/test-results
+[2025-11-25T00:19:58.342Z] [INFO] 
+================================================================================
+[2025-11-25T00:19:58.342Z] [INFO] TEST SUITE: Command Registration
+[2025-11-25T00:19:58.342Z] [INFO] ================================================================================
+[2025-11-25T00:19:58.342Z] [INFO] 
+################################################################################
+[2025-11-25T00:19:58.342Z] [INFO] Starting TEST-1: Main help command
+[2025-11-25T00:19:58.342Z] [INFO] Category: command-registration
+[2025-11-25T00:19:58.342Z] [INFO] ################################################################################
+[2025-11-25T00:19:58.343Z] [INFO] 
+================================================================================
+[2025-11-25T00:19:58.343Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js --help
+[2025-11-25T00:19:58.343Z] [INFO] ================================================================================
+[2025-11-25T00:19:58.459Z] [INFO] STDOUT:
+[1mWhopShip CLI - Deploy and manage your Whop apps[22m
+[1m[22m
+[1m[22m[36mUsage: [39mwhopctl <command> [options]
+
+[1mQuick Start:[22m
+[1m[22m[2mwhopctl login              # Authenticate with Whop[22m
+[2m[22m[2mwhopctl deploy             # Deploy your app[22m
+[2m[22m[2mwhopctl status             # Check deployment status[22m
+[2m[22m[2mwhopctl usage              # View usage analytics[22m
+[2m[22m
+[2m[22m[1mCommon Workflows:[22m
+[1m[22m[2mwhopctl quick deploy       # Deploy with real-time progress[22m
+[2m[22m[2mwhopctl quick status       # Full status overview[22m
+[2m[22m[2mwhopctl quick check        # Validate project setup[22m
+[2m[22m
+
+Commands:
+  whopctl login                    Authenticate with your Whop account
+  whopctl logout                   Clear authentication session
+  whopctl auth                     Manage authentication
+  whopctl repl                     Start interactive mode
+  whopctl apps                     Manage Whop apps
+  whopctl deploy [path] [project]  Deploy a whop app from a directory
+                                                                    [aliases: d]
+  whopctl redeploy <buildId>       Redeploy a previous build       [aliases: rd]
+  whopctl cancel <buildId>         Cancel a build                [aliases: stop]
+  whopctl queue [path]             Show build queue status          [aliases: q]
+  whopctl usage                    View usage analytics             [aliases: u]
+  whopctl history [path]           View deployment history          [aliases: h]
+  whopctl quick                    Quick commands for common workflows
+  whopctl alias                    Manage project name aliases
+  whopctl url                      Manage custom subdomain URLs
+  whopctl status                   Check deployment status
+  whopctl builds                   Manage builds
+  whopctl logs [project]           View runtime logs with live streaming
+                                                                    [aliases: l]
+  whopctl analytics                View usage analytics
+  whopctl billing                  View billing information
+  whopctl tier                     Manage pricing tier
+
+Options:
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Examples:
+  whopctl login            Authenticate with your Whop account
+  whopctl deploy           Deploy your Next.js app to WhopShip
+  whopctl status --logs    Check deployment status with build logs
+  whopctl usage            View your app usage and analytics
+  whopctl history          See your deployment history
+  whopctl redeploy abc123  Redeploy a previous build
+  whopctl quick deploy     Deploy with progress tracking
+
+[1mNeed help?[22m
+  [1m[22m[36mDocumentation: [39m[4mhttps://docs.whopship.app[24m
+  [4m[24m[36mSupport: [39m[4mhttps://whop.com/support[24m
+  [4m[24m[36mGitHub: [39m[4mhttps://github.com/whoplabs/whopship[24m
+
+[2025-11-25T00:19:58.459Z] [INFO] Command completed in 116ms (exit code: 0)
+[2025-11-25T00:19:58.459Z] [INFO] ✅ PASS: Main help command (116ms)
+[2025-11-25T00:19:58.460Z] [INFO] 
+################################################################################
+[2025-11-25T00:19:58.460Z] [INFO] Starting TEST-2: Builds help command
+[2025-11-25T00:19:58.460Z] [INFO] Category: command-registration
+[2025-11-25T00:19:58.460Z] [INFO] ################################################################################
+[2025-11-25T00:19:58.460Z] [INFO] 
+================================================================================
+[2025-11-25T00:19:58.460Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds --help
+[2025-11-25T00:19:58.460Z] [INFO] ================================================================================
+[2025-11-25T00:19:58.569Z] [INFO] STDOUT:
+whopctl builds
+
+Manage builds
+
+Commands:
+  whopctl builds list [path]       List recent builds
+  whopctl builds deploy <buildId>  Deploy a build
+  whopctl builds cancel <buildId>  Cancel a build                [aliases: stop]
+  whopctl builds queue [path]      Show build queue status          [aliases: q]
+  whopctl builds [path]            List recent builds (default)        [default]
+
+Positionals:
+  path  Path to the app directory                        [string] [default: "."]
+
+Options:
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+[2025-11-25T00:19:58.569Z] [INFO] Command completed in 109ms (exit code: 0)
+[2025-11-25T00:19:58.569Z] [INFO] ✅ PASS: Builds help command (109ms)
+[2025-11-25T00:19:58.569Z] [INFO] 
+################################################################################
+[2025-11-25T00:19:58.569Z] [INFO] Starting TEST-3: Cancel command registered
+[2025-11-25T00:19:58.569Z] [INFO] Category: command-registration
+[2025-11-25T00:19:58.569Z] [INFO] ################################################################################
+[2025-11-25T00:19:58.569Z] [INFO] 
+================================================================================
+[2025-11-25T00:19:58.569Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds --help
+[2025-11-25T00:19:58.569Z] [INFO] ================================================================================
+[2025-11-25T00:19:58.679Z] [INFO] STDOUT:
+whopctl builds
+
+Manage builds
+
+Commands:
+  whopctl builds list [path]       List recent builds
+  whopctl builds deploy <buildId>  Deploy a build
+  whopctl builds cancel <buildId>  Cancel a build                [aliases: stop]
+  whopctl builds queue [path]      Show build queue status          [aliases: q]
+  whopctl builds [path]            List recent builds (default)        [default]
+
+Positionals:
+  path  Path to the app directory                        [string] [default: "."]
+
+Options:
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+[2025-11-25T00:19:58.679Z] [INFO] Command completed in 110ms (exit code: 0)
+[2025-11-25T00:19:58.680Z] [INFO] ✅ PASS: Cancel command registered (111ms)
+[2025-11-25T00:19:58.680Z] [INFO] 
+################################################################################
+[2025-11-25T00:19:58.680Z] [INFO] Starting TEST-4: Queue command registered
+[2025-11-25T00:19:58.680Z] [INFO] Category: command-registration
+[2025-11-25T00:19:58.680Z] [INFO] ################################################################################
+[2025-11-25T00:19:58.680Z] [INFO] 
+================================================================================
+[2025-11-25T00:19:58.680Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds --help
+[2025-11-25T00:19:58.680Z] [INFO] ================================================================================
+[2025-11-25T00:19:58.789Z] [INFO] STDOUT:
+whopctl builds
+
+Manage builds
+
+Commands:
+  whopctl builds list [path]       List recent builds
+  whopctl builds deploy <buildId>  Deploy a build
+  whopctl builds cancel <buildId>  Cancel a build                [aliases: stop]
+  whopctl builds queue [path]      Show build queue status          [aliases: q]
+  whopctl builds [path]            List recent builds (default)        [default]
+
+Positionals:
+  path  Path to the app directory                        [string] [default: "."]
+
+Options:
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+[2025-11-25T00:19:58.789Z] [INFO] Command completed in 109ms (exit code: 0)
+[2025-11-25T00:19:58.790Z] [INFO] ✅ PASS: Queue command registered (110ms)
+[2025-11-25T00:19:58.790Z] [INFO] 
+================================================================================
+[2025-11-25T00:19:58.790Z] [INFO] TEST SUITE: Authentication
+[2025-11-25T00:19:58.790Z] [INFO] ================================================================================
+[2025-11-25T00:19:58.790Z] [INFO] 
+################################################################################
+[2025-11-25T00:19:58.790Z] [INFO] Starting TEST-5: Check authentication status
+[2025-11-25T00:19:58.790Z] [INFO] Category: authentication
+[2025-11-25T00:19:58.790Z] [INFO] ################################################################################
+[2025-11-25T00:19:58.790Z] [INFO] 
+================================================================================
+[2025-11-25T00:19:58.790Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js auth check
+[2025-11-25T00:19:58.790Z] [INFO] ================================================================================
+[2025-11-25T00:20:00.027Z] [INFO] STDOUT:
+[34mℹ[39m Checking authentication status...
+
+[2025-11-25T00:20:00.027Z] [INFO] STDERR:
+(node:3976) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Authentication check failed: Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+
+[2025-11-25T00:20:00.028Z] [INFO] Command completed in 1238ms (exit code: 1)
+[2025-11-25T00:20:00.028Z] [INFO] ❌ FAIL: Check authentication status (1238ms)
+[2025-11-25T00:20:00.028Z] [INFO]    Error: (node:3976) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Authentication check failed: Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+
+[2025-11-25T00:20:00.028Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:00.028Z] [INFO] TEST SUITE: Build Cancellation
+[2025-11-25T00:20:00.028Z] [INFO] ================================================================================
+[2025-11-25T00:20:00.028Z] [INFO] 
+################################################################################
+[2025-11-25T00:20:00.028Z] [INFO] Starting TEST-6: Cancel command help
+[2025-11-25T00:20:00.029Z] [INFO] Category: build-cancellation
+[2025-11-25T00:20:00.029Z] [INFO] ################################################################################
+[2025-11-25T00:20:00.029Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:00.029Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds cancel --help
+[2025-11-25T00:20:00.029Z] [INFO] ================================================================================
+[2025-11-25T00:20:00.137Z] [INFO] STDOUT:
+whopctl builds cancel <buildId>
+
+Cancel a build
+
+Positionals:
+  buildId  Build ID to cancel                                [string] [required]
+
+Options:
+      --path     Path to the app directory               [string] [default: "."]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+[2025-11-25T00:20:00.137Z] [INFO] Command completed in 108ms (exit code: 0)
+[2025-11-25T00:20:00.137Z] [INFO] ✅ PASS: Cancel command help (108ms)
+[2025-11-25T00:20:00.137Z] [INFO] 
+################################################################################
+[2025-11-25T00:20:00.137Z] [INFO] Starting TEST-7: Get build list for cancellation test
+[2025-11-25T00:20:00.137Z] [INFO] Category: build-cancellation
+[2025-11-25T00:20:00.137Z] [INFO] ################################################################################
+[2025-11-25T00:20:00.138Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:00.138Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds list
+[2025-11-25T00:20:00.138Z] [INFO] ================================================================================
+[2025-11-25T00:20:00.243Z] [INFO] STDOUT:
+
+[2025-11-25T00:20:00.243Z] [INFO] STDERR:
+(node:3993) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to list builds: Error: ENOENT: no such file or directory, open '/Users/krisciu/workspace/cli/.env'
+
+[2025-11-25T00:20:00.243Z] [INFO] Command completed in 105ms (exit code: 1)
+[2025-11-25T00:20:00.243Z] [INFO] ❌ FAIL: Get build list for cancellation test (106ms)
+[2025-11-25T00:20:00.243Z] [INFO]    Error: Assertion failed: Should successfully list builds
+[2025-11-25T00:20:00.243Z] [INFO] 
+################################################################################
+[2025-11-25T00:20:00.244Z] [INFO] Starting TEST-8: Cancel invalid build ID (should fail)
+[2025-11-25T00:20:00.244Z] [INFO] Category: build-cancellation
+[2025-11-25T00:20:00.244Z] [INFO] ################################################################################
+[2025-11-25T00:20:00.244Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:00.244Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds cancel invalid-build-id-12345
+[2025-11-25T00:20:00.244Z] [INFO] ================================================================================
+[2025-11-25T00:20:00.836Z] [INFO] STDOUT:
+[34mℹ[39m Checking build status...
+
+[2025-11-25T00:20:00.836Z] [INFO] STDERR:
+(node:3994) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to cancel build: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+
+[2025-11-25T00:20:00.836Z] [INFO] Command completed in 592ms (exit code: 1)
+[2025-11-25T00:20:00.837Z] [INFO] ❌ FAIL: Cancel invalid build ID (should fail) (593ms)
+[2025-11-25T00:20:00.837Z] [INFO]    Error: Assertion failed: Should show build not found error
+[2025-11-25T00:20:00.837Z] [INFO] ⚠️  No queued build found, skipping queued cancellation test
+[2025-11-25T00:20:00.837Z] [INFO] ⚠️  No completed build found, skipping completed cancellation test
+[2025-11-25T00:20:00.837Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:00.837Z] [INFO] TEST SUITE: Queue Management
+[2025-11-25T00:20:00.837Z] [INFO] ================================================================================
+[2025-11-25T00:20:00.837Z] [INFO] 
+################################################################################
+[2025-11-25T00:20:00.837Z] [INFO] Starting TEST-9: Queue command help
+[2025-11-25T00:20:00.837Z] [INFO] Category: queue-management
+[2025-11-25T00:20:00.837Z] [INFO] ################################################################################
+[2025-11-25T00:20:00.838Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:00.838Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds queue --help
+[2025-11-25T00:20:00.838Z] [INFO] ================================================================================
+[2025-11-25T00:20:00.945Z] [INFO] STDOUT:
+whopctl builds queue [path]
+
+Show build queue status
+
+Positionals:
+  path  Path to the app directory                        [string] [default: "."]
+
+Options:
+      --app-id   Filter by app ID                                       [string]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+[2025-11-25T00:20:00.945Z] [INFO] Command completed in 107ms (exit code: 0)
+[2025-11-25T00:20:00.946Z] [INFO] ✅ PASS: Queue command help (108ms)
+[2025-11-25T00:20:00.946Z] [INFO] 
+################################################################################
+[2025-11-25T00:20:00.946Z] [INFO] Starting TEST-10: View queue status
+[2025-11-25T00:20:00.946Z] [INFO] Category: queue-management
+[2025-11-25T00:20:00.946Z] [INFO] ################################################################################
+[2025-11-25T00:20:00.946Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:00.946Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds queue
+[2025-11-25T00:20:00.946Z] [INFO] ================================================================================
+[2025-11-25T00:20:01.524Z] [INFO] STDOUT:
+[34mℹ[39m Fetching queue status...
+
+[2025-11-25T00:20:01.524Z] [INFO] STDERR:
+(node:4003) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to get queue status: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+
+[2025-11-25T00:20:01.524Z] [INFO] Command completed in 578ms (exit code: 1)
+[2025-11-25T00:20:01.524Z] [INFO] ❌ FAIL: View queue status (578ms)
+[2025-11-25T00:20:01.525Z] [INFO]    Error: Assertion failed: Should successfully show queue status
+[2025-11-25T00:20:01.525Z] [INFO] 
+################################################################################
+[2025-11-25T00:20:01.525Z] [INFO] Starting TEST-11: Queue command alias (q)
+[2025-11-25T00:20:01.525Z] [INFO] Category: queue-management
+[2025-11-25T00:20:01.525Z] [INFO] ################################################################################
+[2025-11-25T00:20:01.525Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:01.525Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds q
+[2025-11-25T00:20:01.525Z] [INFO] ================================================================================
+[2025-11-25T00:20:02.183Z] [INFO] STDOUT:
+[34mℹ[39m Fetching queue status...
+
+[2025-11-25T00:20:02.184Z] [INFO] STDERR:
+(node:4004) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to get queue status: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+
+[2025-11-25T00:20:02.185Z] [INFO] Command completed in 660ms (exit code: 1)
+[2025-11-25T00:20:02.185Z] [INFO] ❌ FAIL: Queue command alias (q) (660ms)
+[2025-11-25T00:20:02.185Z] [INFO]    Error: (node:4004) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to get queue status: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+
+[2025-11-25T00:20:02.185Z] [INFO] 
+################################################################################
+[2025-11-25T00:20:02.185Z] [INFO] Starting TEST-12: Queue status with app filter
+[2025-11-25T00:20:02.185Z] [INFO] Category: queue-management
+[2025-11-25T00:20:02.185Z] [INFO] ################################################################################
+[2025-11-25T00:20:02.185Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:02.185Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds list
+[2025-11-25T00:20:02.185Z] [INFO] ================================================================================
+[2025-11-25T00:20:02.296Z] [INFO] STDOUT:
+
+[2025-11-25T00:20:02.296Z] [INFO] STDERR:
+(node:4012) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to list builds: Error: ENOENT: no such file or directory, open '/Users/krisciu/workspace/cli/.env'
+
+[2025-11-25T00:20:02.296Z] [INFO] Command completed in 111ms (exit code: 1)
+[2025-11-25T00:20:02.296Z] [INFO] ⚠️  No app ID found, skipping filtered queue test
+[2025-11-25T00:20:02.296Z] [INFO] ✅ PASS: Queue status with app filter (111ms)
+[2025-11-25T00:20:02.297Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:02.297Z] [INFO] TEST SUITE: Overage Billing
+[2025-11-25T00:20:02.297Z] [INFO] ================================================================================
+[2025-11-25T00:20:02.297Z] [INFO] 
+################################################################################
+[2025-11-25T00:20:02.297Z] [INFO] Starting TEST-13: View current billing status
+[2025-11-25T00:20:02.297Z] [INFO] Category: overage-billing
+[2025-11-25T00:20:02.297Z] [INFO] ################################################################################
+[2025-11-25T00:20:02.297Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:02.297Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js billing current
+[2025-11-25T00:20:02.297Z] [INFO] ================================================================================
+[2025-11-25T00:20:02.873Z] [INFO] STDOUT:
+[34mℹ[39m Fetching billing information...
+
+[2025-11-25T00:20:02.873Z] [INFO] STDERR:
+(node:4013) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to fetch billing information
+[31mYour session has expired or is invalid. Please run "whopctl login" to authenticate again.[39m
+whopctl billing current
+
+Get current period usage
+
+Options:
+      --app-id   Filter by app ID                                       [number]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+    at WhopshipAPI.request [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:37974:13[90m)[39m
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async billingCurrentCommand [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:48223:32[90m)[39m
+    at async Object.handler [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:49084:7[90m)[39m
+
+[2025-11-25T00:20:02.874Z] [INFO] Command completed in 577ms (exit code: 1)
+[2025-11-25T00:20:02.874Z] [INFO] ❌ FAIL: View current billing status (577ms)
+[2025-11-25T00:20:02.874Z] [INFO]    Error: Assertion failed: Should successfully show billing status
+[2025-11-25T00:20:02.874Z] [INFO] 
+################################################################################
+[2025-11-25T00:20:02.874Z] [INFO] Starting TEST-14: View billing history
+[2025-11-25T00:20:02.874Z] [INFO] Category: overage-billing
+[2025-11-25T00:20:02.874Z] [INFO] ################################################################################
+[2025-11-25T00:20:02.874Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:02.874Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js billing history
+[2025-11-25T00:20:02.874Z] [INFO] ================================================================================
+[2025-11-25T00:20:03.526Z] [INFO] STDOUT:
+[34mℹ[39m Fetching billing history...
+
+[2025-11-25T00:20:03.527Z] [INFO] STDERR:
+(node:4026) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to fetch billing history
+[31mYour session has expired or is invalid. Please run "whopctl login" to authenticate again.[39m
+whopctl billing history
+
+Get usage history
+
+Options:
+      --app-id   Filter by app ID                                       [number]
+      --months   Number of months to show (default: 6)     [number] [default: 6]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+    at [90mfile:///Users/krisciu/workspace/cli/[39mdist/index.js:37843:23
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async withRetry [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:37662:14[90m)[39m
+    at async billingHistoryCommand [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:48432:18[90m)[39m
+    at async Object.handler [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:49095:7[90m)[39m {
+  status: [33m401[39m
+}
+
+[2025-11-25T00:20:03.527Z] [INFO] Command completed in 653ms (exit code: 1)
+[2025-11-25T00:20:03.527Z] [INFO] ❌ FAIL: View billing history (653ms)
+[2025-11-25T00:20:03.527Z] [INFO]    Error: (node:4026) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to fetch billing history
+[31mYour session has expired or is invalid. Please run "whopctl login" to authenticate again.[39m
+whopctl billing history
+
+Get usage history
+
+Options:
+      --app-id   Filter by app ID                                       [number]
+      --months   Number of months to show (default: 6)     [number] [default: 6]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+    at [90mfile:///Users/krisciu/workspace/cli/[39mdist/index.js:37843:23
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async withRetry [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:37662:14[90m)[39m
+    at async billingHistoryCommand [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:48432:18[90m)[39m
+    at async Object.handler [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:49095:7[90m)[39m {
+  status: [33m401[39m
+}
+
+[2025-11-25T00:20:03.527Z] [INFO] 
+################################################################################
+[2025-11-25T00:20:03.527Z] [INFO] Starting TEST-15: View billing periods
+[2025-11-25T00:20:03.527Z] [INFO] Category: overage-billing
+[2025-11-25T00:20:03.527Z] [INFO] ################################################################################
+[2025-11-25T00:20:03.528Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:03.528Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js billing periods
+[2025-11-25T00:20:03.528Z] [INFO] ================================================================================
+[2025-11-25T00:20:04.125Z] [INFO] STDOUT:
+[34mℹ[39m Fetching billing periods...
+
+[2025-11-25T00:20:04.125Z] [INFO] STDERR:
+(node:4035) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to fetch billing periods
+[31mYour session has expired or is invalid. Please run "whopctl login" to authenticate again.[39m
+whopctl billing periods
+
+List billing periods
+
+Options:
+      --limit    Number of periods to show (default: 12)  [number] [default: 12]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+    at [90mfile:///Users/krisciu/workspace/cli/[39mdist/index.js:37843:23
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async withRetry [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:37662:14[90m)[39m
+    at async billingPeriodsCommand [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:48471:18[90m)[39m
+    at async Object.handler [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:49103:7[90m)[39m {
+  status: [33m401[39m
+}
+
+[2025-11-25T00:20:04.126Z] [INFO] Command completed in 598ms (exit code: 1)
+[2025-11-25T00:20:04.126Z] [INFO] ❌ FAIL: View billing periods (598ms)
+[2025-11-25T00:20:04.126Z] [INFO]    Error: (node:4035) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to fetch billing periods
+[31mYour session has expired or is invalid. Please run "whopctl login" to authenticate again.[39m
+whopctl billing periods
+
+List billing periods
+
+Options:
+      --limit    Number of periods to show (default: 12)  [number] [default: 12]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+    at [90mfile:///Users/krisciu/workspace/cli/[39mdist/index.js:37843:23
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async withRetry [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:37662:14[90m)[39m
+    at async billingPeriodsCommand [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:48471:18[90m)[39m
+    at async Object.handler [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:49103:7[90m)[39m {
+  status: [33m401[39m
+}
+
+[2025-11-25T00:20:04.126Z] [INFO] 
+################################################################################
+[2025-11-25T00:20:04.126Z] [INFO] Starting TEST-16: Verify overage information display
+[2025-11-25T00:20:04.126Z] [INFO] Category: overage-billing
+[2025-11-25T00:20:04.126Z] [INFO] ################################################################################
+[2025-11-25T00:20:04.126Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:04.126Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js billing current
+[2025-11-25T00:20:04.127Z] [INFO] ================================================================================
+[2025-11-25T00:20:04.706Z] [INFO] STDOUT:
+[34mℹ[39m Fetching billing information...
+
+[2025-11-25T00:20:04.707Z] [INFO] STDERR:
+(node:4036) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to fetch billing information
+[31mYour session has expired or is invalid. Please run "whopctl login" to authenticate again.[39m
+whopctl billing current
+
+Get current period usage
+
+Options:
+      --app-id   Filter by app ID                                       [number]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+    at WhopshipAPI.request [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:37974:13[90m)[39m
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async billingCurrentCommand [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:48223:32[90m)[39m
+    at async Object.handler [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:49084:7[90m)[39m
+
+[2025-11-25T00:20:04.707Z] [INFO] Command completed in 580ms (exit code: 1)
+[2025-11-25T00:20:04.708Z] [INFO] ℹ️  No overage information found (may be normal if within limits)
+[2025-11-25T00:20:04.708Z] [INFO] ✅ PASS: Verify overage information display (582ms)
+[2025-11-25T00:20:04.708Z] [INFO] 
+################################################################################
+[2025-11-25T00:20:04.708Z] [INFO] Starting TEST-17: Verify billing display format
+[2025-11-25T00:20:04.708Z] [INFO] Category: overage-billing
+[2025-11-25T00:20:04.708Z] [INFO] ################################################################################
+[2025-11-25T00:20:04.708Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:04.708Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js billing current
+[2025-11-25T00:20:04.708Z] [INFO] ================================================================================
+[2025-11-25T00:20:05.286Z] [INFO] STDOUT:
+[34mℹ[39m Fetching billing information...
+
+[2025-11-25T00:20:05.286Z] [INFO] STDERR:
+(node:4044) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to fetch billing information
+[31mYour session has expired or is invalid. Please run "whopctl login" to authenticate again.[39m
+whopctl billing current
+
+Get current period usage
+
+Options:
+      --app-id   Filter by app ID                                       [number]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+    at WhopshipAPI.request [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:37974:13[90m)[39m
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async billingCurrentCommand [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:48223:32[90m)[39m
+    at async Object.handler [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:49084:7[90m)[39m
+
+[2025-11-25T00:20:05.286Z] [INFO] Command completed in 578ms (exit code: 1)
+[2025-11-25T00:20:05.286Z] [INFO] ❌ FAIL: Verify billing display format (578ms)
+[2025-11-25T00:20:05.286Z] [INFO]    Error: Assertion failed: Should show tier information
+[2025-11-25T00:20:05.287Z] [INFO] 
+================================================================================
+[2025-11-25T00:20:05.287Z] [INFO] Generating Test Report
+[2025-11-25T00:20:05.287Z] [INFO] ================================================================================
+[2025-11-25T00:20:05.287Z] [INFO] ✅ Markdown report written to: /Users/krisciu/workspace/cli/test-results/test-results-2025-11-25T00-19-58-332Z.md
+[2025-11-25T00:20:05.288Z] [INFO] ✅ JSON report written to: /Users/krisciu/workspace/cli/test-results/test-results-2025-11-25T00-19-58-332Z.json

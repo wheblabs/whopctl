@@ -489,6 +489,14 @@ export class WhopshipAPI {
 	}
 
 	/**
+	 * Get current period usage
+	 */
+	async getCurrentUsage(appId?: number) {
+		const query = appId ? `?app_id=${appId}` : ''
+		return this.request(`/api/billing/usage${query}`)
+	}
+
+	/**
 	 * Get subscription status
 	 */
 	async getSubscriptionStatus() {

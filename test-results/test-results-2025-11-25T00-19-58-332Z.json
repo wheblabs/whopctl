@@ -1,0 +1,183 @@
+{
+  "timestamp": "2025-11-25T00:20:05.287Z",
+  "summary": {
+    "total": 17,
+    "passed": 8,
+    "failed": 9,
+    "skipped": 3,
+    "successRate": 47.06,
+    "totalDuration": 6936
+  },
+  "results": [
+    {
+      "id": "TEST-1",
+      "name": "Main help command",
+      "category": "command-registration",
+      "status": "passed",
+      "duration": 116,
+      "error": null,
+      "output": "\u001b[1mWhopShip CLI - Deploy and manage your Whop apps\u001b[22m\n\u001b[1m\u001b[22m\n\u001b[1m\u001b[22m\u001b[36mUsage: \u001b[39mwhopctl <command> [options]\n\n\u001b[1mQuick Start:\u001b[22m\n\u001b[1m\u001b[22m\u001b[2mwhopctl login              # Authenticate with Whop\u001b[22m\n\u001b[2m\u001b[22m\u001b[2mwhopctl deploy             # Deploy your app\u001b[22m\n\u001b[2m\u001b[22m\u001b[2mwhopctl status             # Check deployment status\u001b[22m\n\u001b[2m\u001b[22m\u001b[2mwhopctl usage              # View usage analytics\u001b[22m\n\u001b[2m\u001b[22m\n\u001b[2m\u001b[22m\u001b[1mCommon Workflows:\u001b[22m\n\u001b[1m\u001b[22m\u001b[2mwhopctl quick deploy       # Deploy with real-time progress\u001b[22m\n\u001b[2m\u001b[22m\u001b[2mwhopctl quick status       # Full status overview\u001b[22m\n\u001b[2m\u001b[22m\u001b[2mwhopctl quick check        # Validate project setup\u001b[22m\n\u001b[2m\u001b[22m\n\nCommands:\n  whopctl login                    Authenticate with your Whop account\n  whopctl logout                   Clear authentication session\n  whopctl auth                     Manage authentication\n  whopctl repl                     Start interactive mode\n  whopctl apps                     Manage Whop apps\n  whopctl deploy [path] [project]  Deploy a whop app from a directory\n                                                                    [aliases: d]\n  whopctl redeploy <buildId>       Redeploy a previous build       [aliases: rd]\n  whopctl cancel <buildId>         Cancel a build                [aliases: stop]\n  whopctl queue [path]             Show build queue status          [aliases: q]\n  whopctl usage                    View usage analytics             [aliases: u]\n  whopctl history [path]           View deployment history          [aliases: h]\n  whopctl quick                    Quick commands for common workflows\n  whopctl alias                    Manage project name aliases\n  whopctl url                      Manage custom subdomain URLs\n  whopctl status                   Check deployment status\n  whopctl builds                   Manage builds\n  whopctl logs [project]           View runtime logs with live streaming\n                                                                    [aliases: l]\n  whopctl analytics                View usage analytics\n  whopctl billing                  View billing information\n  whopctl tier                     Manage pricing tier\n\nOptions:\n  -h, --help     Show help                                             [boolean]\n  -v, --version  Show version number                                   [boolean]\n\nExamples:\n  whopctl login            Authenticate with your Whop account\n  whopctl deploy           Deploy your Next.js app to WhopShip\n  whopctl status --logs    Check deployment status with build logs\n  whopctl usage            View your app usage and analytics\n  whopctl history          See your deployment history\n  whopctl redeploy abc123  Redeploy a previous build\n  whopctl quick deploy     Deploy with progress tracking\n\n\u001b[1mNeed help?\u001b[22m\n  \u001b[1m\u001b[22m\u001b[36mDocumentation: \u001b[39m\u001b[4mhttps://docs.whopship.app\u001b[24m\n  \u001b[4m\u001b[24m\u001b[36mSupport: \u001b[39m\u001b[4mhttps://whop.com/support\u001b[24m\n  \u001b[4m\u001b[24m\u001b[36mGitHub: \u001b[39m\u001b[4mhttps://github.com/whoplabs/whopship\u001b[24m\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-2",
+      "name": "Builds help command",
+      "category": "command-registration",
+      "status": "passed",
+      "duration": 109,
+      "error": null,
+      "output": "whopctl builds\n\nManage builds\n\nCommands:\n  whopctl builds list [path]       List recent builds\n  whopctl builds deploy <buildId>  Deploy a build\n  whopctl builds cancel <buildId>  Cancel a build                [aliases: stop]\n  whopctl builds queue [path]      Show build queue status          [aliases: q]\n  whopctl builds [path]            List recent builds (default)        [default]\n\nPositionals:\n  path  Path to the app directory                        [string] [default: \".\"]\n\nOptions:\n  -h, --help     Show help                                             [boolean]\n  -v, --version  Show version number                                   [boolean]\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-3",
+      "name": "Cancel command registered",
+      "category": "command-registration",
+      "status": "passed",
+      "duration": 111,
+      "error": null,
+      "output": "whopctl builds\n\nManage builds\n\nCommands:\n  whopctl builds list [path]       List recent builds\n  whopctl builds deploy <buildId>  Deploy a build\n  whopctl builds cancel <buildId>  Cancel a build                [aliases: stop]\n  whopctl builds queue [path]      Show build queue status          [aliases: q]\n  whopctl builds [path]            List recent builds (default)        [default]\n\nPositionals:\n  path  Path to the app directory                        [string] [default: \".\"]\n\nOptions:\n  -h, --help     Show help                                             [boolean]\n  -v, --version  Show version number                                   [boolean]\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-4",
+      "name": "Queue command registered",
+      "category": "command-registration",
+      "status": "passed",
+      "duration": 110,
+      "error": null,
+      "output": "whopctl builds\n\nManage builds\n\nCommands:\n  whopctl builds list [path]       List recent builds\n  whopctl builds deploy <buildId>  Deploy a build\n  whopctl builds cancel <buildId>  Cancel a build                [aliases: stop]\n  whopctl builds queue [path]      Show build queue status          [aliases: q]\n  whopctl builds [path]            List recent builds (default)        [default]\n\nPositionals:\n  path  Path to the app directory                        [string] [default: \".\"]\n\nOptions:\n  -h, --help     Show help                                             [boolean]\n  -v, --version  Show version number                                   [boolean]\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-5",
+      "name": "Check authentication status",
+      "category": "authentication",
+      "status": "failed",
+      "duration": 1238,
+      "error": "(node:3976) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[31m✗\u001b[39m Authentication check failed: Error: Your session has expired or is invalid. Please run \"whopctl login\" to authenticate again.\n",
+      "output": "\u001b[34mℹ\u001b[39m Checking authentication status...\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-6",
+      "name": "Cancel command help",
+      "category": "build-cancellation",
+      "status": "passed",
+      "duration": 108,
+      "error": null,
+      "output": "whopctl builds cancel <buildId>\n\nCancel a build\n\nPositionals:\n  buildId  Build ID to cancel                                [string] [required]\n\nOptions:\n      --path     Path to the app directory               [string] [default: \".\"]\n  -h, --help     Show help                                             [boolean]\n  -v, --version  Show version number                                   [boolean]\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-7",
+      "name": "Get build list for cancellation test",
+      "category": "build-cancellation",
+      "status": "failed",
+      "duration": 106,
+      "error": "Assertion failed: Should successfully list builds",
+      "output": "",
+      "assertions": []
+    },
+    {
+      "id": "TEST-8",
+      "name": "Cancel invalid build ID (should fail)",
+      "category": "build-cancellation",
+      "status": "failed",
+      "duration": 593,
+      "error": "Assertion failed: Should show build not found error",
+      "output": "",
+      "assertions": []
+    },
+    {
+      "id": "TEST-9",
+      "name": "Queue command help",
+      "category": "queue-management",
+      "status": "passed",
+      "duration": 108,
+      "error": null,
+      "output": "whopctl builds queue [path]\n\nShow build queue status\n\nPositionals:\n  path  Path to the app directory                        [string] [default: \".\"]\n\nOptions:\n      --app-id   Filter by app ID                                       [string]\n  -h, --help     Show help                                             [boolean]\n  -v, --version  Show version number                                   [boolean]\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-10",
+      "name": "View queue status",
+      "category": "queue-management",
+      "status": "failed",
+      "duration": 578,
+      "error": "Assertion failed: Should successfully show queue status",
+      "output": "",
+      "assertions": []
+    },
+    {
+      "id": "TEST-11",
+      "name": "Queue command alias (q)",
+      "category": "queue-management",
+      "status": "failed",
+      "duration": 660,
+      "error": "(node:4004) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[31m✗\u001b[39m Failed to get queue status: Your session has expired or is invalid. Please run \"whopctl login\" to authenticate again.\n",
+      "output": "\u001b[34mℹ\u001b[39m Fetching queue status...\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-12",
+      "name": "Queue status with app filter",
+      "category": "queue-management",
+      "status": "passed",
+      "duration": 111,
+      "error": null,
+      "output": "",
+      "assertions": []
+    },
+    {
+      "id": "TEST-13",
+      "name": "View current billing status",
+      "category": "overage-billing",
+      "status": "failed",
+      "duration": 577,
+      "error": "Assertion failed: Should successfully show billing status",
+      "output": "",
+      "assertions": []
+    },
+    {
+      "id": "TEST-14",
+      "name": "View billing history",
+      "category": "overage-billing",
+      "status": "failed",
+      "duration": 653,
+      "error": "(node:4026) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[31m✗\u001b[39m Failed to fetch billing history\n\u001b[31mYour session has expired or is invalid. Please run \"whopctl login\" to authenticate again.\u001b[39m\nwhopctl billing history\n\nGet usage history\n\nOptions:\n      --app-id   Filter by app ID                                       [number]\n      --months   Number of months to show (default: 6)     [number] [default: 6]\n  -h, --help     Show help                                             [boolean]\n  -v, --version  Show version number                                   [boolean]\n\nError: Your session has expired or is invalid. Please run \"whopctl login\" to authenticate again.\n    at \u001b[90mfile:///Users/krisciu/workspace/cli/\u001b[39mdist/index.js:37843:23\n\u001b[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\u001b[39m\n    at async withRetry \u001b[90m(file:///Users/krisciu/workspace/cli/\u001b[39mdist/index.js:37662:14\u001b[90m)\u001b[39m\n    at async billingHistoryCommand \u001b[90m(file:///Users/krisciu/workspace/cli/\u001b[39mdist/index.js:48432:18\u001b[90m)\u001b[39m\n    at async Object.handler \u001b[90m(file:///Users/krisciu/workspace/cli/\u001b[39mdist/index.js:49095:7\u001b[90m)\u001b[39m {\n  status: \u001b[33m401\u001b[39m\n}\n",
+      "output": "\u001b[34mℹ\u001b[39m Fetching billing history...\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-15",
+      "name": "View billing periods",
+      "category": "overage-billing",
+      "status": "failed",
+      "duration": 598,
+      "error": "(node:4035) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n\u001b[31m✗\u001b[39m Failed to fetch billing periods\n\u001b[31mYour session has expired or is invalid. Please run \"whopctl login\" to authenticate again.\u001b[39m\nwhopctl billing periods\n\nList billing periods\n\nOptions:\n      --limit    Number of periods to show (default: 12)  [number] [default: 12]\n  -h, --help     Show help                                             [boolean]\n  -v, --version  Show version number                                   [boolean]\n\nError: Your session has expired or is invalid. Please run \"whopctl login\" to authenticate again.\n    at \u001b[90mfile:///Users/krisciu/workspace/cli/\u001b[39mdist/index.js:37843:23\n\u001b[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\u001b[39m\n    at async withRetry \u001b[90m(file:///Users/krisciu/workspace/cli/\u001b[39mdist/index.js:37662:14\u001b[90m)\u001b[39m\n    at async billingPeriodsCommand \u001b[90m(file:///Users/krisciu/workspace/cli/\u001b[39mdist/index.js:48471:18\u001b[90m)\u001b[39m\n    at async Object.handler \u001b[90m(file:///Users/krisciu/workspace/cli/\u001b[39mdist/index.js:49103:7\u001b[90m)\u001b[39m {\n  status: \u001b[33m401\u001b[39m\n}\n",
+      "output": "\u001b[34mℹ\u001b[39m Fetching billing periods...\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-16",
+      "name": "Verify overage information display",
+      "category": "overage-billing",
+      "status": "passed",
+      "duration": 582,
+      "error": null,
+      "output": "\u001b[34mℹ\u001b[39m Fetching billing information...\n",
+      "assertions": []
+    },
+    {
+      "id": "TEST-17",
+      "name": "Verify billing display format",
+      "category": "overage-billing",
+      "status": "failed",
+      "duration": 578,
+      "error": "Assertion failed: Should show tier information",
+      "output": "",
+      "assertions": []
+    }
+  ]
+}

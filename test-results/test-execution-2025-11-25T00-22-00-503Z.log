@@ -1,0 +1,558 @@
+[2025-11-25T00:22:00.504Z] [INFO] Starting WhopShip CLI Test Harness
+[2025-11-25T00:22:00.505Z] [INFO] CLI Binary: /Users/krisciu/workspace/cli/dist/index.js
+[2025-11-25T00:22:00.505Z] [INFO] Results Directory: /Users/krisciu/workspace/cli/test-results
+[2025-11-25T00:22:00.505Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:00.505Z] [INFO] TEST SUITE: Command Registration
+[2025-11-25T00:22:00.505Z] [INFO] ================================================================================
+[2025-11-25T00:22:00.505Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:00.505Z] [INFO] Starting TEST-1: Main help command
+[2025-11-25T00:22:00.505Z] [INFO] Category: command-registration
+[2025-11-25T00:22:00.505Z] [INFO] ################################################################################
+[2025-11-25T00:22:00.506Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:00.506Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js --help
+[2025-11-25T00:22:00.506Z] [INFO] ================================================================================
+[2025-11-25T00:22:00.625Z] [INFO] STDOUT:
+[1mWhopShip CLI - Deploy and manage your Whop apps[22m
+[1m[22m
+[1m[22m[36mUsage: [39mwhopctl <command> [options]
+
+[1mQuick Start:[22m
+[1m[22m[2mwhopctl login              # Authenticate with Whop[22m
+[2m[22m[2mwhopctl deploy             # Deploy your app[22m
+[2m[22m[2mwhopctl status             # Check deployment status[22m
+[2m[22m[2mwhopctl usage              # View usage analytics[22m
+[2m[22m
+[2m[22m[1mCommon Workflows:[22m
+[1m[22m[2mwhopctl quick deploy       # Deploy with real-time progress[22m
+[2m[22m[2mwhopctl quick status       # Full status overview[22m
+[2m[22m[2mwhopctl quick check        # Validate project setup[22m
+[2m[22m
+
+Commands:
+  whopctl login                    Authenticate with your Whop account
+  whopctl logout                   Clear authentication session
+  whopctl auth                     Manage authentication
+  whopctl repl                     Start interactive mode
+  whopctl apps                     Manage Whop apps
+  whopctl deploy [path] [project]  Deploy a whop app from a directory
+                                                                    [aliases: d]
+  whopctl redeploy <buildId>       Redeploy a previous build       [aliases: rd]
+  whopctl cancel <buildId>         Cancel a build                [aliases: stop]
+  whopctl queue [path]             Show build queue status          [aliases: q]
+  whopctl usage                    View usage analytics             [aliases: u]
+  whopctl history [path]           View deployment history          [aliases: h]
+  whopctl quick                    Quick commands for common workflows
+  whopctl alias                    Manage project name aliases
+  whopctl url                      Manage custom subdomain URLs
+  whopctl status                   Check deployment status
+  whopctl builds                   Manage builds
+  whopctl logs [project]           View runtime logs with live streaming
+                                                                    [aliases: l]
+  whopctl analytics                View usage analytics
+  whopctl billing                  View billing information
+  whopctl tier                     Manage pricing tier
+
+Options:
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Examples:
+  whopctl login            Authenticate with your Whop account
+  whopctl deploy           Deploy your Next.js app to WhopShip
+  whopctl status --logs    Check deployment status with build logs
+  whopctl usage            View your app usage and analytics
+  whopctl history          See your deployment history
+  whopctl redeploy abc123  Redeploy a previous build
+  whopctl quick deploy     Deploy with progress tracking
+
+[1mNeed help?[22m
+  [1m[22m[36mDocumentation: [39m[4mhttps://docs.whopship.app[24m
+  [4m[24m[36mSupport: [39m[4mhttps://whop.com/support[24m
+  [4m[24m[36mGitHub: [39m[4mhttps://github.com/whoplabs/whopship[24m
+
+[2025-11-25T00:22:00.625Z] [INFO] Command completed in 119ms (exit code: 0)
+[2025-11-25T00:22:00.625Z] [INFO] ✅ PASS: Main help command (120ms)
+[2025-11-25T00:22:00.625Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:00.625Z] [INFO] Starting TEST-2: Builds help command
+[2025-11-25T00:22:00.625Z] [INFO] Category: command-registration
+[2025-11-25T00:22:00.625Z] [INFO] ################################################################################
+[2025-11-25T00:22:00.625Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:00.625Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds --help
+[2025-11-25T00:22:00.625Z] [INFO] ================================================================================
+[2025-11-25T00:22:00.731Z] [INFO] STDOUT:
+whopctl builds
+
+Manage builds
+
+Commands:
+  whopctl builds list [path]       List recent builds
+  whopctl builds deploy <buildId>  Deploy a build
+  whopctl builds cancel <buildId>  Cancel a build                [aliases: stop]
+  whopctl builds queue [path]      Show build queue status          [aliases: q]
+  whopctl builds [path]            List recent builds (default)        [default]
+
+Positionals:
+  path  Path to the app directory                        [string] [default: "."]
+
+Options:
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+[2025-11-25T00:22:00.731Z] [INFO] Command completed in 106ms (exit code: 0)
+[2025-11-25T00:22:00.731Z] [INFO] ✅ PASS: Builds help command (106ms)
+[2025-11-25T00:22:00.732Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:00.732Z] [INFO] Starting TEST-3: Cancel command registered
+[2025-11-25T00:22:00.732Z] [INFO] Category: command-registration
+[2025-11-25T00:22:00.732Z] [INFO] ################################################################################
+[2025-11-25T00:22:00.732Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:00.732Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds --help
+[2025-11-25T00:22:00.732Z] [INFO] ================================================================================
+[2025-11-25T00:22:00.837Z] [INFO] STDOUT:
+whopctl builds
+
+Manage builds
+
+Commands:
+  whopctl builds list [path]       List recent builds
+  whopctl builds deploy <buildId>  Deploy a build
+  whopctl builds cancel <buildId>  Cancel a build                [aliases: stop]
+  whopctl builds queue [path]      Show build queue status          [aliases: q]
+  whopctl builds [path]            List recent builds (default)        [default]
+
+Positionals:
+  path  Path to the app directory                        [string] [default: "."]
+
+Options:
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+[2025-11-25T00:22:00.837Z] [INFO] Command completed in 105ms (exit code: 0)
+[2025-11-25T00:22:00.838Z] [INFO] ✅ PASS: Cancel command registered (106ms)
+[2025-11-25T00:22:00.838Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:00.838Z] [INFO] Starting TEST-4: Queue command registered
+[2025-11-25T00:22:00.838Z] [INFO] Category: command-registration
+[2025-11-25T00:22:00.838Z] [INFO] ################################################################################
+[2025-11-25T00:22:00.838Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:00.838Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds --help
+[2025-11-25T00:22:00.838Z] [INFO] ================================================================================
+[2025-11-25T00:22:00.945Z] [INFO] STDOUT:
+whopctl builds
+
+Manage builds
+
+Commands:
+  whopctl builds list [path]       List recent builds
+  whopctl builds deploy <buildId>  Deploy a build
+  whopctl builds cancel <buildId>  Cancel a build                [aliases: stop]
+  whopctl builds queue [path]      Show build queue status          [aliases: q]
+  whopctl builds [path]            List recent builds (default)        [default]
+
+Positionals:
+  path  Path to the app directory                        [string] [default: "."]
+
+Options:
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+[2025-11-25T00:22:00.945Z] [INFO] Command completed in 106ms (exit code: 0)
+[2025-11-25T00:22:00.946Z] [INFO] ✅ PASS: Queue command registered (108ms)
+[2025-11-25T00:22:00.946Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:00.946Z] [INFO] TEST SUITE: Authentication
+[2025-11-25T00:22:00.946Z] [INFO] ================================================================================
+[2025-11-25T00:22:00.946Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:00.946Z] [INFO] Starting TEST-5: Check authentication status
+[2025-11-25T00:22:00.946Z] [INFO] Category: authentication
+[2025-11-25T00:22:00.946Z] [INFO] ################################################################################
+[2025-11-25T00:22:00.946Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:00.946Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js auth check
+[2025-11-25T00:22:00.946Z] [INFO] ================================================================================
+[2025-11-25T00:22:01.564Z] [INFO] STDOUT:
+[34mℹ[39m Checking authentication status...
+
+[2025-11-25T00:22:01.565Z] [INFO] STDERR:
+[31m✗[39m Authentication check failed: Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+
+[2025-11-25T00:22:01.565Z] [INFO] Command completed in 618ms (exit code: 1)
+[2025-11-25T00:22:01.565Z] [INFO] ❌ FAIL: Check authentication status (619ms)
+[2025-11-25T00:22:01.565Z] [INFO]    Error: [31m✗[39m Authentication check failed: Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+
+[2025-11-25T00:22:01.565Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:01.565Z] [INFO] TEST SUITE: Build Cancellation
+[2025-11-25T00:22:01.565Z] [INFO] ================================================================================
+[2025-11-25T00:22:01.565Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:01.565Z] [INFO] Starting TEST-6: Cancel command help
+[2025-11-25T00:22:01.565Z] [INFO] Category: build-cancellation
+[2025-11-25T00:22:01.565Z] [INFO] ################################################################################
+[2025-11-25T00:22:01.565Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:01.565Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds cancel --help
+[2025-11-25T00:22:01.565Z] [INFO] ================================================================================
+[2025-11-25T00:22:01.666Z] [INFO] STDOUT:
+whopctl builds cancel <buildId>
+
+Cancel a build
+
+Positionals:
+  buildId  Build ID to cancel                                [string] [required]
+
+Options:
+      --path     Path to the app directory               [string] [default: "."]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+[2025-11-25T00:22:01.666Z] [INFO] Command completed in 101ms (exit code: 0)
+[2025-11-25T00:22:01.666Z] [INFO] ✅ PASS: Cancel command help (101ms)
+[2025-11-25T00:22:01.667Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:01.667Z] [INFO] Starting TEST-7: Get build list for cancellation test
+[2025-11-25T00:22:01.667Z] [INFO] Category: build-cancellation
+[2025-11-25T00:22:01.667Z] [INFO] ################################################################################
+[2025-11-25T00:22:01.667Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:01.667Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds list
+[2025-11-25T00:22:01.667Z] [INFO] ================================================================================
+[2025-11-25T00:22:01.769Z] [INFO] STDOUT:
+
+[2025-11-25T00:22:01.769Z] [INFO] STDERR:
+[31m✗[39m Failed to list builds: Error: ENOENT: no such file or directory, open '/Users/krisciu/workspace/cli/.env'
+
+[2025-11-25T00:22:01.769Z] [INFO] Command completed in 102ms (exit code: 1)
+[2025-11-25T00:22:01.769Z] [INFO] ❌ FAIL: Get build list for cancellation test (102ms)
+[2025-11-25T00:22:01.769Z] [INFO]    Error: Assertion failed: Should successfully list builds
+[2025-11-25T00:22:01.769Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:01.769Z] [INFO] Starting TEST-8: Cancel invalid build ID (should fail)
+[2025-11-25T00:22:01.769Z] [INFO] Category: build-cancellation
+[2025-11-25T00:22:01.769Z] [INFO] ################################################################################
+[2025-11-25T00:22:01.770Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:01.770Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds cancel invalid-build-id-12345
+[2025-11-25T00:22:01.770Z] [INFO] ================================================================================
+[2025-11-25T00:22:02.395Z] [INFO] STDOUT:
+[34mℹ[39m Checking build status...
+
+[2025-11-25T00:22:02.396Z] [INFO] STDERR:
+[31m✗[39m Failed to cancel build: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+
+[2025-11-25T00:22:02.396Z] [INFO] Command completed in 626ms (exit code: 1)
+[2025-11-25T00:22:02.396Z] [INFO] ❌ FAIL: Cancel invalid build ID (should fail) (626ms)
+[2025-11-25T00:22:02.396Z] [INFO]    Error: Assertion failed: Should show build not found error
+[2025-11-25T00:22:02.396Z] [INFO] ⚠️  No queued build found, skipping queued cancellation test
+[2025-11-25T00:22:02.396Z] [INFO] ⚠️  No completed build found, skipping completed cancellation test
+[2025-11-25T00:22:02.396Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:02.396Z] [INFO] TEST SUITE: Queue Management
+[2025-11-25T00:22:02.397Z] [INFO] ================================================================================
+[2025-11-25T00:22:02.397Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:02.397Z] [INFO] Starting TEST-9: Queue command help
+[2025-11-25T00:22:02.397Z] [INFO] Category: queue-management
+[2025-11-25T00:22:02.397Z] [INFO] ################################################################################
+[2025-11-25T00:22:02.397Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:02.397Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds queue --help
+[2025-11-25T00:22:02.397Z] [INFO] ================================================================================
+[2025-11-25T00:22:02.502Z] [INFO] STDOUT:
+whopctl builds queue [path]
+
+Show build queue status
+
+Positionals:
+  path  Path to the app directory                        [string] [default: "."]
+
+Options:
+      --app-id   Filter by app ID                                       [string]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+[2025-11-25T00:22:02.502Z] [INFO] Command completed in 105ms (exit code: 0)
+[2025-11-25T00:22:02.503Z] [INFO] ✅ PASS: Queue command help (106ms)
+[2025-11-25T00:22:02.503Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:02.503Z] [INFO] Starting TEST-10: View queue status
+[2025-11-25T00:22:02.503Z] [INFO] Category: queue-management
+[2025-11-25T00:22:02.503Z] [INFO] ################################################################################
+[2025-11-25T00:22:02.503Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:02.503Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds queue
+[2025-11-25T00:22:02.503Z] [INFO] ================================================================================
+[2025-11-25T00:22:03.116Z] [INFO] STDOUT:
+[34mℹ[39m Fetching queue status...
+
+[2025-11-25T00:22:03.116Z] [INFO] STDERR:
+[31m✗[39m Failed to get queue status: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+
+[2025-11-25T00:22:03.117Z] [INFO] Command completed in 614ms (exit code: 1)
+[2025-11-25T00:22:03.117Z] [INFO] ❌ FAIL: View queue status (614ms)
+[2025-11-25T00:22:03.117Z] [INFO]    Error: Assertion failed: Should successfully show queue status
+[2025-11-25T00:22:03.117Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:03.117Z] [INFO] Starting TEST-11: Queue command alias (q)
+[2025-11-25T00:22:03.117Z] [INFO] Category: queue-management
+[2025-11-25T00:22:03.117Z] [INFO] ################################################################################
+[2025-11-25T00:22:03.117Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:03.117Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds q
+[2025-11-25T00:22:03.117Z] [INFO] ================================================================================
+[2025-11-25T00:22:03.674Z] [INFO] STDOUT:
+[34mℹ[39m Fetching queue status...
+
+[2025-11-25T00:22:03.675Z] [INFO] STDERR:
+[31m✗[39m Failed to get queue status: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+
+[2025-11-25T00:22:03.675Z] [INFO] Command completed in 558ms (exit code: 1)
+[2025-11-25T00:22:03.675Z] [INFO] ❌ FAIL: Queue command alias (q) (558ms)
+[2025-11-25T00:22:03.675Z] [INFO]    Error: [31m✗[39m Failed to get queue status: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+
+[2025-11-25T00:22:03.675Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:03.675Z] [INFO] Starting TEST-12: Queue status with app filter
+[2025-11-25T00:22:03.676Z] [INFO] Category: queue-management
+[2025-11-25T00:22:03.676Z] [INFO] ################################################################################
+[2025-11-25T00:22:03.676Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:03.676Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js builds list
+[2025-11-25T00:22:03.676Z] [INFO] ================================================================================
+[2025-11-25T00:22:03.782Z] [INFO] STDOUT:
+
+[2025-11-25T00:22:03.782Z] [INFO] STDERR:
+[31m✗[39m Failed to list builds: Error: ENOENT: no such file or directory, open '/Users/krisciu/workspace/cli/.env'
+
+[2025-11-25T00:22:03.782Z] [INFO] Command completed in 106ms (exit code: 1)
+[2025-11-25T00:22:03.782Z] [INFO] ⚠️  No app ID found, skipping filtered queue test
+[2025-11-25T00:22:03.782Z] [INFO] ✅ PASS: Queue status with app filter (106ms)
+[2025-11-25T00:22:03.782Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:03.783Z] [INFO] TEST SUITE: Overage Billing
+[2025-11-25T00:22:03.783Z] [INFO] ================================================================================
+[2025-11-25T00:22:03.783Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:03.783Z] [INFO] Starting TEST-13: View current billing status
+[2025-11-25T00:22:03.783Z] [INFO] Category: overage-billing
+[2025-11-25T00:22:03.783Z] [INFO] ################################################################################
+[2025-11-25T00:22:03.783Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:03.783Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js billing current
+[2025-11-25T00:22:03.783Z] [INFO] ================================================================================
+[2025-11-25T00:22:04.341Z] [INFO] STDOUT:
+[34mℹ[39m Fetching billing information...
+
+[2025-11-25T00:22:04.341Z] [INFO] STDERR:
+[31m✗[39m Failed to fetch billing information
+[31mYour session has expired or is invalid. Please run "whopctl login" to authenticate again.[39m
+whopctl billing current
+
+Get current period usage
+
+Options:
+      --app-id   Filter by app ID                                       [number]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+    at WhopshipAPI.request [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:37974:13[90m)[39m
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async billingCurrentCommand [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:48223:32[90m)[39m
+    at async Object.handler [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:49084:7[90m)[39m
+
+[2025-11-25T00:22:04.342Z] [INFO] Command completed in 559ms (exit code: 1)
+[2025-11-25T00:22:04.342Z] [INFO] ❌ FAIL: View current billing status (559ms)
+[2025-11-25T00:22:04.342Z] [INFO]    Error: Assertion failed: Should successfully show billing status
+[2025-11-25T00:22:04.342Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:04.342Z] [INFO] Starting TEST-14: View billing history
+[2025-11-25T00:22:04.342Z] [INFO] Category: overage-billing
+[2025-11-25T00:22:04.342Z] [INFO] ################################################################################
+[2025-11-25T00:22:04.342Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:04.342Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js billing history
+[2025-11-25T00:22:04.342Z] [INFO] ================================================================================
+[2025-11-25T00:22:04.880Z] [INFO] STDOUT:
+[34mℹ[39m Fetching billing history...
+
+[2025-11-25T00:22:04.880Z] [INFO] STDERR:
+[31m✗[39m Failed to fetch billing history
+[31mYour session has expired or is invalid. Please run "whopctl login" to authenticate again.[39m
+whopctl billing history
+
+Get usage history
+
+Options:
+      --app-id   Filter by app ID                                       [number]
+      --months   Number of months to show (default: 6)     [number] [default: 6]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+    at [90mfile:///Users/krisciu/workspace/cli/[39mdist/index.js:37843:23
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async withRetry [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:37662:14[90m)[39m
+    at async billingHistoryCommand [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:48432:18[90m)[39m
+    at async Object.handler [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:49095:7[90m)[39m {
+  status: [33m401[39m
+}
+
+[2025-11-25T00:22:04.880Z] [INFO] Command completed in 538ms (exit code: 1)
+[2025-11-25T00:22:04.880Z] [INFO] ❌ FAIL: View billing history (538ms)
+[2025-11-25T00:22:04.880Z] [INFO]    Error: [31m✗[39m Failed to fetch billing history
+[31mYour session has expired or is invalid. Please run "whopctl login" to authenticate again.[39m
+whopctl billing history
+
+Get usage history
+
+Options:
+      --app-id   Filter by app ID                                       [number]
+      --months   Number of months to show (default: 6)     [number] [default: 6]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+    at [90mfile:///Users/krisciu/workspace/cli/[39mdist/index.js:37843:23
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async withRetry [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:37662:14[90m)[39m
+    at async billingHistoryCommand [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:48432:18[90m)[39m
+    at async Object.handler [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:49095:7[90m)[39m {
+  status: [33m401[39m
+}
+
+[2025-11-25T00:22:04.880Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:04.880Z] [INFO] Starting TEST-15: View billing periods
+[2025-11-25T00:22:04.880Z] [INFO] Category: overage-billing
+[2025-11-25T00:22:04.880Z] [INFO] ################################################################################
+[2025-11-25T00:22:04.880Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:04.880Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js billing periods
+[2025-11-25T00:22:04.880Z] [INFO] ================================================================================
+[2025-11-25T00:22:05.477Z] [INFO] STDOUT:
+[34mℹ[39m Fetching billing periods...
+
+[2025-11-25T00:22:05.478Z] [INFO] STDERR:
+[31m✗[39m Failed to fetch billing periods
+[31mYour session has expired or is invalid. Please run "whopctl login" to authenticate again.[39m
+whopctl billing periods
+
+List billing periods
+
+Options:
+      --limit    Number of periods to show (default: 12)  [number] [default: 12]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+    at [90mfile:///Users/krisciu/workspace/cli/[39mdist/index.js:37843:23
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async withRetry [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:37662:14[90m)[39m
+    at async billingPeriodsCommand [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:48471:18[90m)[39m
+    at async Object.handler [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:49103:7[90m)[39m {
+  status: [33m401[39m
+}
+
+[2025-11-25T00:22:05.478Z] [INFO] Command completed in 597ms (exit code: 1)
+[2025-11-25T00:22:05.478Z] [INFO] ❌ FAIL: View billing periods (598ms)
+[2025-11-25T00:22:05.478Z] [INFO]    Error: [31m✗[39m Failed to fetch billing periods
+[31mYour session has expired or is invalid. Please run "whopctl login" to authenticate again.[39m
+whopctl billing periods
+
+List billing periods
+
+Options:
+      --limit    Number of periods to show (default: 12)  [number] [default: 12]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+    at [90mfile:///Users/krisciu/workspace/cli/[39mdist/index.js:37843:23
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async withRetry [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:37662:14[90m)[39m
+    at async billingPeriodsCommand [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:48471:18[90m)[39m
+    at async Object.handler [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:49103:7[90m)[39m {
+  status: [33m401[39m
+}
+
+[2025-11-25T00:22:05.478Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:05.479Z] [INFO] Starting TEST-16: Verify overage information display
+[2025-11-25T00:22:05.479Z] [INFO] Category: overage-billing
+[2025-11-25T00:22:05.479Z] [INFO] ################################################################################
+[2025-11-25T00:22:05.479Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:05.479Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js billing current
+[2025-11-25T00:22:05.479Z] [INFO] ================================================================================
+[2025-11-25T00:22:06.081Z] [INFO] STDOUT:
+[34mℹ[39m Fetching billing information...
+
+[2025-11-25T00:22:06.081Z] [INFO] STDERR:
+[31m✗[39m Failed to fetch billing information
+[31mYour session has expired or is invalid. Please run "whopctl login" to authenticate again.[39m
+whopctl billing current
+
+Get current period usage
+
+Options:
+      --app-id   Filter by app ID                                       [number]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+    at WhopshipAPI.request [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:37974:13[90m)[39m
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async billingCurrentCommand [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:48223:32[90m)[39m
+    at async Object.handler [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:49084:7[90m)[39m
+
+[2025-11-25T00:22:06.082Z] [INFO] Command completed in 603ms (exit code: 1)
+[2025-11-25T00:22:06.082Z] [INFO] ℹ️  No overage information found (may be normal if within limits)
+[2025-11-25T00:22:06.082Z] [INFO] ✅ PASS: Verify overage information display (603ms)
+[2025-11-25T00:22:06.082Z] [INFO] 
+################################################################################
+[2025-11-25T00:22:06.082Z] [INFO] Starting TEST-17: Verify billing display format
+[2025-11-25T00:22:06.082Z] [INFO] Category: overage-billing
+[2025-11-25T00:22:06.082Z] [INFO] ################################################################################
+[2025-11-25T00:22:06.083Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:06.083Z] [INFO] Executing: /Users/krisciu/workspace/cli/dist/index.js billing current
+[2025-11-25T00:22:06.083Z] [INFO] ================================================================================
+[2025-11-25T00:22:06.640Z] [INFO] STDOUT:
+[34mℹ[39m Fetching billing information...
+
+[2025-11-25T00:22:06.640Z] [INFO] STDERR:
+[31m✗[39m Failed to fetch billing information
+[31mYour session has expired or is invalid. Please run "whopctl login" to authenticate again.[39m
+whopctl billing current
+
+Get current period usage
+
+Options:
+      --app-id   Filter by app ID                                       [number]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Error: Your session has expired or is invalid. Please run "whopctl login" to authenticate again.
+    at WhopshipAPI.request [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:37974:13[90m)[39m
+[90m    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at async billingCurrentCommand [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:48223:32[90m)[39m
+    at async Object.handler [90m(file:///Users/krisciu/workspace/cli/[39mdist/index.js:49084:7[90m)[39m
+
+[2025-11-25T00:22:06.641Z] [INFO] Command completed in 558ms (exit code: 1)
+[2025-11-25T00:22:06.641Z] [INFO] ❌ FAIL: Verify billing display format (558ms)
+[2025-11-25T00:22:06.641Z] [INFO]    Error: Assertion failed: Should show tier information
+[2025-11-25T00:22:06.641Z] [INFO] 
+================================================================================
+[2025-11-25T00:22:06.641Z] [INFO] Generating Test Report
+[2025-11-25T00:22:06.641Z] [INFO] ================================================================================
+[2025-11-25T00:22:06.642Z] [INFO] ✅ Markdown report written to: /Users/krisciu/workspace/cli/test-results/test-results-2025-11-25T00-22-00-503Z.md
+[2025-11-25T00:22:06.643Z] [INFO] ✅ JSON report written to: /Users/krisciu/workspace/cli/test-results/test-results-2025-11-25T00-22-00-503Z.json

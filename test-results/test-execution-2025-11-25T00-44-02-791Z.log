@@ -1,0 +1,718 @@
+[2025-11-25T00:44:02.792Z] [INFO] Starting WhopShip CLI Test Harness
+[2025-11-25T00:44:02.793Z] [INFO] CLI Binary: /Users/krisciu/workspace/cli/dist/index.js
+[2025-11-25T00:44:02.794Z] [INFO] Results Directory: /Users/krisciu/workspace/cli/test-results
+[2025-11-25T00:44:02.794Z] [INFO] Using LOCAL build (not global whopctl)
+[2025-11-25T00:44:02.794Z] [INFO] ✅ CLI binary found at: /Users/krisciu/workspace/cli/dist/index.js
+[2025-11-25T00:44:02.794Z] [INFO] Checking authentication status...
+[2025-11-25T00:44:02.794Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:02.794Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" auth check
+[2025-11-25T00:44:02.794Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:02.795Z] [INFO] ================================================================================
+[2025-11-25T00:44:03.453Z] [INFO] STDOUT:
+[34mℹ[39m Checking authentication status...
+[32m✓[39m ✓ Authentication valid
+
+[34mℹ[39m User Information:
+  Username:     undefined
+  Display Name: undefined
+  Email:        undefined
+  User ID:      undefined
+
+[2025-11-25T00:44:03.454Z] [INFO] Command completed in 659ms (exit code: 0)
+[2025-11-25T00:44:03.454Z] [INFO] ✅ Authentication verified
+[2025-11-25T00:44:03.454Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:03.454Z] [INFO] TEST SUITE: Command Registration
+[2025-11-25T00:44:03.454Z] [INFO] ================================================================================
+[2025-11-25T00:44:03.454Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:03.454Z] [INFO] Starting TEST-1: Main help command
+[2025-11-25T00:44:03.454Z] [INFO] Category: command-registration
+[2025-11-25T00:44:03.454Z] [INFO] ################################################################################
+[2025-11-25T00:44:03.455Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:03.455Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" --help
+[2025-11-25T00:44:03.455Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:03.455Z] [INFO] ================================================================================
+[2025-11-25T00:44:03.572Z] [INFO] STDOUT:
+[1mWhopShip CLI - Deploy and manage your Whop apps[22m
+[1m[22m
+[1m[22m[36mUsage: [39mwhopctl <command> [options]
+
+[1mQuick Start:[22m
+[1m[22m[2mwhopctl login              # Authenticate with Whop[22m
+[2m[22m[2mwhopctl deploy             # Deploy your app[22m
+[2m[22m[2mwhopctl status             # Check deployment status[22m
+[2m[22m[2mwhopctl usage              # View usage analytics[22m
+[2m[22m
+[2m[22m[1mCommon Workflows:[22m
+[1m[22m[2mwhopctl quick deploy       # Deploy with real-time progress[22m
+[2m[22m[2mwhopctl quick status       # Full status overview[22m
+[2m[22m[2mwhopctl quick check        # Validate project setup[22m
+[2m[22m
+
+Commands:
+  whopctl login                    Authenticate with your Whop account
+  whopctl logout                   Clear authentication session
+  whopctl auth                     Manage authentication
+  whopctl repl                     Start interactive mode
+  whopctl apps                     Manage Whop apps
+  whopctl deploy [path] [project]  Deploy a whop app from a directory
+                                                                    [aliases: d]
+  whopctl redeploy <buildId>       Redeploy a previous build       [aliases: rd]
+  whopctl cancel <buildId>         Cancel a build                [aliases: stop]
+  whopctl queue [path]             Show build queue status          [aliases: q]
+  whopctl usage                    View usage analytics             [aliases: u]
+  whopctl history [path]           View deployment history          [aliases: h]
+  whopctl quick                    Quick commands for common workflows
+  whopctl alias                    Manage project name aliases
+  whopctl url                      Manage custom subdomain URLs
+  whopctl status                   Check deployment status
+  whopctl builds                   Manage builds
+  whopctl logs [project]           View runtime logs with live streaming
+                                                                    [aliases: l]
+  whopctl analytics                View usage analytics
+  whopctl billing                  View billing information
+  whopctl tier                     Manage pricing tier
+
+Options:
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+Examples:
+  whopctl login            Authenticate with your Whop account
+  whopctl deploy           Deploy your Next.js app to WhopShip
+  whopctl status --logs    Check deployment status with build logs
+  whopctl usage            View your app usage and analytics
+  whopctl history          See your deployment history
+  whopctl redeploy abc123  Redeploy a previous build
+  whopctl quick deploy     Deploy with progress tracking
+
+[1mNeed help?[22m
+  [1m[22m[36mDocumentation: [39m[4mhttps://docs.whopship.app[24m
+  [4m[24m[36mSupport: [39m[4mhttps://whop.com/support[24m
+  [4m[24m[36mGitHub: [39m[4mhttps://github.com/whoplabs/whopship[24m
+
+[2025-11-25T00:44:03.572Z] [INFO] Command completed in 117ms (exit code: 0)
+[2025-11-25T00:44:03.572Z] [INFO] ✅ PASS: Main help command (117ms)
+[2025-11-25T00:44:03.572Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:03.572Z] [INFO] Starting TEST-2: Builds help command
+[2025-11-25T00:44:03.572Z] [INFO] Category: command-registration
+[2025-11-25T00:44:03.573Z] [INFO] ################################################################################
+[2025-11-25T00:44:03.573Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:03.573Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" builds --help
+[2025-11-25T00:44:03.573Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:03.573Z] [INFO] ================================================================================
+[2025-11-25T00:44:03.682Z] [INFO] STDOUT:
+whopctl builds
+
+Manage builds
+
+Commands:
+  whopctl builds list [path]       List recent builds
+  whopctl builds deploy <buildId>  Deploy a build
+  whopctl builds cancel <buildId>  Cancel a build                [aliases: stop]
+  whopctl builds queue [path]      Show build queue status          [aliases: q]
+  whopctl builds [path]            List recent builds (default)        [default]
+
+Positionals:
+  path  Path to the app directory                        [string] [default: "."]
+
+Options:
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+[2025-11-25T00:44:03.682Z] [INFO] Command completed in 109ms (exit code: 0)
+[2025-11-25T00:44:03.682Z] [INFO] ✅ PASS: Builds help command (109ms)
+[2025-11-25T00:44:03.683Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:03.683Z] [INFO] Starting TEST-3: Cancel command registered
+[2025-11-25T00:44:03.683Z] [INFO] Category: command-registration
+[2025-11-25T00:44:03.683Z] [INFO] ################################################################################
+[2025-11-25T00:44:03.683Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:03.683Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" builds --help
+[2025-11-25T00:44:03.683Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:03.683Z] [INFO] ================================================================================
+[2025-11-25T00:44:03.792Z] [INFO] STDOUT:
+whopctl builds
+
+Manage builds
+
+Commands:
+  whopctl builds list [path]       List recent builds
+  whopctl builds deploy <buildId>  Deploy a build
+  whopctl builds cancel <buildId>  Cancel a build                [aliases: stop]
+  whopctl builds queue [path]      Show build queue status          [aliases: q]
+  whopctl builds [path]            List recent builds (default)        [default]
+
+Positionals:
+  path  Path to the app directory                        [string] [default: "."]
+
+Options:
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+[2025-11-25T00:44:03.792Z] [INFO] Command completed in 109ms (exit code: 0)
+[2025-11-25T00:44:03.793Z] [INFO] ✅ PASS: Cancel command registered (110ms)
+[2025-11-25T00:44:03.793Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:03.793Z] [INFO] Starting TEST-4: Queue command registered
+[2025-11-25T00:44:03.793Z] [INFO] Category: command-registration
+[2025-11-25T00:44:03.793Z] [INFO] ################################################################################
+[2025-11-25T00:44:03.793Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:03.793Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" builds --help
+[2025-11-25T00:44:03.793Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:03.793Z] [INFO] ================================================================================
+[2025-11-25T00:44:03.901Z] [INFO] STDOUT:
+whopctl builds
+
+Manage builds
+
+Commands:
+  whopctl builds list [path]       List recent builds
+  whopctl builds deploy <buildId>  Deploy a build
+  whopctl builds cancel <buildId>  Cancel a build                [aliases: stop]
+  whopctl builds queue [path]      Show build queue status          [aliases: q]
+  whopctl builds [path]            List recent builds (default)        [default]
+
+Positionals:
+  path  Path to the app directory                        [string] [default: "."]
+
+Options:
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+[2025-11-25T00:44:03.901Z] [INFO] Command completed in 108ms (exit code: 0)
+[2025-11-25T00:44:03.901Z] [INFO] ✅ PASS: Queue command registered (108ms)
+[2025-11-25T00:44:03.902Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:03.902Z] [INFO] TEST SUITE: Authentication
+[2025-11-25T00:44:03.902Z] [INFO] ================================================================================
+[2025-11-25T00:44:03.902Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:03.902Z] [INFO] Starting TEST-5: Check authentication status
+[2025-11-25T00:44:03.902Z] [INFO] Category: authentication
+[2025-11-25T00:44:03.902Z] [INFO] ################################################################################
+[2025-11-25T00:44:03.902Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:03.902Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" auth check
+[2025-11-25T00:44:03.902Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:03.902Z] [INFO] ================================================================================
+[2025-11-25T00:44:04.367Z] [INFO] STDOUT:
+[34mℹ[39m Checking authentication status...
+[32m✓[39m ✓ Authentication valid
+
+[34mℹ[39m User Information:
+  Username:     undefined
+  Display Name: undefined
+  Email:        undefined
+  User ID:      undefined
+
+[2025-11-25T00:44:04.368Z] [INFO] Command completed in 466ms (exit code: 0)
+[2025-11-25T00:44:04.368Z] [INFO] ✅ PASS: Check authentication status (466ms)
+[2025-11-25T00:44:04.369Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:04.369Z] [INFO] TEST SUITE: Build Cancellation
+[2025-11-25T00:44:04.369Z] [INFO] ================================================================================
+[2025-11-25T00:44:04.369Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:04.369Z] [INFO] Starting TEST-6: Cancel command help
+[2025-11-25T00:44:04.369Z] [INFO] Category: build-cancellation
+[2025-11-25T00:44:04.369Z] [INFO] ################################################################################
+[2025-11-25T00:44:04.369Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:04.369Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" builds cancel --help
+[2025-11-25T00:44:04.369Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:04.369Z] [INFO] ================================================================================
+[2025-11-25T00:44:04.478Z] [INFO] STDOUT:
+whopctl builds cancel <buildId>
+
+Cancel a build
+
+Positionals:
+  buildId  Build ID to cancel                                [string] [required]
+
+Options:
+      --path     Path to the app directory               [string] [default: "."]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+[2025-11-25T00:44:04.478Z] [INFO] Command completed in 109ms (exit code: 0)
+[2025-11-25T00:44:04.478Z] [INFO] ✅ PASS: Cancel command help (109ms)
+[2025-11-25T00:44:04.478Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:04.478Z] [INFO] Starting TEST-7: Get build list for cancellation test
+[2025-11-25T00:44:04.478Z] [INFO] Category: build-cancellation
+[2025-11-25T00:44:04.478Z] [INFO] ################################################################################
+[2025-11-25T00:44:04.478Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:04.479Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" builds list
+[2025-11-25T00:44:04.479Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:04.479Z] [INFO] ================================================================================
+[2025-11-25T00:44:04.584Z] [INFO] STDOUT:
+
+[2025-11-25T00:44:04.584Z] [INFO] STDERR:
+(node:19401) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to list builds: Error: ENOENT: no such file or directory, open '/Users/krisciu/workspace/cli/.env'
+
+[2025-11-25T00:44:04.584Z] [INFO] Command completed in 105ms (exit code: 1)
+[2025-11-25T00:44:04.585Z] [INFO] ❌ FAIL: Get build list for cancellation test (107ms)
+[2025-11-25T00:44:04.585Z] [INFO]    Error: Assertion failed: Should successfully list builds
+[2025-11-25T00:44:04.585Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:04.585Z] [INFO] Starting TEST-8: Cancel invalid build ID (should fail)
+[2025-11-25T00:44:04.585Z] [INFO] Category: build-cancellation
+[2025-11-25T00:44:04.585Z] [INFO] ################################################################################
+[2025-11-25T00:44:04.585Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:04.585Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" builds cancel invalid-build-id-12345
+[2025-11-25T00:44:04.585Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:04.585Z] [INFO] ================================================================================
+[2025-11-25T00:44:05.016Z] [INFO] STDOUT:
+[34mℹ[39m Checking build status...
+
+[2025-11-25T00:44:05.016Z] [INFO] STDERR:
+(node:19402) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to cancel build: Not Found
+
+[2025-11-25T00:44:05.016Z] [INFO] Command completed in 431ms (exit code: 1)
+[2025-11-25T00:44:05.017Z] [INFO] ❌ FAIL: Cancel invalid build ID (should fail) (432ms)
+[2025-11-25T00:44:05.017Z] [INFO]    Error: Assertion failed: Should show build not found error
+[2025-11-25T00:44:05.017Z] [INFO] ⚠️  No queued build found, skipping queued cancellation test
+[2025-11-25T00:44:05.017Z] [INFO] ⚠️  No completed build found, skipping completed cancellation test
+[2025-11-25T00:44:05.017Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:05.017Z] [INFO] TEST SUITE: Queue Management
+[2025-11-25T00:44:05.017Z] [INFO] ================================================================================
+[2025-11-25T00:44:05.017Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:05.017Z] [INFO] Starting TEST-9: Queue command help
+[2025-11-25T00:44:05.017Z] [INFO] Category: queue-management
+[2025-11-25T00:44:05.017Z] [INFO] ################################################################################
+[2025-11-25T00:44:05.017Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:05.017Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" builds queue --help
+[2025-11-25T00:44:05.017Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:05.017Z] [INFO] ================================================================================
+[2025-11-25T00:44:05.128Z] [INFO] STDOUT:
+whopctl builds queue [path]
+
+Show build queue status
+
+Positionals:
+  path  Path to the app directory                        [string] [default: "."]
+
+Options:
+      --app-id   Filter by app ID                                       [string]
+  -h, --help     Show help                                             [boolean]
+  -v, --version  Show version number                                   [boolean]
+
+[2025-11-25T00:44:05.128Z] [INFO] Command completed in 111ms (exit code: 0)
+[2025-11-25T00:44:05.129Z] [INFO] ✅ PASS: Queue command help (112ms)
+[2025-11-25T00:44:05.129Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:05.129Z] [INFO] Starting TEST-10: View queue status
+[2025-11-25T00:44:05.129Z] [INFO] Category: queue-management
+[2025-11-25T00:44:05.129Z] [INFO] ################################################################################
+[2025-11-25T00:44:05.129Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:05.129Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" builds queue
+[2025-11-25T00:44:05.129Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:05.129Z] [INFO] ================================================================================
+[2025-11-25T00:44:05.598Z] [INFO] STDOUT:
+[34mℹ[39m Fetching queue status...
+
+[32m✓[39m 📊 Build Queue Status
+
+[1mSummary:[22m
+  Queued builds: [33m8[39m
+  Building: [34m1[39m
+
+[1mQueue:[22m
+
+  1. [33mQUEUED[39m test-app-joe
+     Build ID: 11342c68-b362-4545-a469-a2d4474325e6
+     Created: 11/5/2025, 7:09:02 PM
+
+  2. [33mQUEUED[39m test-app-joe
+     Build ID: 2eff78c0-bb22-4968-bcbb-1067af758a70
+     Created: 11/5/2025, 7:10:06 PM
+     Estimated wait: ~3 minutes
+
+  3. [33mQUEUED[39m e2e2
+     Build ID: 29149398-991b-49a7-b3d2-37a85a40ee26
+     Created: 11/20/2025, 10:06:47 PM
+     Estimated wait: ~6 minutes
+
+  4. [33mQUEUED[39m e2e2
+     Build ID: 5697200a-ed60-4926-8bd1-494a84767ae2
+     Created: 11/20/2025, 10:24:04 PM
+     Estimated wait: ~9 minutes
+
+  5. [33mQUEUED[39m e2e2
+     Build ID: 2914e535-5814-434d-8677-d51ce52729ab
+     Created: 11/20/2025, 10:33:51 PM
+     Estimated wait: ~12 minutes
+
+  6. [33mQUEUED[39m e2e2
+     Build ID: 02009967-4edb-42f7-8cb2-ccf16d9accc7
+     Created: 11/20/2025, 10:37:57 PM
+     Estimated wait: ~15 minutes
+
+  7. [33mQUEUED[39m e2e2
+     Build ID: e076698a-4b91-4c50-95d3-23b990f04f46
+     Created: 11/20/2025, 10:39:40 PM
+     Estimated wait: ~18 minutes
+
+  8. [33mQUEUED[39m e2e2
+     Build ID: 24a8102c-8755-4572-b566-0757ca52b2fa
+     Created: 11/20/2025, 10:44:22 PM
+     Estimated wait: ~21 minutes
+
+[34mℹ[39m Use "whopctl builds cancel <build-id>" to cancel a queued build
+
+[2025-11-25T00:44:05.599Z] [INFO] Command completed in 470ms (exit code: 0)
+[2025-11-25T00:44:05.599Z] [INFO] ✅ PASS: View queue status (470ms)
+[2025-11-25T00:44:05.599Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:05.599Z] [INFO] Starting TEST-11: Queue command alias (q)
+[2025-11-25T00:44:05.599Z] [INFO] Category: queue-management
+[2025-11-25T00:44:05.599Z] [INFO] ################################################################################
+[2025-11-25T00:44:05.599Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:05.599Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" builds q
+[2025-11-25T00:44:05.599Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:05.599Z] [INFO] ================================================================================
+[2025-11-25T00:44:06.072Z] [INFO] STDOUT:
+[34mℹ[39m Fetching queue status...
+
+[32m✓[39m 📊 Build Queue Status
+
+[1mSummary:[22m
+  Queued builds: [33m8[39m
+  Building: [34m1[39m
+
+[1mQueue:[22m
+
+  1. [33mQUEUED[39m test-app-joe
+     Build ID: 11342c68-b362-4545-a469-a2d4474325e6
+     Created: 11/5/2025, 7:09:02 PM
+
+  2. [33mQUEUED[39m test-app-joe
+     Build ID: 2eff78c0-bb22-4968-bcbb-1067af758a70
+     Created: 11/5/2025, 7:10:06 PM
+     Estimated wait: ~3 minutes
+
+  3. [33mQUEUED[39m e2e2
+     Build ID: 29149398-991b-49a7-b3d2-37a85a40ee26
+     Created: 11/20/2025, 10:06:47 PM
+     Estimated wait: ~6 minutes
+
+  4. [33mQUEUED[39m e2e2
+     Build ID: 5697200a-ed60-4926-8bd1-494a84767ae2
+     Created: 11/20/2025, 10:24:04 PM
+     Estimated wait: ~9 minutes
+
+  5. [33mQUEUED[39m e2e2
+     Build ID: 2914e535-5814-434d-8677-d51ce52729ab
+     Created: 11/20/2025, 10:33:51 PM
+     Estimated wait: ~12 minutes
+
+  6. [33mQUEUED[39m e2e2
+     Build ID: 02009967-4edb-42f7-8cb2-ccf16d9accc7
+     Created: 11/20/2025, 10:37:57 PM
+     Estimated wait: ~15 minutes
+
+  7. [33mQUEUED[39m e2e2
+     Build ID: e076698a-4b91-4c50-95d3-23b990f04f46
+     Created: 11/20/2025, 10:39:40 PM
+     Estimated wait: ~18 minutes
+
+  8. [33mQUEUED[39m e2e2
+     Build ID: 24a8102c-8755-4572-b566-0757ca52b2fa
+     Created: 11/20/2025, 10:44:22 PM
+     Estimated wait: ~21 minutes
+
+[34mℹ[39m Use "whopctl builds cancel <build-id>" to cancel a queued build
+
+[2025-11-25T00:44:06.072Z] [INFO] Command completed in 472ms (exit code: 0)
+[2025-11-25T00:44:06.073Z] [INFO] ✅ PASS: Queue command alias (q) (474ms)
+[2025-11-25T00:44:06.073Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:06.073Z] [INFO] Starting TEST-12: Queue status with app filter
+[2025-11-25T00:44:06.073Z] [INFO] Category: queue-management
+[2025-11-25T00:44:06.073Z] [INFO] ################################################################################
+[2025-11-25T00:44:06.073Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:06.073Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" builds list
+[2025-11-25T00:44:06.073Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:06.073Z] [INFO] ================================================================================
+[2025-11-25T00:44:06.187Z] [INFO] STDOUT:
+
+[2025-11-25T00:44:06.187Z] [INFO] STDERR:
+(node:19417) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗[39m Failed to list builds: Error: ENOENT: no such file or directory, open '/Users/krisciu/workspace/cli/.env'
+
+[2025-11-25T00:44:06.187Z] [INFO] Command completed in 114ms (exit code: 1)
+[2025-11-25T00:44:06.187Z] [INFO] ⚠️  No app ID found, skipping filtered queue test
+[2025-11-25T00:44:06.188Z] [INFO] ✅ PASS: Queue status with app filter (115ms)
+[2025-11-25T00:44:06.188Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:06.188Z] [INFO] TEST SUITE: Overage Billing
+[2025-11-25T00:44:06.188Z] [INFO] ================================================================================
+[2025-11-25T00:44:06.188Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:06.188Z] [INFO] Starting TEST-13: View current billing status
+[2025-11-25T00:44:06.188Z] [INFO] Category: overage-billing
+[2025-11-25T00:44:06.188Z] [INFO] ################################################################################
+[2025-11-25T00:44:06.188Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:06.188Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" billing current
+[2025-11-25T00:44:06.188Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:06.188Z] [INFO] ================================================================================
+[2025-11-25T00:44:07.069Z] [INFO] STDOUT:
+[34mℹ[39m Fetching billing information...
+
+[32m✓[39m Billing Status
+
+[1mSubscription:[22m
+  Tier: [36mFree[39m
+  Price: [36m$0.00[39m/month
+  Status: [33mfree[39m
+
+[1mCurrent Period Usage:[22m
+
+[1mFunction Invocations:[22m
+  [31m2,765 / 100[39m
+
+[1mBandwidth:[22m
+  [31m6.00 / 1 GB[39m
+
+[1mBuild Minutes:[22m
+  [31m45.00 / 10[39m
+
+[1mStorage:[22m
+  [31m2.00 / 1 GB[39m
+
+[1mDeployments:[22m
+  [36m5 / 10[39m
+
+[1m[33m⚠️  Usage Overages:[39m[22m
+
+  Function Invocations: [31m+2,665[39m ($0.0053)
+  Bandwidth: [31m+5.00 GB[39m ($0.50)
+  Build Minutes: [31m+35.00[39m ($1.75)
+  Storage: [31m+1.00 GB[39m ($0.05)
+
+[1m[31m  Total Overage Cost: $2.3053[39m[22m
+
+[33m  ⏰ Grace period ends in 3 days (11/27/2025)[39m
+
+[1m[33m⚠️  Warnings:[39m[22m
+[33m  • Function invocations exceeded limit by 2,665 (0.0053 overage cost)[39m
+[33m  • Bandwidth exceeded limit by 5.00 GB ($0.50 overage cost)[39m
+[33m  • Build minutes exceeded limit by 35.00 minutes ($1.75 overage cost)[39m
+[33m  • Storage exceeded limit by 1.00 GB ($0.05 overage cost)[39m
+
+[1mCost:[22m
+  [32m$0.98[39m
+  [33mOverage: $2.3053[39m
+
+
+[34mℹ[39m 💡 Upgrade to unlock more resources:
+[2m   whopctl billing subscribe hobby[22m
+[2m   whopctl billing subscribe pro[22m
+
+
+[2025-11-25T00:44:07.069Z] [INFO] Command completed in 881ms (exit code: 0)
+[2025-11-25T00:44:07.069Z] [INFO] ✅ PASS: View current billing status (881ms)
+[2025-11-25T00:44:07.069Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:07.069Z] [INFO] Starting TEST-14: View billing history
+[2025-11-25T00:44:07.069Z] [INFO] Category: overage-billing
+[2025-11-25T00:44:07.070Z] [INFO] ################################################################################
+[2025-11-25T00:44:07.070Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:07.070Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" billing history
+[2025-11-25T00:44:07.070Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:07.070Z] [INFO] ================================================================================
+[2025-11-25T00:44:07.638Z] [INFO] STDOUT:
+[34mℹ[39m Fetching billing history...
+
+[32m✓[39m Billing History (1 periods)
+
+[1mPeriod 1: 2025-11[22m
+  Function Invocations: [36m2,765[39m
+  Bandwidth: [36m6.00[39m GB
+  Build Minutes: [36m45.00[39m
+  Storage: [36m2.00[39m GB
+  Deployments: [36m5[39m
+  Cost: [32m$0.98[39m
+
+
+[2025-11-25T00:44:07.638Z] [INFO] Command completed in 568ms (exit code: 0)
+[2025-11-25T00:44:07.639Z] [INFO] ✅ PASS: View billing history (569ms)
+[2025-11-25T00:44:07.639Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:07.639Z] [INFO] Starting TEST-15: View billing periods
+[2025-11-25T00:44:07.639Z] [INFO] Category: overage-billing
+[2025-11-25T00:44:07.639Z] [INFO] ################################################################################
+[2025-11-25T00:44:07.639Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:07.639Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" billing periods
+[2025-11-25T00:44:07.639Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:07.639Z] [INFO] ================================================================================
+[2025-11-25T00:44:08.101Z] [INFO] STDOUT:
+[34mℹ[39m Fetching billing periods...
+[34mℹ[39m No billing periods found.
+
+[2025-11-25T00:44:08.102Z] [INFO] Command completed in 463ms (exit code: 0)
+[2025-11-25T00:44:08.102Z] [INFO] ✅ PASS: View billing periods (463ms)
+[2025-11-25T00:44:08.102Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:08.102Z] [INFO] Starting TEST-16: Verify overage information display
+[2025-11-25T00:44:08.102Z] [INFO] Category: overage-billing
+[2025-11-25T00:44:08.102Z] [INFO] ################################################################################
+[2025-11-25T00:44:08.103Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:08.103Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" billing current
+[2025-11-25T00:44:08.103Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:08.103Z] [INFO] ================================================================================
+[2025-11-25T00:44:09.061Z] [INFO] STDOUT:
+[34mℹ[39m Fetching billing information...
+
+[32m✓[39m Billing Status
+
+[1mSubscription:[22m
+  Tier: [36mFree[39m
+  Price: [36m$0.00[39m/month
+  Status: [33mfree[39m
+
+[1mCurrent Period Usage:[22m
+
+[1mFunction Invocations:[22m
+  [31m2,765 / 100[39m
+
+[1mBandwidth:[22m
+  [31m6.00 / 1 GB[39m
+
+[1mBuild Minutes:[22m
+  [31m45.00 / 10[39m
+
+[1mStorage:[22m
+  [31m2.00 / 1 GB[39m
+
+[1mDeployments:[22m
+  [36m5 / 10[39m
+
+[1m[33m⚠️  Usage Overages:[39m[22m
+
+  Function Invocations: [31m+2,665[39m ($0.0053)
+  Bandwidth: [31m+5.00 GB[39m ($0.50)
+  Build Minutes: [31m+35.00[39m ($1.75)
+  Storage: [31m+1.00 GB[39m ($0.05)
+
+[1m[31m  Total Overage Cost: $2.3053[39m[22m
+
+[33m  ⏰ Grace period ends in 3 days (11/27/2025)[39m
+
+[1m[33m⚠️  Warnings:[39m[22m
+[33m  • Function invocations exceeded limit by 2,665 (0.0053 overage cost)[39m
+[33m  • Bandwidth exceeded limit by 5.00 GB ($0.50 overage cost)[39m
+[33m  • Build minutes exceeded limit by 35.00 minutes ($1.75 overage cost)[39m
+[33m  • Storage exceeded limit by 1.00 GB ($0.05 overage cost)[39m
+
+[1mCost:[22m
+  [32m$0.98[39m
+  [33mOverage: $2.3053[39m
+
+
+[34mℹ[39m 💡 Upgrade to unlock more resources:
+[2m   whopctl billing subscribe hobby[22m
+[2m   whopctl billing subscribe pro[22m
+
+
+[2025-11-25T00:44:09.061Z] [INFO] Command completed in 958ms (exit code: 0)
+[2025-11-25T00:44:09.061Z] [INFO] ✅ Overage information found in billing output
+[2025-11-25T00:44:09.061Z] [INFO] ✅ Usage vs limits display found
+[2025-11-25T00:44:09.061Z] [INFO] ✅ PASS: Verify overage information display (959ms)
+[2025-11-25T00:44:09.061Z] [INFO] 
+################################################################################
+[2025-11-25T00:44:09.061Z] [INFO] Starting TEST-17: Verify billing display format
+[2025-11-25T00:44:09.061Z] [INFO] Category: overage-billing
+[2025-11-25T00:44:09.061Z] [INFO] ################################################################################
+[2025-11-25T00:44:09.061Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:09.062Z] [INFO] Executing: node "/Users/krisciu/workspace/cli/dist/index.js" billing current
+[2025-11-25T00:44:09.062Z] [INFO] Working Directory: /Users/krisciu/workspace/cli
+[2025-11-25T00:44:09.062Z] [INFO] ================================================================================
+[2025-11-25T00:44:09.942Z] [INFO] STDOUT:
+[34mℹ[39m Fetching billing information...
+
+[32m✓[39m Billing Status
+
+[1mSubscription:[22m
+  Tier: [36mFree[39m
+  Price: [36m$0.00[39m/month
+  Status: [33mfree[39m
+
+[1mCurrent Period Usage:[22m
+
+[1mFunction Invocations:[22m
+  [31m2,765 / 100[39m
+
+[1mBandwidth:[22m
+  [31m6.00 / 1 GB[39m
+
+[1mBuild Minutes:[22m
+  [31m45.00 / 10[39m
+
+[1mStorage:[22m
+  [31m2.00 / 1 GB[39m
+
+[1mDeployments:[22m
+  [36m5 / 10[39m
+
+[1m[33m⚠️  Usage Overages:[39m[22m
+
+  Function Invocations: [31m+2,665[39m ($0.0053)
+  Bandwidth: [31m+5.00 GB[39m ($0.50)
+  Build Minutes: [31m+35.00[39m ($1.75)
+  Storage: [31m+1.00 GB[39m ($0.05)
+
+[1m[31m  Total Overage Cost: $2.3053[39m[22m
+
+[33m  ⏰ Grace period ends in 3 days (11/27/2025)[39m
+
+[1m[33m⚠️  Warnings:[39m[22m
+[33m  • Function invocations exceeded limit by 2,665 (0.0053 overage cost)[39m
+[33m  • Bandwidth exceeded limit by 5.00 GB ($0.50 overage cost)[39m
+[33m  • Build minutes exceeded limit by 35.00 minutes ($1.75 overage cost)[39m
+[33m  • Storage exceeded limit by 1.00 GB ($0.05 overage cost)[39m
+
+[1mCost:[22m
+  [32m$0.98[39m
+  [33mOverage: $2.3053[39m
+
+
+[34mℹ[39m 💡 Upgrade to unlock more resources:
+[2m   whopctl billing subscribe hobby[22m
+[2m   whopctl billing subscribe pro[22m
+
+
+[2025-11-25T00:44:09.942Z] [INFO] Command completed in 880ms (exit code: 0)
+[2025-11-25T00:44:09.942Z] [INFO] ✅ PASS: Verify billing display format (881ms)
+[2025-11-25T00:44:09.942Z] [INFO] 
+================================================================================
+[2025-11-25T00:44:09.942Z] [INFO] Generating Test Report
+[2025-11-25T00:44:09.942Z] [INFO] ================================================================================
+[2025-11-25T00:44:09.943Z] [INFO] ✅ Markdown report written to: /Users/krisciu/workspace/cli/test-results/test-results-2025-11-25T00-44-02-791Z.md
+[2025-11-25T00:44:09.943Z] [INFO] ✅ JSON report written to: /Users/krisciu/workspace/cli/test-results/test-results-2025-11-25T00-44-02-791Z.json
