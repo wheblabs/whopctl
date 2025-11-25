@@ -17,6 +17,8 @@ import { statusCommand } from './commands/status/status.ts'
 import { logsCommand as buildLogsCommand } from './commands/status/logs.ts'
 import { redeployBuildCommand } from './commands/builds/redeploy.ts'
 import { listBuildsCommand } from './commands/builds/list.ts'
+import { cancelBuildCommand } from './commands/builds/cancel.ts'
+import { queueStatusCommand } from './commands/builds/queue.ts'
 import { logsCommand } from './commands/logs.ts'
 import { analyticsUsageCommand } from './commands/analytics/usage.ts'
 import { analyticsSummaryCommand } from './commands/analytics/summary.ts'
@@ -25,6 +27,7 @@ import { quickDeployCommand, quickStatusCommand, quickCheckCommand } from './com
 import { setAliasCommand, removeAliasCommand, listAliasesCommand, showAliasCommand, discoverAliasesCommand } from './commands/alias.ts'
 import { checkUrlCommand, reserveUrlCommand, releaseUrlCommand, listUrlsCommand, suggestUrlCommand } from './commands/url.ts'
 import { billingCurrentCommand } from './commands/billing/current.ts'
+import { billingSubscribeCommand } from './commands/billing/subscribe.ts'
 import { billingHistoryCommand } from './commands/billing/history.ts'
 import { billingPeriodsCommand } from './commands/billing/periods.ts'
 import { tierCurrentCommand } from './commands/tier/current.ts'
@@ -153,6 +156,45 @@ async function main() {
 			},
 			async (argv) => {
 				await redeployBuildCommand(argv.buildId as string)
+			},
+		)
+		.command(
+			['cancel <buildId>', 'stop <buildId>'],
+			'Cancel a build',
+			(yargs) => {
+				return yargs
+					.positional('buildId', {
+						describe: 'Build ID to cancel',
+						type: 'string',
+						demandOption: true,
+					})
+					.option('path', {
+						describe: 'Path to the app directory',
+						type: 'string',
+						default: '.',
+					})
+			},
+			async (argv) => {
+				await cancelBuildCommand(argv.buildId as string, argv.path as string)
+			},
+		)
+		.command(
+			['queue [path]', 'q [path]'],
+			'Show build queue status',
+			(yargs) => {
+				return yargs
+					.positional('path', {
+						describe: 'Path to the app directory',
+						type: 'string',
+						default: '.',
+					})
+					.option('app-id', {
+						describe: 'Filter by app ID',
+						type: 'string',
+					})
+			},
+			async (argv) => {
+				await queueStatusCommand(argv.path as string, argv['app-id'] as string | undefined)
 			},
 		)
 		.command(['usage', 'u'], 'View usage analytics', (yargs) => {
@@ -440,6 +482,45 @@ async function main() {
 					},
 				)
 				.command(
+					['cancel <buildId>', 'stop <buildId>'],
+					'Cancel a build',
+					(yargs) => {
+						return yargs
+							.positional('buildId', {
+								describe: 'Build ID to cancel',
+								type: 'string',
+								demandOption: true,
+							})
+							.option('path', {
+								describe: 'Path to the app directory',
+								type: 'string',
+								default: '.',
+							})
+					},
+					async (argv) => {
+						await cancelBuildCommand(argv.buildId as string, argv.path as string)
+					},
+				)
+				.command(
+					['queue [path]', 'q [path]'],
+					'Show build queue status',
+					(yargs) => {
+						return yargs
+							.positional('path', {
+								describe: 'Path to the app directory',
+								type: 'string',
+								default: '.',
+							})
+							.option('app-id', {
+								describe: 'Filter by app ID',
+								type: 'string',
+							})
+					},
+					async (argv) => {
+						await queueStatusCommand(argv.path as string, argv['app-id'] as string | undefined)
+					},
+				)
+				.command(
 					'$0 [path]',
 					'List recent builds (default)',
 					(yargs) => {
@@ -618,7 +699,21 @@ async function main() {
 						await billingPeriodsCommand(argv.limit as number | undefined)
 					},
 				)
-				.demandCommand(1, 'Please specify a subcommand (current, history, periods)')
+				.command(
+					'subscribe <tier>',
+					'Subscribe to a pricing tier',
+					(yargs) => {
+						return yargs.positional('tier', {
+							describe: 'Tier to subscribe to (free, hobby, pro)',
+							type: 'string',
+							choices: ['free', 'hobby', 'pro'],
+						})
+					},
+					async (argv) => {
+						await billingSubscribeCommand(argv.tier as 'free' | 'hobby' | 'pro' | undefined)
+					},
+				)
+				.demandCommand(1, 'Please specify a subcommand (current, history, periods, subscribe)')
 				.help()
 		})
 		.command('tier', 'Manage pricing tier', (yargs) => {

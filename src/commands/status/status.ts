@@ -337,8 +337,31 @@ export async function statusCommand(
 			console.log(chalk.bold.yellow('⏳ Build in Progress'))
 			console.log(chalk.gray('─'.repeat(60)))
 			console.log()
+			
+			// Show queue information if queued
+			if (build.status === 'queued') {
+				try {
+					const queueStatus = await api.getQueueStatus(appId)
+					const queueItem = queueStatus.queue?.find((item: any) => item.build_id === build.build_id)
+					if (queueItem && queueItem.position) {
+						console.log(chalk.yellow(`Queue Position: ${queueItem.position} of ${queueStatus.queued}`))
+						const estimatedWait = (queueItem.position - 1) * 3 // Rough estimate: 3 min per build
+						if (estimatedWait > 0) {
+							console.log(chalk.dim(`Estimated wait: ~${estimatedWait} minutes`))
+						}
+						console.log()
+					}
+				} catch {
+					// Queue status unavailable, continue without it
+				}
+			}
+			
 			console.log(chalk.yellow('Your build is currently processing. You can:'))
 			console.log(`  ${chalk.blue('•')} Watch live logs: ${chalk.dim('whopctl status --logs --follow')}`)
+			console.log(`  ${chalk.blue('•')} Check queue: ${chalk.dim('whopctl builds queue')}`)
+			if (build.status === 'queued') {
+				console.log(`  ${chalk.blue('•')} Cancel build: ${chalk.dim(`whopctl builds cancel ${build.build_id}`)}`)
+			}
 			console.log(`  ${chalk.blue('•')} Check again: ${chalk.dim('whopctl status')}`)
 			console.log()
 		} else if (build.status === 'failed') {

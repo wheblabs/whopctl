@@ -1,24 +1,13 @@
+import chalk from 'chalk'
 import { requireAuth } from '../../lib/auth-guard.ts'
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
-import { whopshipApi } from '../../lib/whopship-api.ts'
-
-interface TierUpgradeResponse {
-	success: boolean
-	tier: 'free' | 'hobby' | 'pro'
-	tierInfo: {
-		name: string
-		monthlyPrice: number
-		limits: Record<string, unknown>
-		overageRates: Record<string, unknown>
-	}
-	previousTier: 'free' | 'hobby' | 'pro'
-	userId: number
-}
+import { whop } from '../../lib/whop.ts'
+import { WhopshipAPI } from '../../lib/whopship-api.ts'
 
 /**
  * Handles the "tier upgrade" command.
  *
- * Upgrades the user's pricing tier.
+ * Upgrades the user's pricing tier via checkout flow.
  */
 export async function tierUpgradeCommand(tier: 'free' | 'hobby' | 'pro'): Promise<void> {
 	requireAuth()
@@ -29,14 +18,38 @@ export async function tierUpgradeCommand(tier: 'free' | 'hobby' | 'pro'): Promis
 	}
 
 	try {
-		printInfo(`Upgrading tier to ${tier}...`)
+		const session = whop.getTokens()
+		if (!session) {
+			printError('No session found. Please run "whopctl login" first.')
+			process.exit(1)
+		}
 
-		const response = (await whopshipApi.upgradeTier(tier)) as TierUpgradeResponse
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 
-		console.log('')
-		printSuccess(`Tier upgraded from ${response.previousTier} to ${response.tier}`)
-		printInfo(`New tier: ${response.tierInfo.name}`)
-		printInfo(`Monthly price: $${response.tierInfo.monthlyPrice}`)
+		printInfo(`Subscribing to ${tier} tier...`)
+
+		const result = await api.createCheckoutSession(tier)
+
+		if (!result.requiresPayment) {
+			// Free tier - no payment needed
+			console.log()
+			printSuccess(`✓ ${result.tier} tier activated successfully!`)
+			console.log()
+		} else {
+			// Paid tier - show checkout URL
+			console.log()
+			printSuccess('Checkout session created!')
+			console.log()
+			printInfo('Complete your subscription:')
+			console.log(chalk.cyan(result.checkoutUrl))
+			console.log()
+			printInfo('After completing payment, your subscription will be activated automatically.')
+			console.log()
+		}
 	} catch (error) {
 		printError('Failed to upgrade tier')
 		if (error instanceof Error) {

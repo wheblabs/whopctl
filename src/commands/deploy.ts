@@ -393,7 +393,7 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 		const { path: archivePath, sha256 } = await createArchive(targetDir)
 		printInfo(`  Source SHA256: ${sha256}`)
 
-		// 5. Get presigned URL
+		// 5. Check billing status and show onboarding for free tier
 		const session = whop.getTokens()
 		if (!session) {
 			printError('No session found. Please run "whopctl login" first.')
@@ -406,28 +406,137 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 			userId: session.userId,
 		})
 
+		// Check subscription status
+		printInfo('Checking subscription status...')
+		let subscriptionStatus
+		try {
+			subscriptionStatus = await api.getSubscriptionStatus()
+			
+			// Show free tier onboarding if on free tier
+			if (subscriptionStatus.tier === 'free' && subscriptionStatus.subscriptionStatus === 'free') {
+				console.log()
+				printInfo('🎉 Welcome to WhopShip Free Tier!')
+				console.log()
+				console.log(chalk.dim('You\'re on the free tier with the following limits:'))
+				console.log(chalk.dim(`  • ${subscriptionStatus.tierInfo.limits.functionInvocations.toLocaleString()} function invocations/month`))
+				console.log(chalk.dim(`  • ${subscriptionStatus.tierInfo.limits.bandwidthGb} GB bandwidth/month`))
+				console.log(chalk.dim(`  • ${subscriptionStatus.tierInfo.limits.buildMinutes} build minutes/month`))
+				console.log(chalk.dim(`  • ${subscriptionStatus.tierInfo.limits.storageGb} GB storage`))
+				console.log(chalk.dim(`  • ${subscriptionStatus.tierInfo.limits.deployments} deployments/month`))
+				console.log()
+				printInfo('💡 Upgrade anytime:')
+				console.log(chalk.dim('   whopctl billing subscribe hobby  # $20/month'))
+				console.log(chalk.dim('   whopctl billing subscribe pro    # $100/month'))
+				console.log()
+			}
+		} catch (error) {
+			// If subscription check fails, continue anyway (might be first deploy)
+			printWarning('Could not check subscription status, continuing...')
+		}
+
+		// 6. Get presigned URL
 		printInfo('\nInitializing deployment...')
-		const response = await api.deployInit({
-			whop_app_id: appId,
-			whop_app_company_id: companyId,
-			source_sha256: sha256,
-		})
+		let response
+		try {
+			response = await api.deployInit({
+				whop_app_id: appId,
+				whop_app_company_id: companyId,
+				source_sha256: sha256,
+			})
+
+			// Check for billing warnings/overages in response
+			if (response.billing) {
+				console.log()
+				if (response.billing.warnings && response.billing.warnings.length > 0) {
+					printWarning('⚠️  Usage Limit Warnings:')
+					for (const warning of response.billing.warnings) {
+						console.log(chalk.yellow(`  • ${warning}`))
+					}
+					console.log()
+
+					if (response.billing.totalOverageCost && response.billing.totalOverageCost > 0) {
+						printWarning(
+							`  Estimated overage cost: $${response.billing.totalOverageCost.toFixed(4)}`,
+						)
+						console.log()
+					}
+
+					if (response.billing.gracePeriodEndsAt) {
+						const graceEnd = new Date(response.billing.gracePeriodEndsAt)
+						const now = new Date()
+						const daysRemaining = Math.ceil(
+							(graceEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+						)
+						if (daysRemaining > 0) {
+							printInfo(
+								`⏰ Grace period: ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} remaining (ends ${graceEnd.toLocaleDateString()})`,
+							)
+							console.log()
+						}
+					}
+
+					printInfo('💡 Consider upgrading your tier to avoid overage charges:')
+					console.log(chalk.dim('   whopctl billing subscribe hobby  # $20/month'))
+					console.log(chalk.dim('   whopctl billing subscribe pro    # $100/month'))
+					console.log()
+				}
+			}
+		} catch (error: any) {
+			// Handle billing errors
+			if (error.message?.includes('402') || error.message?.includes('Billing check failed')) {
+				console.log()
+				printError('Billing check failed')
+				if (error.message) {
+					console.log(chalk.red(error.message))
+				}
+				console.log()
+				printInfo('💡 To subscribe to a tier:')
+				console.log(chalk.dim('   whopctl billing subscribe free   # Free tier'))
+				console.log(chalk.dim('   whopctl billing subscribe hobby  # $20/month'))
+				console.log(chalk.dim('   whopctl billing subscribe pro    # $100/month'))
+				console.log()
+				process.exit(1)
+			}
+			throw error
+		}
 
 		printSuccess('✓ Deployment initialized')
 		printInfo(`  Build ID: ${response.build_id}`)
 
-		// 6. Upload to S3
+		// 7. Upload to S3
 		await uploadToS3(archivePath, response.upload.url, sha256)
 
-		// 7. Clean up archive
+		// 8. Clean up archive
 		await unlink(archivePath)
 
-		// 8. Mark upload as complete
+		// 9. Mark upload as complete
 		const spinner = createSpinner('Finalizing deployment...')
 		spinner.start()
 		
 		const completeResponse = await api.deployComplete(response.build_id)
 		spinner.succeed(`Build queued as ${completeResponse.status}`)
+
+		// Check for billing warnings in complete response
+		if (completeResponse.billing) {
+			if (completeResponse.billing.warnings && completeResponse.billing.warnings.length > 0) {
+				console.log()
+				printWarning('⚠️  Usage Limit Warnings:')
+				for (const warning of completeResponse.billing.warnings) {
+					console.log(chalk.yellow(`  • ${warning}`))
+				}
+				console.log()
+
+				if (
+					completeResponse.billing.totalOverageCost &&
+					completeResponse.billing.totalOverageCost > 0
+				) {
+					printWarning(
+						`  Estimated overage cost: $${completeResponse.billing.totalOverageCost.toFixed(4)}`,
+					)
+					console.log()
+				}
+			}
+		}
 
 		if (options.background) {
 			// Background mode - just show the build ID and exit
@@ -442,7 +551,7 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 			return
 		}
 
-		// 9. Track build progress in real-time
+		// 10. Track build progress in real-time
 		console.log()
 		printInfo('🔨 Starting build process...')
 		console.log(chalk.dim('This may take several minutes depending on your app size'))

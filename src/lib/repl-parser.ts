@@ -13,6 +13,8 @@ import { checkUrlCommand, reserveUrlCommand, releaseUrlCommand, listUrlsCommand,
 import { quickDeployCommand, quickStatusCommand, quickCheckCommand } from '../commands/quick.ts'
 import { listBuildsCommand } from '../commands/builds/list.ts'
 import { redeployBuildCommand } from '../commands/builds/redeploy.ts'
+import { cancelBuildCommand } from '../commands/builds/cancel.ts'
+import { queueStatusCommand } from '../commands/builds/queue.ts'
 import { AuthenticationRequiredError } from './auth-guard.ts'
 import { printError, printWhopError } from './output.ts'
 
@@ -30,6 +32,8 @@ export function printReplHelp(): void {
 	console.log(`${chalk.bold('│')}`)
 	console.log(`${chalk.bold('│')}  ${chalk.cyan('Deployment:')}`)
 	console.log(`${chalk.bold('│')}    deploy [project] Deploy your app to WhopShip`)
+	console.log(`${chalk.bold('│')}    cancel <id>      Cancel a build`)
+	console.log(`${chalk.bold('│')}    queue            Show build queue status`)
 	console.log(`${chalk.bold('│')}    status [project] Check deployment status`)
 	console.log(`${chalk.bold('│')}    redeploy <id>    Redeploy a previous build`)
 	console.log(`${chalk.bold('│')}    history [project] Show deployment history`)
@@ -190,7 +194,7 @@ export async function parseAndExecute(input: string): Promise<void> {
 			// Builds command: builds <subcommand> [args]
 			if (args.length === 0) {
 				printError('Missing subcommand for builds command')
-				console.log(chalk.dim('Usage: builds <list|deploy> [args]'))
+				console.log(chalk.dim('Usage: builds <list|deploy|cancel|queue> [args]'))
 			} else if (args[0] === 'list') {
 				await listBuildsCommand(args[1] || '.')
 			} else if (args[0] === 'deploy') {
@@ -200,10 +204,30 @@ export async function parseAndExecute(input: string): Promise<void> {
 				} else {
 					await redeployBuildCommand(args[1])
 				}
+			} else if (args[0] === 'cancel' || args[0] === 'stop') {
+				if (args.length < 2) {
+					printError('Missing build ID for builds cancel command')
+					console.log(chalk.dim('Usage: builds cancel <buildId>'))
+				} else {
+					await cancelBuildCommand(args[1], args[2] || '.')
+				}
+			} else if (args[0] === 'queue' || args[0] === 'q') {
+				await queueStatusCommand(args[1] || '.')
 			} else {
 				printError(`Unknown builds subcommand: ${args[0]}`)
-				console.log(chalk.dim('Usage: builds <list|deploy> [args]'))
+				console.log(chalk.dim('Usage: builds <list|deploy|cancel|queue> [args]'))
 			}
+		} else if (command === 'cancel' || command === 'stop') {
+			// Cancel command: cancel <buildId>
+			if (args.length === 0) {
+				printError('Missing build ID for cancel command')
+				console.log(chalk.dim('Usage: cancel <buildId>'))
+			} else {
+				await cancelBuildCommand(args[0], args[1] || '.')
+			}
+		} else if (command === 'queue' || command === 'q') {
+			// Queue command: queue [path]
+			await queueStatusCommand(args[0] || '.')
 		} else if (command === 'search') {
 			// This will be intercepted by the custom eval to call .search
 			// This is just a fallback

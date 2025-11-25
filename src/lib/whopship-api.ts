@@ -419,6 +419,35 @@ export class WhopshipAPI {
 		})
 	}
 
+	/**
+	 * Cancel a build
+	 * @param buildId Build UUID to cancel
+	 */
+	async cancelBuild(buildId: string) {
+		return this.request(`/api/deploy/builds/${buildId}/cancel`, {
+			method: 'POST',
+		})
+	}
+
+	/**
+	 * Get queue status for builds
+	 */
+	async getQueueStatus(appId?: string) {
+		const query = appId ? `?app_id=${appId}` : ''
+		return this.request<{
+			queued: number
+			building: number
+			queue: Array<{
+				build_id: string
+				app_id: string
+				app_name: string
+				status: string
+				created_at: string
+				position?: number
+			}>
+		}>(`/api/deploy/queue${query}`)
+	}
+
 	// URL Management methods
 	async checkSubdomainAvailability(subdomain: string) {
 		return this.request<{ available: boolean; suggestions?: string[] }>(`/api/subdomains/check/${subdomain}`)
@@ -440,5 +469,45 @@ export class WhopshipAPI {
 
 	async listUserSubdomains() {
 		return this.request<{ subdomains: Array<{ subdomain: string; app_id: string; app_name: string; reserved_at: string }> }>('/api/subdomains/list')
+	}
+
+	/**
+	 * Create checkout session for subscription
+	 */
+	async createCheckoutSession(tier: 'free' | 'hobby' | 'pro') {
+		return this.request<{
+			success: boolean
+			tier: string
+			requiresPayment: boolean
+			checkoutUrl?: string
+			sessionId?: string
+			message?: string
+		}>('/api/billing/checkout', {
+			method: 'POST',
+			body: JSON.stringify({ tier }),
+		})
+	}
+
+	/**
+	 * Get subscription status
+	 */
+	async getSubscriptionStatus() {
+		return this.request<{
+			tier: 'free' | 'hobby' | 'pro'
+			tierInfo: {
+				name: string
+				monthlyPrice: number
+				limits: {
+					functionInvocations: number
+					bandwidthGb: number
+					buildMinutes: number
+					storageGb: number
+					deployments: number
+				}
+			}
+			subscriptionStatus?: 'free' | 'active' | 'cancelled' | 'expired' | 'trial'
+			whopMembershipId?: string | null
+			subscriptionEndsAt?: string | null
+		}>('/api/tiers/current')
 	}
 }
