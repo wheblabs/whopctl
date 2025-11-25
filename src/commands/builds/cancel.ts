@@ -98,12 +98,21 @@ export async function cancelBuildCommand(buildId: string, path: string = '.'): P
 			printSuccess(`✓ Build ${buildId} has been cancelled`)
 		} catch (error: any) {
 			spinner.fail('Failed to cancel build')
-			if (error.message?.includes('404')) {
+			const errorMessage = error.message || String(error)
+			if (error.status === 404 || errorMessage.includes('404') || errorMessage.includes('not found')) {
 				printError(`Build not found: ${buildId}`)
-			} else if (error.message?.includes('cannot be cancelled')) {
-				printError(`Build cannot be cancelled: ${error.message}`)
+				printInfo('Make sure you have the correct build ID and that you own this build.')
+			} else if (error.status === 400 || errorMessage.includes('cannot be cancelled') || errorMessage.includes('Cannot cancel')) {
+				printError(`Build cannot be cancelled: ${errorMessage}`)
+				if (status === 'deploying') {
+					printInfo('Note: Builds in "deploying" status should be cancellable. This might be a temporary issue.')
+					printInfo('If the build is stuck, it may complete on its own or you may need to wait for the deployment to finish.')
+				}
 			} else {
-				printError(`Failed to cancel build: ${error.message || error}`)
+				printError(`Failed to cancel build: ${errorMessage}`)
+				if (error.status) {
+					printInfo(`HTTP Status: ${error.status}`)
+				}
 			}
 			process.exit(1)
 		}

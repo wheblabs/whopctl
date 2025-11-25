@@ -34,16 +34,22 @@ export async function checkAuthCommand(): Promise<void> {
 		userId: session.userId,
 	})
 
-		const user = await api.getMe()
+		const response = await api.getMe() as { user: any }
+		const user = response.user
+
+		if (!user) {
+			printError('Failed to retrieve user information from API')
+			process.exit(1)
+		}
 
 		// Display user information
 		printSuccess('✓ Authentication valid')
 		console.log()
 		printInfo('User Information:')
-		console.log(`  Username:     ${user.whopUsername}`)
-		console.log(`  Display Name: ${user.whopDisplayName}`)
-		console.log(`  Email:        ${user.whopEmail}`)
-		console.log(`  User ID:      ${user.whopUserId}`)
+		console.log(`  Username:     ${user.whopUsername || 'N/A'}`)
+		console.log(`  Display Name: ${user.whopDisplayName || 'N/A'}`)
+		console.log(`  Email:        ${user.whopEmail || 'N/A'}`)
+		console.log(`  User ID:      ${user.whopUserId || 'N/A'}`)
 	} catch (error) {
 		printError(`Authentication check failed: ${error}`)
 		process.exit(1)

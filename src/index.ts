@@ -781,10 +781,6 @@ async function main() {
 		.example('whopctl history', 'See your deployment history')
 		.example('whopctl redeploy abc123', 'Redeploy a previous build')
 		.example('whopctl quick deploy', 'Deploy with progress tracking')
-		.epilogue(chalk.bold('Need help?\n') +
-			chalk.cyan('  Documentation: ') + chalk.underline('https://docs.whopship.app\n') +
-			chalk.cyan('  Support: ') + chalk.underline('https://whop.com/support\n') +
-			chalk.cyan('  GitHub: ') + chalk.underline('https://github.com/whoplabs/whopship'))
 		.strict()
 		.parse()
 }

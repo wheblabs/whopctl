@@ -1,11 +1,14 @@
 import chalk from 'chalk'
 import { deployAppCommand } from '../commands/apps/deploy.ts'
 import { listAppsCommand } from '../commands/apps/list.ts'
+import { checkAuthCommand } from '../commands/auth/check.ts'
 import { loginCommand } from '../commands/login.ts'
 import { logoutCommand } from '../commands/logout.ts'
 import { deployCommand } from '../commands/deploy.ts'
 import { statusCommand } from '../commands/status/status.ts'
+import { logsCommand as buildLogsCommand } from '../commands/status/logs.ts'
 import { analyticsUsageCommand } from '../commands/analytics/usage.ts'
+import { analyticsSummaryCommand } from '../commands/analytics/summary.ts'
 import { historyCommand } from '../commands/history.ts'
 import { logsCommand } from '../commands/logs.ts'
 import { setAliasCommand, removeAliasCommand, listAliasesCommand, showAliasCommand, discoverAliasesCommand } from '../commands/alias.ts'
@@ -15,6 +18,14 @@ import { listBuildsCommand } from '../commands/builds/list.ts'
 import { redeployBuildCommand } from '../commands/builds/redeploy.ts'
 import { cancelBuildCommand } from '../commands/builds/cancel.ts'
 import { queueStatusCommand } from '../commands/builds/queue.ts'
+import { billingCurrentCommand } from '../commands/billing/current.ts'
+import { billingSubscribeCommand } from '../commands/billing/subscribe.ts'
+import { billingHistoryCommand } from '../commands/billing/history.ts'
+import { billingPeriodsCommand } from '../commands/billing/periods.ts'
+import { tierCurrentCommand } from '../commands/tier/current.ts'
+import { tierUpdateCommand } from '../commands/tier/update.ts'
+import { tierUpgradeCommand } from '../commands/tier/upgrade.ts'
+import { tierDowngradeCommand } from '../commands/tier/downgrade.ts'
 import { AuthenticationRequiredError } from './auth-guard.ts'
 import { printError, printWhopError } from './output.ts'
 
@@ -29,18 +40,31 @@ export function printReplHelp(): void {
 	console.log(`${chalk.bold('│')}  ${chalk.cyan('Authentication:')}`)
 	console.log(`${chalk.bold('│')}    login            Authenticate with your Whop account`)
 	console.log(`${chalk.bold('│')}    logout           Clear authentication session`)
+	console.log(`${chalk.bold('│')}    auth check       Check authentication status`)
 	console.log(`${chalk.bold('│')}`)
 	console.log(`${chalk.bold('│')}  ${chalk.cyan('Deployment:')}`)
 	console.log(`${chalk.bold('│')}    deploy [project] Deploy your app to WhopShip`)
 	console.log(`${chalk.bold('│')}    cancel <id>      Cancel a build`)
 	console.log(`${chalk.bold('│')}    queue            Show build queue status`)
 	console.log(`${chalk.bold('│')}    status [project] Check deployment status`)
+	console.log(`${chalk.bold('│')}    status logs      View build logs`)
 	console.log(`${chalk.bold('│')}    redeploy <id>    Redeploy a previous build`)
 	console.log(`${chalk.bold('│')}    history [project] Show deployment history`)
 	console.log(`${chalk.bold('│')}`)
 	console.log(`${chalk.bold('│')}  ${chalk.cyan('Analytics & Logs:')}`)
 	console.log(`${chalk.bold('│')}    usage [appId]    View usage analytics`)
+	console.log(`${chalk.bold('│')}    analytics summary Get usage summary`)
 	console.log(`${chalk.bold('│')}    logs <type>      Stream runtime logs`)
+	console.log(`${chalk.bold('│')}`)
+	console.log(`${chalk.bold('│')}  ${chalk.cyan('Billing & Tiers:')}`)
+	console.log(`${chalk.bold('│')}    billing current  Get current period usage`)
+	console.log(`${chalk.bold('│')}    billing history  Get usage history`)
+	console.log(`${chalk.bold('│')}    billing periods  List billing periods`)
+	console.log(`${chalk.bold('│')}    billing subscribe Subscribe to a tier`)
+	console.log(`${chalk.bold('│')}    tier current     Show current tier`)
+	console.log(`${chalk.bold('│')}    tier update      Update tier`)
+	console.log(`${chalk.bold('│')}    tier upgrade     Upgrade tier`)
+	console.log(`${chalk.bold('│')}    tier downgrade   Downgrade tier`)
 	console.log(`${chalk.bold('│')}`)
 	console.log(`${chalk.bold('│')}  ${chalk.cyan('Project Management:')}`)
 	console.log(`${chalk.bold('│')}    alias <cmd>      Manage project aliases`)
@@ -122,11 +146,93 @@ export async function parseAndExecute(input: string): Promise<void> {
 			
 			await deployCommand('.', projectIdentifier, options)
 		} else if (command === 'status' || command === 's') {
-			// Status command: status [project]
-			await statusCommand(args[0])
+			// Status command: status [project] or status logs [path]
+			if (args[0] === 'logs') {
+				await buildLogsCommand(args[1] || '.')
+			} else {
+				await statusCommand(args[0])
+			}
 		} else if (command === 'usage' || command === 'u') {
 			// Usage command: usage [appId]
 			await analyticsUsageCommand(args[0])
+		} else if (command === 'auth') {
+			// Auth command: auth check
+			if (args[0] === 'check') {
+				await checkAuthCommand()
+			} else {
+				printError('Missing subcommand for auth command')
+				console.log(chalk.dim('Usage: auth check'))
+			}
+		} else if (command === 'analytics') {
+			// Analytics command: analytics <subcommand> [args]
+			if (args.length === 0) {
+				printError('Missing subcommand for analytics command')
+				console.log(chalk.dim('Usage: analytics <usage|summary> [args]'))
+			} else if (args[0] === 'usage') {
+				await analyticsUsageCommand(args[1])
+			} else if (args[0] === 'summary') {
+				await analyticsSummaryCommand(args[1])
+			} else {
+				printError(`Unknown analytics subcommand: ${args[0]}`)
+				console.log(chalk.dim('Usage: analytics <usage|summary> [args]'))
+			}
+		} else if (command === 'billing') {
+			// Billing command: billing <subcommand> [args]
+			if (args.length === 0) {
+				printError('Missing subcommand for billing command')
+				console.log(chalk.dim('Usage: billing <current|history|periods|subscribe> [args]'))
+			} else if (args[0] === 'current') {
+				await billingCurrentCommand(args[1] ? parseInt(args[1]) : undefined)
+			} else if (args[0] === 'history') {
+				await billingHistoryCommand(
+					args[1] ? parseInt(args[1]) : undefined,
+					args[2] ? parseInt(args[2]) : undefined,
+				)
+			} else if (args[0] === 'periods') {
+				await billingPeriodsCommand(args[1] ? parseInt(args[1]) : undefined)
+			} else if (args[0] === 'subscribe') {
+				if (args.length < 2) {
+					printError('Missing tier for billing subscribe command')
+					console.log(chalk.dim('Usage: billing subscribe <free|hobby|pro>'))
+				} else {
+					await billingSubscribeCommand(args[1] as 'free' | 'hobby' | 'pro' | undefined)
+				}
+			} else {
+				printError(`Unknown billing subcommand: ${args[0]}`)
+				console.log(chalk.dim('Usage: billing <current|history|periods|subscribe> [args]'))
+			}
+		} else if (command === 'tier') {
+			// Tier command: tier <subcommand> [args]
+			if (args.length === 0) {
+				printError('Missing subcommand for tier command')
+				console.log(chalk.dim('Usage: tier <current|update|upgrade|downgrade> [args]'))
+			} else if (args[0] === 'current') {
+				await tierCurrentCommand()
+			} else if (args[0] === 'update') {
+				if (args.length < 2) {
+					printError('Missing tier for tier update command')
+					console.log(chalk.dim('Usage: tier update <free|hobby|pro>'))
+				} else {
+					await tierUpdateCommand(args[1] as 'free' | 'hobby' | 'pro')
+				}
+			} else if (args[0] === 'upgrade') {
+				if (args.length < 2) {
+					printError('Missing tier for tier upgrade command')
+					console.log(chalk.dim('Usage: tier upgrade <free|hobby|pro>'))
+				} else {
+					await tierUpgradeCommand(args[1] as 'free' | 'hobby' | 'pro')
+				}
+			} else if (args[0] === 'downgrade') {
+				if (args.length < 2) {
+					printError('Missing tier for tier downgrade command')
+					console.log(chalk.dim('Usage: tier downgrade <free|hobby|pro>'))
+				} else {
+					await tierDowngradeCommand(args[1] as 'free' | 'hobby' | 'pro')
+				}
+			} else {
+				printError(`Unknown tier subcommand: ${args[0]}`)
+				console.log(chalk.dim('Usage: tier <current|update|upgrade|downgrade> [args]'))
+			}
 		} else if (command === 'redeploy' || command === 'rd') {
 			// Redeploy command: redeploy <buildId>
 			if (args.length === 0) {

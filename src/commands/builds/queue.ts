@@ -41,6 +41,7 @@ function formatStatus(status: string): string {
 	const colors: Record<string, (text: string) => string> = {
 		queued: chalk.yellow,
 		building: chalk.blue,
+		deploying: chalk.cyan,
 		uploading: chalk.cyan,
 		uploaded: chalk.cyan,
 		built: chalk.green,
@@ -91,8 +92,11 @@ export async function queueStatusCommand(path: string = '.', appId?: string): Pr
 
 		// Show summary
 		console.log(chalk.bold('Summary:'))
-		console.log(`  Queued builds: ${chalk.yellow(queueStatus.queued.toString())}`)
-		console.log(`  Building: ${chalk.blue(queueStatus.building.toString())}`)
+		console.log(`  Queued builds: ${chalk.yellow(queueStatus.queued?.toString() || '0')}`)
+		console.log(`  Building: ${chalk.blue(queueStatus.building?.toString() || '0')}`)
+		if (queueStatus.deploying && queueStatus.deploying > 0) {
+			console.log(`  Deploying: ${chalk.cyan(queueStatus.deploying.toString())}`)
+		}
 		console.log()
 
 		// Show queue details

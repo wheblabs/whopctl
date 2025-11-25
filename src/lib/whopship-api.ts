@@ -141,10 +141,17 @@ class WhopShipApiClient {
 			if (!response.ok) {
 				const errorText = await response.text()
 				let errorMessage = `API error: ${response.status} ${response.statusText}`
+				let errorJson: any = null
 
 				try {
-					const errorJson = JSON.parse(errorText)
-					errorMessage = errorJson.error || errorJson.message || errorMessage
+					errorJson = JSON.parse(errorText)
+					// Prefer message over error, as message usually contains more detailed information
+					// Show message if available, otherwise fall back to error
+					if (errorJson.message) {
+						errorMessage = errorJson.message
+					} else if (errorJson.error) {
+						errorMessage = errorJson.error
+					}
 				} catch {
 					// If not JSON, use the text as-is
 					if (errorText) {
@@ -154,6 +161,10 @@ class WhopShipApiClient {
 
 				const error = new Error(errorMessage)
 				;(error as any).status = response.status
+				;(error as any).responseBody = errorText // Store original response for debugging
+				if (errorJson) {
+					;(error as any).errorJson = errorJson // Store parsed JSON for access
+				}
 				throw error
 			}
 
@@ -426,6 +437,10 @@ export class WhopshipAPI {
 	async cancelBuild(buildId: string) {
 		return this.request(`/api/deploy/builds/${buildId}/cancel`, {
 			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({}),
 		})
 	}
 
