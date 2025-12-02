@@ -1,31 +1,43 @@
 import chalk from 'chalk'
+import {
+	discoverAliasesCommand,
+	listAliasesCommand,
+	removeAliasCommand,
+	setAliasCommand,
+	showAliasCommand,
+} from '../commands/alias.ts'
+import { analyticsSummaryCommand } from '../commands/analytics/summary.ts'
+import { analyticsUsageCommand } from '../commands/analytics/usage.ts'
 import { deployAppCommand } from '../commands/apps/deploy.ts'
 import { listAppsCommand } from '../commands/apps/list.ts'
 import { checkAuthCommand } from '../commands/auth/check.ts'
-import { loginCommand } from '../commands/login.ts'
-import { logoutCommand } from '../commands/logout.ts'
-import { deployCommand } from '../commands/deploy.ts'
-import { statusCommand } from '../commands/status/status.ts'
-import { logsCommand as buildLogsCommand } from '../commands/status/logs.ts'
-import { analyticsUsageCommand } from '../commands/analytics/usage.ts'
-import { analyticsSummaryCommand } from '../commands/analytics/summary.ts'
-import { historyCommand } from '../commands/history.ts'
-import { logsCommand } from '../commands/logs.ts'
-import { setAliasCommand, removeAliasCommand, listAliasesCommand, showAliasCommand, discoverAliasesCommand } from '../commands/alias.ts'
-import { checkUrlCommand, reserveUrlCommand, releaseUrlCommand, listUrlsCommand, suggestUrlCommand } from '../commands/url.ts'
-import { quickDeployCommand, quickStatusCommand, quickCheckCommand } from '../commands/quick.ts'
-import { listBuildsCommand } from '../commands/builds/list.ts'
-import { redeployBuildCommand } from '../commands/builds/redeploy.ts'
-import { cancelBuildCommand } from '../commands/builds/cancel.ts'
-import { queueStatusCommand } from '../commands/builds/queue.ts'
 import { billingCurrentCommand } from '../commands/billing/current.ts'
-import { billingSubscribeCommand } from '../commands/billing/subscribe.ts'
 import { billingHistoryCommand } from '../commands/billing/history.ts'
 import { billingPeriodsCommand } from '../commands/billing/periods.ts'
+import { billingSubscribeCommand } from '../commands/billing/subscribe.ts'
+import { cancelBuildCommand } from '../commands/builds/cancel.ts'
+import { listBuildsCommand } from '../commands/builds/list.ts'
+import { queueStatusCommand } from '../commands/builds/queue.ts'
+import { redeployBuildCommand } from '../commands/builds/redeploy.ts'
+import { deployCommand } from '../commands/deploy.ts'
+import { historyCommand } from '../commands/history.ts'
+import { loginCommand } from '../commands/login.ts'
+import { logoutCommand } from '../commands/logout.ts'
+import { logsCommand } from '../commands/logs.ts'
+import { quickCheckCommand, quickDeployCommand, quickStatusCommand } from '../commands/quick.ts'
+import { logsCommand as buildLogsCommand } from '../commands/status/logs.ts'
+import { statusCommand } from '../commands/status/status.ts'
 import { tierCurrentCommand } from '../commands/tier/current.ts'
+import { tierDowngradeCommand } from '../commands/tier/downgrade.ts'
 import { tierUpdateCommand } from '../commands/tier/update.ts'
 import { tierUpgradeCommand } from '../commands/tier/upgrade.ts'
-import { tierDowngradeCommand } from '../commands/tier/downgrade.ts'
+import {
+	checkUrlCommand,
+	listUrlsCommand,
+	releaseUrlCommand,
+	reserveUrlCommand,
+	suggestUrlCommand,
+} from '../commands/url.ts'
 import { AuthenticationRequiredError } from './auth-guard.ts'
 import { printError, printWhopError } from './output.ts'
 
@@ -133,8 +145,8 @@ export async function parseAndExecute(input: string): Promise<void> {
 		} else if (command === 'deploy' || command === 'd') {
 			// Deploy command: deploy [project] [--background]
 			let projectIdentifier = args[0]
-			let options = { background: false }
-			
+			const options = { background: false }
+
 			// Check for --background flag
 			const backgroundIndex = args.indexOf('--background')
 			if (backgroundIndex !== -1) {
@@ -143,7 +155,7 @@ export async function parseAndExecute(input: string): Promise<void> {
 				args.splice(backgroundIndex, 1)
 				projectIdentifier = args[0] // Re-get project after removing flag
 			}
-			
+
 			await deployCommand('.', projectIdentifier, options)
 		} else if (command === 'status' || command === 's') {
 			// Status command: status [project] or status logs [path]
@@ -182,14 +194,14 @@ export async function parseAndExecute(input: string): Promise<void> {
 				printError('Missing subcommand for billing command')
 				console.log(chalk.dim('Usage: billing <current|history|periods|subscribe> [args]'))
 			} else if (args[0] === 'current') {
-				await billingCurrentCommand(args[1] ? parseInt(args[1]) : undefined)
+				await billingCurrentCommand(args[1] ? parseInt(args[1], 10) : undefined)
 			} else if (args[0] === 'history') {
 				await billingHistoryCommand(
-					args[1] ? parseInt(args[1]) : undefined,
-					args[2] ? parseInt(args[2]) : undefined,
+					args[1] ? parseInt(args[1], 10) : undefined,
+					args[2] ? parseInt(args[2], 10) : undefined,
 				)
 			} else if (args[0] === 'periods') {
-				await billingPeriodsCommand(args[1] ? parseInt(args[1]) : undefined)
+				await billingPeriodsCommand(args[1] ? parseInt(args[1], 10) : undefined)
 			} else if (args[0] === 'subscribe') {
 				if (args.length < 2) {
 					printError('Missing tier for billing subscribe command')
@@ -258,7 +270,7 @@ export async function parseAndExecute(input: string): Promise<void> {
 				// Parse logs arguments
 				const logType = args[0]
 				const options: any = {}
-				
+
 				for (let i = 1; i < args.length; i++) {
 					const arg = args[i]
 					if (arg === '--follow' || arg === '-f') {
@@ -269,7 +281,7 @@ export async function parseAndExecute(input: string): Promise<void> {
 						options.filter = arg.split('=')[1]
 					}
 				}
-				
+
 				await logsCommand(logType, options)
 			}
 		} else if (command === 'alias') {

@@ -67,7 +67,7 @@ export class ProgressBar {
 		}
 
 		// Clear line and write
-		process.stdout.write('\r\x1b[K' + output)
+		process.stdout.write(`\r\x1b[K${output}`)
 
 		// Add newline when complete
 		if (this.current >= this.total) {

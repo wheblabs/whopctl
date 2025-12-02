@@ -32,7 +32,7 @@ async function readEnvFile(dir: string): Promise<Record<string, string>> {
 		}
 
 		return env
-	} catch (error) {
+	} catch (_error) {
 		return {}
 	}
 }

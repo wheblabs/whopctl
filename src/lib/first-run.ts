@@ -1,6 +1,6 @@
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { readFile, writeFile, mkdir, access } from 'node:fs/promises'
 import chalk from 'chalk'
 
 interface FirstRunState {
@@ -107,4 +107,3 @@ export async function checkFirstRun(): Promise<void> {
 		await markWelcomeSeen()
 	}
 }
-

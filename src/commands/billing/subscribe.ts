@@ -1,9 +1,9 @@
 import chalk from 'chalk'
 import { requireAuth } from '../../lib/auth-guard.ts'
-import { printError, printInfo, printSuccess, printWarning } from '../../lib/output.ts'
+import { printError, printInfo, printSuccess } from '../../lib/output.ts'
+import { promptUser } from '../../lib/repl-prompt.ts'
 import { whop } from '../../lib/whop.ts'
 import { WhopshipAPI } from '../../lib/whopship-api.ts'
-import { promptUser } from '../../lib/repl-prompt.ts'
 
 /**
  * Handles the "billing subscribe" command.
@@ -32,21 +32,21 @@ export async function billingSubscribeCommand(tier?: 'free' | 'hobby' | 'pro'): 
 			console.log()
 			printInfo('Select a subscription tier:')
 			console.log()
-			console.log(chalk.cyan('1) Free') + ' - $0/month')
+			console.log(`${chalk.cyan('1) Free')} - $0/month`)
 			console.log('   • 100 function invocations/month')
 			console.log('   • 1 GB bandwidth/month')
 			console.log('   • 10 build minutes/month')
 			console.log('   • 1 GB storage')
 			console.log('   • 10 deployments/month')
 			console.log()
-			console.log(chalk.cyan('2) Hobby') + ' - $20/month')
+			console.log(`${chalk.cyan('2) Hobby')} - $20/month`)
 			console.log('   • 10,000 function invocations/month')
 			console.log('   • 100 GB bandwidth/month')
 			console.log('   • 100 build minutes/month')
 			console.log('   • 10 GB storage')
 			console.log('   • 100 deployments/month')
 			console.log()
-			console.log(chalk.cyan('3) Pro') + ' - $100/month')
+			console.log(`${chalk.cyan('3) Pro')} - $100/month`)
 			console.log('   • 1,000,000 function invocations/month')
 			console.log('   • 1 TB bandwidth/month')
 			console.log('   • 1,000 build minutes/month')
@@ -100,7 +100,7 @@ export async function billingSubscribeCommand(tier?: 'free' | 'hobby' | 'pro'): 
 		} else {
 			console.error(chalk.red(String(error)))
 		}
-		
+
 		// Log additional error details if available
 		if (error?.responseBody) {
 			try {
@@ -112,8 +112,7 @@ export async function billingSubscribeCommand(tier?: 'free' | 'hobby' | 'pro'): 
 				// Ignore parse errors
 			}
 		}
-		
+
 		process.exit(1)
 	}
 }
-

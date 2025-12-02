@@ -1,9 +1,9 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises'
-import { join } from 'node:path'
-import { homedir } from 'node:os'
 import { existsSync } from 'node:fs'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 import chalk from 'chalk'
-import { printError, printInfo, printSuccess, printWarning } from './output.ts'
+import { printInfo } from './output.ts'
 import { WhopshipAPI } from './whopship-api.ts'
 
 const whoplabsDir = join(homedir(), '.whoplabs')
@@ -32,7 +32,7 @@ export class AliasManager {
 			if (!existsSync(whoplabsDir)) {
 				mkdir(whoplabsDir, { recursive: true })
 			}
-		} catch (error) {
+		} catch (_error) {
 			// Ignore errors, will handle when needed
 		}
 	}
@@ -48,11 +48,11 @@ export class AliasManager {
 		try {
 			const content = await readFile(aliasesPath, 'utf-8')
 			this.config = JSON.parse(content)
-		} catch (error) {
+		} catch (_error) {
 			// File doesn't exist or is invalid, create default config
 			this.config = {
 				aliases: {},
-				version: '1.0.0'
+				version: '1.0.0',
 			}
 		}
 
@@ -87,14 +87,14 @@ export class AliasManager {
 		}
 
 		const config = await this.loadConfig()
-		
+
 		const alias: ProjectAlias = {
 			name,
 			appId,
 			appName,
 			subdomain,
 			createdAt: new Date().toISOString(),
-			lastUsed: new Date().toISOString()
+			lastUsed: new Date().toISOString(),
 		}
 
 		config.aliases[name] = alias
@@ -107,13 +107,13 @@ export class AliasManager {
 	async getAlias(name: string): Promise<ProjectAlias | null> {
 		const config = await this.loadConfig()
 		const alias = config.aliases[name]
-		
+
 		if (alias) {
 			// Update last used timestamp
 			alias.lastUsed = new Date().toISOString()
 			await this.saveConfig()
 		}
-		
+
 		return alias || null
 	}
 
@@ -122,13 +122,13 @@ export class AliasManager {
 	 */
 	async removeAlias(name: string): Promise<boolean> {
 		const config = await this.loadConfig()
-		
+
 		if (config.aliases[name]) {
 			delete config.aliases[name]
 			await this.saveConfig()
 			return true
 		}
-		
+
 		return false
 	}
 
@@ -137,15 +137,19 @@ export class AliasManager {
 	 */
 	async listAliases(): Promise<ProjectAlias[]> {
 		const config = await this.loadConfig()
-		return Object.values(config.aliases).sort((a, b) => 
-			new Date(b.lastUsed || b.createdAt).getTime() - new Date(a.lastUsed || a.createdAt).getTime()
+		return Object.values(config.aliases).sort(
+			(a, b) =>
+				new Date(b.lastUsed || b.createdAt).getTime() -
+				new Date(a.lastUsed || a.createdAt).getTime(),
 		)
 	}
 
 	/**
 	 * Resolve a project identifier to an app ID
 	 */
-	async resolveProjectId(identifier: string): Promise<{ appId: string; source: 'alias' | 'direct' | 'env' }> {
+	async resolveProjectId(
+		identifier: string,
+	): Promise<{ appId: string; source: 'alias' | 'direct' | 'env' }> {
 		// If it's already an app ID, return it
 		if (identifier.startsWith('app_')) {
 			return { appId: identifier, source: 'direct' }
@@ -162,12 +166,12 @@ export class AliasManager {
 			try {
 				const envPath = join(process.cwd(), '.env')
 				const content = await readFile(envPath, 'utf-8')
-				
+
 				for (const line of content.split('\n')) {
 					const trimmed = line.trim()
 					if (trimmed.startsWith('NEXT_PUBLIC_WHOP_APP_ID=')) {
 						const appId = trimmed.split('=')[1]?.trim().replace(/['"]/g, '')
-						if (appId && appId.startsWith('app_')) {
+						if (appId?.startsWith('app_')) {
 							return { appId, source: 'env' }
 						}
 					}
@@ -177,13 +181,17 @@ export class AliasManager {
 			}
 		}
 
-		throw new Error(`Project "${identifier}" not found. Use an app ID (app_xxx) or create an alias.`)
+		throw new Error(
+			`Project "${identifier}" not found. Use an app ID (app_xxx) or create an alias.`,
+		)
 	}
 
 	/**
 	 * Auto-discover and suggest aliases for apps
 	 */
-	async suggestAliases(api: WhopshipAPI): Promise<{ name: string; appId: string; appName: string }[]> {
+	async suggestAliases(
+		_api: WhopshipAPI,
+	): Promise<{ name: string; appId: string; appName: string }[]> {
 		try {
 			// This would require an API endpoint to list user's apps
 			// For now, return empty array
@@ -224,8 +232,8 @@ export class AliasManager {
 		// Table header
 		console.log(
 			chalk.bold(
-				`${'Name'.padEnd(20)} ${'App ID'.padEnd(25)} ${'App Name'.padEnd(20)} ${'Last Used'.padEnd(12)}`
-			)
+				`${'Name'.padEnd(20)} ${'App ID'.padEnd(25)} ${'App Name'.padEnd(20)} ${'Last Used'.padEnd(12)}`,
+			),
 		)
 		console.log(chalk.gray('─'.repeat(80)))
 
@@ -233,9 +241,9 @@ export class AliasManager {
 			const name = chalk.cyan(alias.name.padEnd(20))
 			const appId = chalk.dim(alias.appId.padEnd(25))
 			const appName = (alias.appName || 'Unknown').padEnd(20)
-			const lastUsed = alias.lastUsed ? 
-				this.formatRelativeTime(alias.lastUsed).padEnd(12) : 
-				chalk.dim('Never'.padEnd(12))
+			const lastUsed = alias.lastUsed
+				? this.formatRelativeTime(alias.lastUsed).padEnd(12)
+				: chalk.dim('Never'.padEnd(12))
 
 			console.log(`${name} ${appId} ${appName} ${lastUsed}`)
 		}

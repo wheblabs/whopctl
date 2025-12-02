@@ -1,4 +1,4 @@
-import { printWarning, printInfo } from './output.ts'
+import { printInfo, printWarning } from './output.ts'
 
 export interface RetryOptions {
 	maxAttempts?: number
@@ -10,7 +10,10 @@ export interface RetryOptions {
 }
 
 export class RetryableError extends Error {
-	constructor(message: string, public originalError?: Error) {
+	constructor(
+		message: string,
+		public originalError?: Error,
+	) {
 		super(message)
 		this.name = 'RetryableError'
 	}
@@ -18,7 +21,7 @@ export class RetryableError extends Error {
 
 export async function withRetry<T>(
 	operation: () => Promise<T>,
-	options: RetryOptions = {}
+	options: RetryOptions = {},
 ): Promise<T> {
 	const {
 		maxAttempts = 3,
@@ -43,7 +46,7 @@ export async function withRetry<T>(
 			}
 
 			// Calculate delay with exponential backoff
-			const delay = Math.min(baseDelay * Math.pow(backoffFactor, attempt - 1), maxDelay)
+			const delay = Math.min(baseDelay * backoffFactor ** (attempt - 1), maxDelay)
 
 			if (onRetry) {
 				onRetry(error, attempt)
@@ -51,7 +54,7 @@ export async function withRetry<T>(
 				printWarning(`Attempt ${attempt} failed, retrying in ${delay}ms...`)
 			}
 
-			await new Promise(resolve => setTimeout(resolve, delay))
+			await new Promise((resolve) => setTimeout(resolve, delay))
 		}
 	}
 
@@ -125,7 +128,7 @@ export function getContextualErrorMessage(error: any, context: string): string {
 
 		case 'file_system':
 			if (baseMessage.includes('ENOENT')) {
-				return 'File not found. Make sure you\'re running the command from your project directory.'
+				return "File not found. Make sure you're running the command from your project directory."
 			}
 			if (baseMessage.includes('EACCES')) {
 				return 'Permission denied. You may need to run the command with appropriate permissions.'
@@ -147,7 +150,7 @@ export function getContextualErrorMessage(error: any, context: string): string {
 
 export async function retryableRequest<T>(
 	requestFn: () => Promise<T>,
-	context: string = 'network'
+	context: string = 'network',
 ): Promise<T> {
 	return withRetry(requestFn, {
 		maxAttempts: 3,

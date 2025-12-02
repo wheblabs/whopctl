@@ -1,17 +1,12 @@
-import { resolve } from 'node:path'
 import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import chalk from 'chalk'
+import type { BuildStage, BuildStages, DeployStage, ErrorContext } from '~/types/index.ts'
 import { requireAuth } from '../../lib/auth-guard.ts'
 import { printError, printInfo, printSuccess, printWarning } from '../../lib/output.ts'
+import { createSpinner } from '../../lib/progress.ts'
 import { whop } from '../../lib/whop.ts'
 import { WhopshipAPI } from '../../lib/whopship-api.ts'
-import { createSpinner } from '../../lib/progress.ts'
-import type {
-	BuildStages,
-	BuildStage,
-	DeployStage,
-	ErrorContext,
-} from '~/types/index.ts'
 
 /**
  * Simple .env reader
@@ -111,21 +106,21 @@ function formatLogLine(line: string): string {
 function displayStageSummary(stages: BuildStages): void {
 	console.log(chalk.bold('Stage Summary:'))
 	console.log()
-	
+
 	const stageOrder: Array<keyof BuildStages> = ['upload', 'queue', 'build', 'deploy']
-	
+
 	for (const stageName of stageOrder) {
 		const stage = stages[stageName]
 		if (!stage) continue
-		
+
 		const isComplete = stage.completedAt !== undefined
 		const isActive = stage.startedAt && !stage.completedAt
 		const icon = isComplete ? chalk.green('✓') : isActive ? chalk.yellow('●') : chalk.dim('○')
 		const name = STAGE_NAMES[stageName] || stageName
 		const duration = stage.durationMs ? formatDuration(stage.durationMs) : ''
-		
+
 		console.log(`  ${icon} ${chalk.bold(name)} ${duration ? chalk.dim(`(${duration})`) : ''}`)
-		
+
 		// Show sub-stages for build
 		if (stageName === 'build' && stage) {
 			const buildStage = stage as BuildStage
@@ -134,14 +129,20 @@ function displayStageSummary(stages: BuildStages): void {
 					if (!subStage) continue
 					const subComplete = subStage.completedAt !== undefined
 					const subActive = subStage.startedAt && !subStage.completedAt
-					const subIcon = subComplete ? chalk.green('✓') : subActive ? chalk.yellow('→') : chalk.dim('·')
+					const subIcon = subComplete
+						? chalk.green('✓')
+						: subActive
+							? chalk.yellow('→')
+							: chalk.dim('·')
 					const subLabel = BUILD_SUBSTAGE_NAMES[subName] || subName
 					const subDuration = subStage.durationMs ? formatDuration(subStage.durationMs) : ''
-					console.log(`     ${subIcon} ${subLabel} ${subDuration ? chalk.dim(`(${subDuration})`) : ''}`)
+					console.log(
+						`     ${subIcon} ${subLabel} ${subDuration ? chalk.dim(`(${subDuration})`) : ''}`,
+					)
 				}
 			}
 		}
-		
+
 		// Show sub-stages for deploy
 		if (stageName === 'deploy' && stage) {
 			const deployStage = stage as DeployStage
@@ -150,15 +151,21 @@ function displayStageSummary(stages: BuildStages): void {
 					if (!subStage) continue
 					const subComplete = subStage.completedAt !== undefined
 					const subActive = subStage.startedAt && !subStage.completedAt
-					const subIcon = subComplete ? chalk.green('✓') : subActive ? chalk.yellow('→') : chalk.dim('·')
+					const subIcon = subComplete
+						? chalk.green('✓')
+						: subActive
+							? chalk.yellow('→')
+							: chalk.dim('·')
 					const subLabel = DEPLOY_SUBSTAGE_NAMES[subName] || subName
 					const subDuration = subStage.durationMs ? formatDuration(subStage.durationMs) : ''
-					console.log(`     ${subIcon} ${subLabel} ${subDuration ? chalk.dim(`(${subDuration})`) : ''}`)
+					console.log(
+						`     ${subIcon} ${subLabel} ${subDuration ? chalk.dim(`(${subDuration})`) : ''}`,
+					)
 				}
 			}
 		}
 	}
-	
+
 	console.log()
 }
 
@@ -168,20 +175,20 @@ function displayStageSummary(stages: BuildStages): void {
 function displayErrorContext(context: ErrorContext, errorMessage: string): void {
 	console.log(chalk.bold.red('Error Details:'))
 	console.log()
-	
+
 	if (context.stage) {
-		const stageName = context.subStage 
-			? `${STAGE_NAMES[context.stage] || context.stage} → ${BUILD_SUBSTAGE_NAMES[context.subStage] || DEPLOY_SUBSTAGE_NAMES[context.subStage] || context.subStage}` 
+		const stageName = context.subStage
+			? `${STAGE_NAMES[context.stage] || context.stage} → ${BUILD_SUBSTAGE_NAMES[context.subStage] || DEPLOY_SUBSTAGE_NAMES[context.subStage] || context.subStage}`
 			: STAGE_NAMES[context.stage] || context.stage
 		console.log(`  ${chalk.cyan('Failed at:')} ${stageName}`)
 	}
-	
+
 	if (context.exitCode !== undefined) {
 		console.log(`  ${chalk.cyan('Exit code:')} ${context.exitCode}`)
 	}
-	
+
 	console.log(`  ${chalk.cyan('Message:')} ${chalk.red(errorMessage)}`)
-	
+
 	if (context.likelyCauses && context.likelyCauses.length > 0) {
 		console.log()
 		console.log(chalk.bold('Likely causes:'))
@@ -189,7 +196,7 @@ function displayErrorContext(context: ErrorContext, errorMessage: string): void 
 			console.log(chalk.yellow(`  • ${cause}`))
 		}
 	}
-	
+
 	if (context.debugSteps && context.debugSteps.length > 0) {
 		console.log()
 		console.log(chalk.bold('How to fix:'))
@@ -197,7 +204,7 @@ function displayErrorContext(context: ErrorContext, errorMessage: string): void 
 			console.log(chalk.cyan(`  ${i + 1}. ${context.debugSteps[i]}`))
 		}
 	}
-	
+
 	console.log()
 }
 
@@ -255,7 +262,7 @@ export async function buildLogsCommand(
 				const build = await api.getLatestBuildForApp(appId)
 				buildId = build.build_id
 				spinner.succeed(`Found build: ${buildId.substring(0, 8)}...`)
-			} catch (error) {
+			} catch (_error) {
 				spinner.fail('Failed to find builds for this app')
 				printError(`No builds found. Deploy first with: whopctl deploy`)
 				process.exit(1)
@@ -276,7 +283,10 @@ export async function buildLogsCommand(
 
 		// Display current stage
 		if (logsResponse.current_stage) {
-			console.log(chalk.bold('Current Stage:'), chalk.cyan(STAGE_NAMES[logsResponse.current_stage] || logsResponse.current_stage))
+			console.log(
+				chalk.bold('Current Stage:'),
+				chalk.cyan(STAGE_NAMES[logsResponse.current_stage] || logsResponse.current_stage),
+			)
 			console.log()
 		}
 
@@ -300,17 +310,19 @@ export async function buildLogsCommand(
 		} else {
 			console.log(chalk.bold('Logs:'))
 			console.log()
-			
+
 			// Limit lines if specified and not verbose
-			const linesToShow = options.verbose 
-				? logs 
-				: logs.slice(-(options.lines || 50))
-			
+			const linesToShow = options.verbose ? logs : logs.slice(-(options.lines || 50))
+
 			if (!options.verbose && logs.length > linesToShow.length) {
-				console.log(chalk.dim(`... ${logs.length - linesToShow.length} earlier lines hidden (use --verbose to see all)`))
+				console.log(
+					chalk.dim(
+						`... ${logs.length - linesToShow.length} earlier lines hidden (use --verbose to see all)`,
+					),
+				)
 				console.log()
 			}
-			
+
 			for (const log of linesToShow) {
 				console.log(formatLogLine(log))
 			}
@@ -319,7 +331,7 @@ export async function buildLogsCommand(
 		// Follow mode
 		if (options.follow) {
 			const activeStatuses = ['init', 'uploading', 'uploaded', 'queued', 'building', 'deploying']
-			
+
 			if (!activeStatuses.includes(logsResponse.status)) {
 				console.log()
 				printInfo(`Build is ${logsResponse.status}. No new logs expected.`)
@@ -332,7 +344,7 @@ export async function buildLogsCommand(
 
 			let lastLogCount = logs.length
 			let interrupted = false
-			
+
 			const interruptHandler = () => {
 				interrupted = true
 				console.log()
@@ -347,7 +359,7 @@ export async function buildLogsCommand(
 
 					try {
 						const newLogs = await api.getBuildLogs(buildId)
-						
+
 						if (newLogs.logs && newLogs.logs.length > lastLogCount) {
 							const newLines = newLogs.logs.slice(lastLogCount)
 							for (const log of newLines) {
@@ -363,7 +375,10 @@ export async function buildLogsCommand(
 							} else if (newLogs.status === 'failed') {
 								printError(`Build failed`)
 								if (newLogs.error_context) {
-									displayErrorContext(newLogs.error_context, newLogs.error_message || 'Unknown error')
+									displayErrorContext(
+										newLogs.error_context,
+										newLogs.error_message || 'Unknown error',
+									)
 								} else if (newLogs.error_message) {
 									console.log(chalk.red(`Error: ${newLogs.error_message}`))
 								}
@@ -372,7 +387,7 @@ export async function buildLogsCommand(
 							}
 							break
 						}
-					} catch (error) {
+					} catch (_error) {
 						printWarning('Failed to fetch logs, retrying...')
 					}
 				}
@@ -387,4 +402,3 @@ export async function buildLogsCommand(
 		process.exit(1)
 	}
 }
-

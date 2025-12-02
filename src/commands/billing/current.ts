@@ -29,9 +29,9 @@ export async function billingCurrentCommand(appId?: number): Promise<void> {
 
 		// Get subscription status
 		const subscriptionStatus = await api.getSubscriptionStatus()
-		
+
 		// Get usage
-		const usageData = await api.getCurrentUsage(appId) as any
+		const usageData = (await api.getCurrentUsage(appId)) as any
 
 		console.log('')
 		printSuccess('Billing Status')
@@ -40,10 +40,13 @@ export async function billingCurrentCommand(appId?: number): Promise<void> {
 		// Subscription info
 		console.log(chalk.bold('Subscription:'))
 		console.log(`  Tier: ${chalk.cyan(subscriptionStatus.tierInfo.name)}`)
-		console.log(`  Price: ${chalk.cyan('$' + subscriptionStatus.tierInfo.monthlyPrice.toFixed(2))}/month`)
-		
+		console.log(
+			`  Price: ${chalk.cyan(`$${subscriptionStatus.tierInfo.monthlyPrice.toFixed(2)}`)}/month`,
+		)
+
 		if (subscriptionStatus.subscriptionStatus) {
-			const statusColor = subscriptionStatus.subscriptionStatus === 'active' ? chalk.green : chalk.yellow
+			const statusColor =
+				subscriptionStatus.subscriptionStatus === 'active' ? chalk.green : chalk.yellow
 			console.log(`  Status: ${statusColor(subscriptionStatus.subscriptionStatus)}`)
 		}
 
@@ -143,7 +146,9 @@ export async function billingCurrentCommand(appId?: number): Promise<void> {
 			if (usageData.gracePeriodEndsAt) {
 				const graceEnd = new Date(usageData.gracePeriodEndsAt)
 				const now = new Date()
-				const daysRemaining = Math.ceil((graceEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+				const daysRemaining = Math.ceil(
+					(graceEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+				)
 				console.log('')
 				if (daysRemaining > 0) {
 					console.log(
@@ -170,11 +175,9 @@ export async function billingCurrentCommand(appId?: number): Promise<void> {
 
 		if (usageData.costUsd !== undefined) {
 			console.log(chalk.bold('Cost:'))
-			console.log(`  ${chalk.green('$' + parseFloat(usageData.costUsd || '0').toFixed(2))}`)
+			console.log(`  ${chalk.green(`$${parseFloat(usageData.costUsd || '0').toFixed(2)}`)}`)
 			if (usageData.totalOverageCost !== undefined && usageData.totalOverageCost > 0) {
-				console.log(
-					`  ${chalk.yellow('Overage: $' + usageData.totalOverageCost.toFixed(4))}`,
-				)
+				console.log(`  ${chalk.yellow(`Overage: $${usageData.totalOverageCost.toFixed(4)}`)}`)
 			}
 			console.log('')
 		}

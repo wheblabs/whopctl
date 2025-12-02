@@ -1,20 +1,20 @@
-import { createHash, randomBytes } from 'node:crypto'
+import { createHash } from 'node:crypto'
 import { createReadStream, createWriteStream } from 'node:fs'
-import { readFile, writeFile, stat, unlink } from 'node:fs/promises'
+import { readFile, stat, unlink, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { pipeline } from 'node:stream/promises'
 import { createGzip } from 'node:zlib'
-import { create as createTar } from 'tar'
 import chalk from 'chalk'
+import { create as createTar } from 'tar'
+import { aliasManager } from '../lib/alias-manager.ts'
 import { requireAuth } from '../lib/auth-guard.ts'
+import { createBuildTracker } from '../lib/build-tracker.ts'
 import { printError, printInfo, printSuccess, printWarning } from '../lib/output.ts'
+import { createProgressBar, createSpinner } from '../lib/progress.ts'
+import { validateProject } from '../lib/project-validator.ts'
+import { createContextualError } from '../lib/retry.ts'
 import { whop } from '../lib/whop.ts'
 import { WhopshipAPI } from '../lib/whopship-api.ts'
-import { createProgressBar, createSpinner } from '../lib/progress.ts'
-import { createBuildTracker } from '../lib/build-tracker.ts'
-import { createContextualError } from '../lib/retry.ts'
-import { validateProject } from '../lib/project-validator.ts'
-import { aliasManager } from '../lib/alias-manager.ts'
 
 /**
  * Create tar.gz archive of the project
@@ -71,7 +71,7 @@ async function createArchive(dir: string): Promise<{ path: string; sha256: strin
 /**
  * Upload archive to S3 with progress tracking
  */
-async function uploadToS3(filePath: string, uploadUrl: string, sha256: string): Promise<void> {
+async function uploadToS3(filePath: string, uploadUrl: string, _sha256: string): Promise<void> {
 	const fileBuffer = await readFile(filePath)
 	const totalSize = fileBuffer.length
 	const progressBar = createProgressBar({
@@ -163,7 +163,7 @@ async function buildProject(dir: string, projectType: string): Promise<void> {
 	try {
 		const { spawn } = await import('node:child_process')
 		const { promisify } = await import('node:util')
-		
+
 		let buildCommand: string
 		let buildArgs: string[]
 
@@ -273,7 +273,7 @@ async function ensureStandaloneOutput(dir: string): Promise<void> {
 
 		await writeFile(configFile, config)
 		printSuccess('✓ Updated Next.js config for standalone build')
-	} catch (error) {
+	} catch (_error) {
 		printWarning('Could not update Next.js config - ensure output: "standalone" is set manually')
 	}
 }
@@ -286,7 +286,11 @@ async function ensureStandaloneOutput(dir: string): Promise<void> {
  * @param projectIdentifier Optional project name/alias or app ID to deploy
  * @param options Optional deployment options
  */
-export async function deployCommand(path: string = '.', projectIdentifier?: string, options: { background?: boolean } = {}): Promise<void> {
+export async function deployCommand(
+	path: string = '.',
+	projectIdentifier?: string,
+	options: { background?: boolean } = {},
+): Promise<void> {
 	requireAuth()
 	const targetDir = resolve(process.cwd(), path)
 
@@ -296,16 +300,16 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 		// 1. Validate project
 		printInfo('🔍 Validating project...')
 		const validationResult = await validateProject(targetDir, { verbose: false })
-		
+
 		if (!validationResult.isValid) {
 			console.log()
 			console.log(chalk.bold.red('❌ Project validation failed'))
 			console.log()
-			
+
 			for (const error of validationResult.errors) {
 				printError(`✗ ${error}`)
 			}
-			
+
 			if (validationResult.suggestions.length > 0) {
 				console.log()
 				printInfo('💡 Suggestions:')
@@ -313,7 +317,7 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 					console.log(chalk.blue(`  • ${suggestion}`))
 				}
 			}
-			
+
 			console.log()
 			printError('Please fix the above issues before deploying.')
 			process.exit(1)
@@ -342,7 +346,7 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 				const { appId: resolvedAppId } = await aliasManager.resolveProjectId(projectIdentifier)
 				appId = resolvedAppId
 				printSuccess(`✓ Resolved to App ID: ${appId}`)
-				
+
 				// Still need company ID from .env for now
 				const env = await readEnvFile(targetDir)
 				const envCompanyId = env.NEXT_PUBLIC_WHOP_COMPANY_ID
@@ -411,25 +415,35 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 		let subscriptionStatus
 		try {
 			subscriptionStatus = await api.getSubscriptionStatus()
-			
+
 			// Show free tier onboarding if on free tier
 			if (subscriptionStatus.tier === 'free' && subscriptionStatus.subscriptionStatus === 'free') {
 				console.log()
 				printInfo('🎉 Welcome to WhopShip Free Tier!')
 				console.log()
-				console.log(chalk.dim('You\'re on the free tier with the following limits:'))
-				console.log(chalk.dim(`  • ${subscriptionStatus.tierInfo.limits.functionInvocations.toLocaleString()} function invocations/month`))
-				console.log(chalk.dim(`  • ${subscriptionStatus.tierInfo.limits.bandwidthGb} GB bandwidth/month`))
-				console.log(chalk.dim(`  • ${subscriptionStatus.tierInfo.limits.buildMinutes} build minutes/month`))
+				console.log(chalk.dim("You're on the free tier with the following limits:"))
+				console.log(
+					chalk.dim(
+						`  • ${subscriptionStatus.tierInfo.limits.functionInvocations.toLocaleString()} function invocations/month`,
+					),
+				)
+				console.log(
+					chalk.dim(`  • ${subscriptionStatus.tierInfo.limits.bandwidthGb} GB bandwidth/month`),
+				)
+				console.log(
+					chalk.dim(`  • ${subscriptionStatus.tierInfo.limits.buildMinutes} build minutes/month`),
+				)
 				console.log(chalk.dim(`  • ${subscriptionStatus.tierInfo.limits.storageGb} GB storage`))
-				console.log(chalk.dim(`  • ${subscriptionStatus.tierInfo.limits.deployments} deployments/month`))
+				console.log(
+					chalk.dim(`  • ${subscriptionStatus.tierInfo.limits.deployments} deployments/month`),
+				)
 				console.log()
 				printInfo('💡 Upgrade anytime:')
 				console.log(chalk.dim('   whopctl billing subscribe hobby  # $20/month'))
 				console.log(chalk.dim('   whopctl billing subscribe pro    # $100/month'))
 				console.log()
 			}
-		} catch (error) {
+		} catch (_error) {
 			// If subscription check fails, continue anyway (might be first deploy)
 			printWarning('Could not check subscription status, continuing...')
 		}
@@ -512,7 +526,7 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 		// 9. Mark upload as complete
 		const spinner = createSpinner('Finalizing deployment...')
 		spinner.start()
-		
+
 		const completeResponse = await api.deployComplete(response.build_id)
 		spinner.succeed(`Build queued as ${completeResponse.status}`)
 
@@ -555,7 +569,11 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 		console.log()
 		printInfo('🔨 Starting build process...')
 		console.log(chalk.dim('This may take several minutes depending on your app size'))
-		console.log(chalk.dim('💡 Press Ctrl+C to run in background, then use `whopctl status` to check progress'))
+		console.log(
+			chalk.dim(
+				'💡 Press Ctrl+C to run in background, then use `whopctl status` to check progress',
+			),
+		)
 		console.log()
 
 		const buildTracker = createBuildTracker(api, response.build_id, {
@@ -578,7 +596,7 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 	} catch (error) {
 		// Provide contextual error messages
 		let contextualError: Error
-		
+
 		if (error instanceof Error) {
 			if (error.message.includes('ENOENT') && error.message.includes('.env')) {
 				contextualError = createContextualError(error, 'validation')
@@ -596,7 +614,7 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 		}
 
 		printError(`Deployment failed: ${contextualError.message}`)
-		
+
 		// Provide helpful next steps
 		console.log()
 		printInfo('💡 Need help? Try these steps:')
@@ -604,7 +622,7 @@ export async function deployCommand(path: string = '.', projectIdentifier?: stri
 		console.log(chalk.dim('• Verify your .env file has all required variables'))
 		console.log(chalk.dim('• Test your app locally with `npm run build`'))
 		console.log(chalk.dim('• Check our docs: https://docs.whopship.app'))
-		
+
 		process.exit(1)
 	}
 }

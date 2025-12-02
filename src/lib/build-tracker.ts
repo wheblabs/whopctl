@@ -1,27 +1,26 @@
 import chalk from 'chalk'
-import { WhopshipAPI } from './whopship-api.ts'
-import { createSpinner } from './progress.ts'
-import { printError, printInfo, printSuccess, printWarning } from './output.ts'
-import { showTipSync } from './tips.ts'
 import type {
-	BuildStatusResponse,
-	BuildStages,
 	BuildStage,
+	BuildStages,
 	DeployStage,
-	QueueStage,
 	ErrorContext,
+	QueueStage,
 } from '~/types/index.ts'
+import { printError, printWarning } from './output.ts'
+import { createSpinner } from './progress.ts'
+import { showTipSync } from './tips.ts'
+import { WhopshipAPI } from './whopship-api.ts'
 
 // Encouraging messages to show during long waits
 const ENCOURAGING_MESSAGES = [
-	"☕ Great time for a coffee break!",
-	"🔨 Building something awesome...",
-	"⚡ Almost there, hang tight!",
-	"🎯 Your app is getting ready for the spotlight",
-	"🚀 Preparing for liftoff...",
-	"✨ Magic is happening behind the scenes",
-	"🌟 Your app will be live soon!",
-	"💪 Stay patient, great things take time",
+	'☕ Great time for a coffee break!',
+	'🔨 Building something awesome...',
+	'⚡ Almost there, hang tight!',
+	'🎯 Your app is getting ready for the spotlight',
+	'🚀 Preparing for liftoff...',
+	'✨ Magic is happening behind the scenes',
+	'🌟 Your app will be live soon!',
+	'💪 Stay patient, great things take time',
 ]
 
 // Typical build times for estimation
@@ -108,7 +107,7 @@ export class BuildTracker {
 		if (currentIndex === -1) return null
 
 		let remainingMs = 0
-		
+
 		// Add remaining time for current stage
 		const currentStageData = stages[currentStage as keyof BuildStages]
 		if (currentStageData?.startedAt) {
@@ -170,18 +169,21 @@ export class BuildTracker {
 
 				// Get current status
 				const status = await this.api.getBuildStatus(this.buildId)
-				
+
 				// Calculate elapsed time
 				const elapsedMs = Date.now() - startTime
 
 				// Update spinner text if status changed
 				if (status.status !== lastStatus) {
 					lastStatus = status.status
-					
+
 					// Include estimated remaining time if available
 					let message = this.getStatusMessage(status.status, status.progress)
 					if (status.progress?.stages && status.progress.current_stage) {
-						const remaining = this.getEstimatedRemaining(status.progress.current_stage, status.progress.stages)
+						const remaining = this.getEstimatedRemaining(
+							status.progress.current_stage,
+							status.progress.stages,
+						)
 						if (remaining) {
 							message += chalk.dim(` (~${remaining} remaining)`)
 						}
@@ -197,7 +199,10 @@ export class BuildTracker {
 
 				// Show stage progress if enabled and available
 				if (this.options.showStages && status.progress?.stages) {
-					const stageDisplay = this.formatStageProgress(status.progress.stages, status.progress.current_stage)
+					const stageDisplay = this.formatStageProgress(
+						status.progress.stages,
+						status.progress.current_stage,
+					)
 					if (stageDisplay !== lastStageDisplay) {
 						spinner.stop()
 						console.log() // Add spacing
@@ -213,7 +218,7 @@ export class BuildTracker {
 						const logs = await this.api.getBuildLogs(this.buildId)
 						if (logs.logs && logs.logs.length > lastLogCount) {
 							spinner.stop()
-							
+
 							// Show new log lines (limit to last 5 to avoid flooding)
 							const newLogs = logs.logs.slice(lastLogCount)
 							const displayLogs = newLogs.slice(-5)
@@ -224,10 +229,10 @@ export class BuildTracker {
 								console.log(chalk.dim('  │ ') + this.formatLogLine(log))
 							}
 							lastLogCount = logs.logs.length
-							
+
 							spinner.setText(this.getStatusMessage(status.status, status.progress)).start()
 						}
-					} catch (logError) {
+					} catch (_logError) {
 						// Ignore log errors, continue tracking
 					}
 				}
@@ -236,13 +241,13 @@ export class BuildTracker {
 				if (['built', 'failed', 'completed'].includes(status.status)) {
 					if (status.status === 'built' || status.status === 'completed') {
 						spinner.succeed('Build completed successfully')
-						
+
 						// Show final stage progress
 						if (this.options.showStages && status.progress?.stages) {
 							console.log()
 							console.log(this.formatStageProgress(status.progress.stages, 'deploy'))
 						}
-						
+
 						// Show final logs
 						if (this.options.showLogs) {
 							try {
@@ -253,28 +258,28 @@ export class BuildTracker {
 										console.log(chalk.dim('  │ ') + this.formatLogLine(log))
 									}
 								}
-							} catch (logError) {
+							} catch (_logError) {
 								// Ignore log errors
 							}
 						}
-						
+
 						return status as BuildStatus
 					} else {
 						spinner.fail('Build failed')
-						
+
 						// Show error context with debugging help
 						if (status.progress?.error_context) {
 							this.displayErrorContext(status.progress.error_context, status.error_message || '')
 						} else if (status.error_message) {
 							printError(`Error: ${status.error_message}`)
 						}
-						
+
 						throw new Error(`Build failed: ${status.error_message || 'Unknown error'}`)
 					}
 				}
 
 				// Wait before next poll
-				await new Promise(resolve => setTimeout(resolve, this.options.pollInterval))
+				await new Promise((resolve) => setTimeout(resolve, this.options.pollInterval))
 			}
 		} catch (error) {
 			spinner.fail('Build tracking failed')
@@ -300,21 +305,25 @@ export class BuildTracker {
 		const lines: string[] = []
 		lines.push(chalk.bold.cyan('Build Progress'))
 		lines.push('')
-		
+
 		// Define stage order
 		const stageOrder: Array<keyof BuildStages> = ['upload', 'queue', 'build', 'deploy']
-		
+
 		for (const stageName of stageOrder) {
 			const stage = stages[stageName]
 			const isCurrent = currentStage === stageName
 			const isComplete = stage?.completedAt !== undefined
 			const isActive = stage?.startedAt && !stage?.completedAt
-			
+
 			// Main stage line
-			const icon = isComplete ? chalk.green('✓') : (isActive || isCurrent) ? chalk.yellow('●') : chalk.dim('○')
+			const icon = isComplete
+				? chalk.green('✓')
+				: isActive || isCurrent
+					? chalk.yellow('●')
+					: chalk.dim('○')
 			const name = STAGE_NAMES[stageName]
 			const duration = stage?.durationMs ? this.formatDuration(stage.durationMs) : ''
-			
+
 			let info = ''
 			if (stageName === 'upload' && stage) {
 				const uploadStage = stage as typeof stages.upload
@@ -330,24 +339,36 @@ export class BuildTracker {
 					}
 				}
 			}
-			
+
 			const durationStr = duration ? chalk.dim(` ${duration}`) : ''
 			lines.push(`${icon} ${chalk.bold(name)}${info}${durationStr}`)
-			
+
 			// Sub-stages for build
 			if (stageName === 'build' && stage) {
 				const buildStage = stage as BuildStage
 				if (buildStage.subStages) {
-					const subStageOrder: Array<keyof typeof buildStage.subStages> = ['download', 'extract', 'install', 'openNextBuild', 'artifact']
+					const subStageOrder: Array<keyof typeof buildStage.subStages> = [
+						'download',
+						'extract',
+						'install',
+						'openNextBuild',
+						'artifact',
+					]
 					for (const subName of subStageOrder) {
 						const subStage = buildStage.subStages[subName]
 						if (subStage) {
 							const subComplete = subStage.completedAt !== undefined
 							const subActive = subStage.startedAt && !subStage.completedAt
-							const subIcon = subComplete ? chalk.green('✓') : subActive ? chalk.yellow('→') : chalk.dim('·')
+							const subIcon = subComplete
+								? chalk.green('✓')
+								: subActive
+									? chalk.yellow('→')
+									: chalk.dim('·')
 							const subLabel = BUILD_SUBSTAGE_NAMES[subName]
-							const subDuration = subStage.durationMs ? chalk.dim(` ${this.formatDuration(subStage.durationMs)}`) : ''
-							
+							const subDuration = subStage.durationMs
+								? chalk.dim(` ${this.formatDuration(subStage.durationMs)}`)
+								: ''
+
 							let subInfo = ''
 							if (subName === 'download' && subStage.sizeMb) {
 								subInfo = chalk.dim(` (${subStage.sizeMb} MB)`)
@@ -356,39 +377,51 @@ export class BuildTracker {
 							} else if (subName === 'artifact' && subStage.sizeMb) {
 								subInfo = chalk.dim(` (${subStage.sizeMb} MB)`)
 							}
-							
+
 							lines.push(`  ${subIcon} ${subLabel}${subInfo}${subDuration}`)
 						}
 					}
 				}
 			}
-			
+
 			// Sub-stages for deploy
 			if (stageName === 'deploy' && stage) {
 				const deployStage = stage as DeployStage
 				if (deployStage.subStages) {
-					const subStageOrder: Array<keyof typeof deployStage.subStages> = ['roleSetup', 'lambdaCreate', 'staticAssets', 'urlSetup', 'subdomainMapping']
+					const subStageOrder: Array<keyof typeof deployStage.subStages> = [
+						'roleSetup',
+						'lambdaCreate',
+						'staticAssets',
+						'urlSetup',
+						'subdomainMapping',
+					]
 					for (const subName of subStageOrder) {
 						const subStage = deployStage.subStages[subName]
 						if (subStage) {
 							const subComplete = subStage.completedAt !== undefined
 							const subActive = subStage.startedAt && !subStage.completedAt
-							const subIcon = subComplete ? chalk.green('✓') : subActive ? chalk.yellow('→') : chalk.dim('·')
+							const subIcon = subComplete
+								? chalk.green('✓')
+								: subActive
+									? chalk.yellow('→')
+									: chalk.dim('·')
 							const subLabel = DEPLOY_SUBSTAGE_NAMES[subName]
-							const subDuration = subStage.durationMs ? chalk.dim(` ${this.formatDuration(subStage.durationMs)}`) : ''
-							
+							const subDuration = subStage.durationMs
+								? chalk.dim(` ${this.formatDuration(subStage.durationMs)}`)
+								: ''
+
 							let subInfo = ''
 							if (subName === 'staticAssets' && subStage.fileCount) {
 								subInfo = chalk.dim(` (${subStage.fileCount} files)`)
 							}
-							
+
 							lines.push(`  ${subIcon} ${subLabel}${subInfo}${subDuration}`)
 						}
 					}
 				}
 			}
 		}
-		
+
 		return lines.join('\n')
 	}
 
@@ -409,21 +442,19 @@ export class BuildTracker {
 	private displayErrorContext(context: ErrorContext, errorMessage: string): void {
 		console.log()
 		console.log(chalk.red.bold('Build Failed'))
-		
+
 		if (context.stage) {
-			const stageName = context.subStage 
-				? `${context.stage}.${context.subStage}` 
-				: context.stage
+			const stageName = context.subStage ? `${context.stage}.${context.subStage}` : context.stage
 			console.log(chalk.red(`  Failed at stage: ${stageName}`))
 		}
-		
+
 		if (context.exitCode !== undefined) {
 			console.log(chalk.dim(`  Exit code: ${context.exitCode}`))
 		}
-		
+
 		console.log()
 		console.log(chalk.yellow(`Error: ${errorMessage}`))
-		
+
 		if (context.likelyCauses && context.likelyCauses.length > 0) {
 			console.log()
 			console.log(chalk.bold('Likely causes:'))
@@ -431,7 +462,7 @@ export class BuildTracker {
 				console.log(chalk.yellow(`  • ${cause}`))
 			}
 		}
-		
+
 		if (context.debugSteps && context.debugSteps.length > 0) {
 			console.log()
 			console.log(chalk.bold('Debug steps:'))
@@ -439,31 +470,40 @@ export class BuildTracker {
 				console.log(chalk.cyan(`  ${i + 1}. ${context.debugSteps[i]}`))
 			}
 		}
-		
+
 		console.log()
 	}
 
-	private getStatusMessage(status: string, progress?: { current_stage?: string; stages?: BuildStages }): string {
+	private getStatusMessage(
+		status: string,
+		progress?: { current_stage?: string; stages?: BuildStages },
+	): string {
 		// Get more specific message based on current stage
 		if (progress?.current_stage) {
 			const stageName = STAGE_NAMES[progress.current_stage as keyof typeof STAGE_NAMES]
 			if (stageName) {
 				// Check for sub-stage
 				if (progress.current_stage === 'build' && progress.stages?.build?.currentSubStage) {
-					const subStageName = BUILD_SUBSTAGE_NAMES[progress.stages.build.currentSubStage as keyof typeof BUILD_SUBSTAGE_NAMES]
+					const subStageName =
+						BUILD_SUBSTAGE_NAMES[
+							progress.stages.build.currentSubStage as keyof typeof BUILD_SUBSTAGE_NAMES
+						]
 					if (subStageName) {
 						return `Building: ${subStageName}...`
 					}
 				}
 				if (progress.current_stage === 'deploy' && progress.stages?.deploy?.currentSubStage) {
-					const subStageName = DEPLOY_SUBSTAGE_NAMES[progress.stages.deploy.currentSubStage as keyof typeof DEPLOY_SUBSTAGE_NAMES]
+					const subStageName =
+						DEPLOY_SUBSTAGE_NAMES[
+							progress.stages.deploy.currentSubStage as keyof typeof DEPLOY_SUBSTAGE_NAMES
+						]
 					if (subStageName) {
 						return `Deploying: ${subStageName}...`
 					}
 				}
 			}
 		}
-		
+
 		switch (status) {
 			case 'init':
 			case 'uploaded':
@@ -507,47 +547,40 @@ export class BuildTracker {
 			console.log(chalk.dim('  Details:'))
 			console.log(chalk.dim(`    App Name:  `) + chalk.white(status.app.whop_app_name))
 			console.log(chalk.dim(`    Build ID:  `) + chalk.white(status.build_id))
-			console.log(chalk.dim(`    Deployed:  `) + chalk.white(new Date(status.updated_at).toLocaleString()))
-			
+			console.log(
+				chalk.dim(`    Deployed:  `) + chalk.white(new Date(status.updated_at).toLocaleString()),
+			)
+
 			// Show total duration if available
 			if (status.total_duration_ms) {
-				console.log(chalk.dim(`    Duration:  `) + chalk.white(this.formatDuration(status.total_duration_ms)))
+				console.log(
+					chalk.dim(`    Duration:  `) + chalk.white(this.formatDuration(status.total_duration_ms)),
+				)
 			}
-			
+
 			console.log()
 			console.log(chalk.gray('─'.repeat(50)))
 			console.log()
-			console.log(chalk.bold('  What\'s next?'))
+			console.log(chalk.bold("  What's next?"))
 			console.log()
 			console.log(chalk.cyan('    • ') + chalk.white('View your app: ') + chalk.dim('whopctl open'))
-			console.log(chalk.cyan('    • ') + chalk.white('Check status:  ') + chalk.dim('whopctl status'))
+			console.log(
+				chalk.cyan('    • ') + chalk.white('Check status:  ') + chalk.dim('whopctl status'),
+			)
 			console.log(chalk.cyan('    • ') + chalk.white('View logs:     ') + chalk.dim('whopctl logs'))
 			console.log()
 			console.log(chalk.gray('─'.repeat(50)))
 			console.log()
-		} catch (error) {
+		} catch (_error) {
 			printWarning('Could not fetch deployment summary')
-		}
-	}
-
-	private getStatusBadge(status: string): string {
-		switch (status) {
-			case 'completed':
-			case 'built':
-				return chalk.bgGreen.black(' LIVE ') + chalk.green(` ${status}`)
-			case 'building':
-			case 'deploying':
-				return chalk.bgYellow.black(' BUILDING ') + chalk.yellow(` ${status}`)
-			case 'failed':
-				return chalk.bgRed.white(' FAILED ') + chalk.red(` ${status}`)
-			case 'queued':
-				return chalk.bgBlue.white(' QUEUED ') + chalk.blue(` ${status}`)
-			default:
-				return chalk.bgGray.white(` ${status.toUpperCase()} `)
 		}
 	}
 }
 
-export function createBuildTracker(api: WhopshipAPI, buildId: string, options?: BuildTrackingOptions): BuildTracker {
+export function createBuildTracker(
+	api: WhopshipAPI,
+	buildId: string,
+	options?: BuildTrackingOptions,
+): BuildTracker {
 	return new BuildTracker(api, buildId, options)
 }

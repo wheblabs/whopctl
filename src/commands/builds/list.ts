@@ -1,10 +1,10 @@
-import { resolve } from 'node:path'
 import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import chalk from 'chalk'
 import { requireAuth } from '../../lib/auth-guard.ts'
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
 import { whop } from '../../lib/whop.ts'
-import { WhopshipAPI, type BuildStatus } from '../../lib/whopship-api.ts'
+import { type BuildStatus, WhopshipAPI } from '../../lib/whopship-api.ts'
 
 async function readEnvFile(dir: string): Promise<Record<string, string>> {
 	const envPath = resolve(dir, '.env')
@@ -64,11 +64,11 @@ export async function listBuildsCommand(path: string = '.', limit: number = 10):
 			process.exit(1)
 		}
 
-	const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-		uidToken: session.uidToken,
-		ssk: session.ssk,
-		userId: session.userId,
-	})
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 
 		printInfo(`Fetching builds for app ${appId}...`)
 		const response = (await api.getBuilds(appId, limit)) as { builds: BuildStatus[] }

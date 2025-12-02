@@ -1,9 +1,8 @@
 import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
 import { homedir } from 'node:os'
-import { printError } from './output.ts'
-import { retryableRequest, createContextualError } from './retry.ts'
+import { join } from 'node:path'
 import type { BuildLogsResponse, BuildStatusResponse } from '~/types/index.ts'
+import { retryableRequest } from './retry.ts'
 
 const whoplabsDir = join(homedir(), '.whoplabs')
 const sessionPath = join(whoplabsDir, 'whop-session.json')
@@ -74,7 +73,7 @@ class WhopShipApiClient {
 
 			// Handle flat structure (old format)
 			return session
-		} catch (error) {
+		} catch (_error) {
 			return null
 		}
 	}
@@ -411,7 +410,9 @@ export class WhopshipAPI {
 	}
 
 	async getLatestBuildForApp(whopAppId: string) {
-		const response = await this.request<{ builds: any[] }>(`/api/deploy/builds?whop_app_id=${whopAppId}&limit=1`)
+		const response = await this.request<{ builds: any[] }>(
+			`/api/deploy/builds?whop_app_id=${whopAppId}&limit=1`,
+		)
 		if (!response.builds || response.builds.length === 0) {
 			throw new Error('No builds found for this app')
 		}
@@ -474,7 +475,9 @@ export class WhopshipAPI {
 
 	// URL Management methods
 	async checkSubdomainAvailability(subdomain: string) {
-		return this.request<{ available: boolean; suggestions?: string[] }>(`/api/subdomains/check/${subdomain}`)
+		return this.request<{ available: boolean; suggestions?: string[] }>(
+			`/api/subdomains/check/${subdomain}`,
+		)
 	}
 
 	async reserveSubdomain(subdomain: string, appId: string) {
@@ -492,7 +495,14 @@ export class WhopshipAPI {
 	}
 
 	async listUserSubdomains() {
-		return this.request<{ subdomains: Array<{ subdomain: string; app_id: string; app_name: string; reserved_at: string }> }>('/api/subdomains/list')
+		return this.request<{
+			subdomains: Array<{
+				subdomain: string
+				app_id: string
+				app_name: string
+				reserved_at: string
+			}>
+		}>('/api/subdomains/list')
 	}
 
 	/**

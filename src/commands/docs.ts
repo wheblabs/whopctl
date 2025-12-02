@@ -71,7 +71,16 @@ async function openInBrowser(url: string): Promise<boolean> {
 	}
 }
 
-type DocsTopic = 'main' | 'deploy' | 'errors' | 'api' | 'nextjs' | 'env' | 'billing' | 'cli' | 'quickstart'
+type DocsTopic =
+	| 'main'
+	| 'deploy'
+	| 'errors'
+	| 'api'
+	| 'nextjs'
+	| 'env'
+	| 'billing'
+	| 'cli'
+	| 'quickstart'
 
 /**
  * Docs command - open documentation
@@ -133,4 +142,3 @@ export async function docsCommand(topic: DocsTopic = 'main'): Promise<void> {
 	}
 	console.log()
 }
-

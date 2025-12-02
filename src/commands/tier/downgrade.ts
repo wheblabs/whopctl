@@ -46,7 +46,7 @@ export async function tierDowngradeCommand(tier: 'free' | 'hobby' | 'pro'): Prom
 		// For free tier, allow immediate downgrade
 		if (tier === 'free') {
 			printInfo(`Downgrading to free tier...`)
-			const result = await api.createCheckoutSession('free')
+			const _result = await api.createCheckoutSession('free')
 			console.log()
 			printSuccess(`✓ Downgraded to free tier`)
 			console.log()

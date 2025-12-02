@@ -1,5 +1,5 @@
-import { resolve } from 'node:path'
 import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import chalk from 'chalk'
 import { requireAuth } from '../../lib/auth-guard'
 import { printError, printInfo } from '../../lib/output'
@@ -166,11 +166,11 @@ export async function logsCommand(
 			process.exit(1)
 		}
 
-	const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-		uidToken: session.uidToken,
-		ssk: session.ssk,
-		userId: session.userId,
-	})
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 
 		printInfo(`Fetching logs for app ${appId}...`)
 		const build = await api.getLatestBuildForApp(appId)

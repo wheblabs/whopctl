@@ -2,10 +2,10 @@ import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import chalk from 'chalk'
 import { requireAuth } from '../lib/auth-guard.ts'
-import { printError, printInfo, printSuccess } from '../lib/output.ts'
+import { printError, printInfo } from '../lib/output.ts'
+import { createSpinner } from '../lib/progress.ts'
 import { whop } from '../lib/whop.ts'
 import { WhopshipAPI } from '../lib/whopship-api.ts'
-import { createSpinner } from '../lib/progress.ts'
 
 /**
  * Simple .env reader
@@ -89,7 +89,7 @@ function formatRelativeTime(dateString: string): string {
  */
 export async function historyCommand(
 	path: string = '.',
-	options: { limit?: number; all?: boolean } = {}
+	options: { limit?: number; all?: boolean } = {},
 ): Promise<void> {
 	requireAuth()
 	const targetDir = resolve(process.cwd(), path)
@@ -111,11 +111,11 @@ export async function historyCommand(
 			process.exit(1)
 		}
 
-	const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-		uidToken: session.uidToken,
-		ssk: session.ssk,
-		userId: session.userId,
-	})
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 
 		// 3. Fetch build history
 		const spinner = createSpinner(`Fetching deployment history for ${appId}...`)
@@ -143,16 +143,16 @@ export async function historyCommand(
 		// Table header
 		console.log(
 			chalk.bold(
-				`${'Build ID'.padEnd(38)} ${'Status'.padEnd(15)} ${'Created'.padEnd(12)} ${'Duration'.padEnd(10)}`
-			)
+				`${'Build ID'.padEnd(38)} ${'Status'.padEnd(15)} ${'Created'.padEnd(12)} ${'Duration'.padEnd(10)}`,
+			),
 		)
 		console.log(chalk.gray('─'.repeat(80)))
 
 		for (const build of builds) {
-			const buildId = build.build_id.substring(0, 8) + '...'
+			const buildId = `${build.build_id.substring(0, 8)}...`
 			const status = formatStatus(build.status)
 			const created = formatRelativeTime(build.created_at)
-			
+
 			// Calculate duration
 			const createdTime = new Date(build.created_at)
 			const updatedTime = new Date(build.updated_at)
@@ -161,7 +161,7 @@ export async function historyCommand(
 			const duration = durationMinutes > 0 ? `${durationMinutes}m` : '<1m'
 
 			console.log(
-				`${chalk.cyan(buildId.padEnd(38))} ${status.padEnd(25)} ${created.padEnd(12)} ${chalk.dim(duration.padEnd(10))}`
+				`${chalk.cyan(buildId.padEnd(38))} ${status.padEnd(25)} ${created.padEnd(12)} ${chalk.dim(duration.padEnd(10))}`,
 			)
 
 			// Show error message if failed
@@ -186,14 +186,15 @@ export async function historyCommand(
 		console.log(chalk.bold('Quick Actions:'))
 		console.log(`  ${chalk.blue('•')} View details: ${chalk.dim('whopctl status')}`)
 		console.log(`  ${chalk.blue('•')} View logs: ${chalk.dim('whopctl status --logs')}`)
-		console.log(`  ${chalk.blue('•')} Redeploy latest: ${chalk.dim(`whopctl redeploy ${builds[0]?.build_id}`)}`)
+		console.log(
+			`  ${chalk.blue('•')} Redeploy latest: ${chalk.dim(`whopctl redeploy ${builds[0]?.build_id}`)}`,
+		)
 		console.log(`  ${chalk.blue('•')} New deployment: ${chalk.dim('whopctl deploy')}`)
 		console.log()
 
 		if (!options.all && builds.length >= 10) {
 			console.log(chalk.dim('💡 Use --all to see complete history'))
 		}
-
 	} catch (error) {
 		printError(`Failed to get deployment history: ${error}`)
 		process.exit(1)

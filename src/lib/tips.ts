@@ -1,6 +1,6 @@
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import chalk from 'chalk'
 
 /**
@@ -107,8 +107,8 @@ export async function getRandomTip(context?: string): Promise<string | null> {
 
 	// If context provided, prefer contextual tips
 	if (context) {
-		const contextualTips = availableTips.filter(
-			(tip) => tip.context?.some((c) => context.toLowerCase().includes(c.toLowerCase()))
+		const contextualTips = availableTips.filter((tip) =>
+			tip.context?.some((c) => context.toLowerCase().includes(c.toLowerCase())),
 		)
 		if (contextualTips.length > 0) {
 			availableTips = contextualTips
@@ -151,4 +151,3 @@ export function showTipSync(text: string): void {
 	console.log()
 	console.log(chalk.dim('💡 Tip: ') + chalk.cyan(text))
 }
-

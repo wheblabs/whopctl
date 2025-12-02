@@ -11,10 +11,10 @@ export async function analyticsSummaryCommand(appId?: number, month?: string): P
 	try {
 		printInfo('Fetching usage summary...')
 
-		const summary = await whopshipApi.getUsageSummary({
+		const summary = (await whopshipApi.getUsageSummary({
 			appId,
 			month,
-		}) as any
+		})) as any
 
 		console.log('')
 		printSuccess('Usage Summary')
@@ -50,7 +50,7 @@ export async function analyticsSummaryCommand(appId?: number, month?: string): P
 		console.log('')
 
 		console.log(chalk.bold('Cost:'))
-		console.log(`  ${chalk.green('$' + parseFloat(summary.costUsd || '0').toFixed(2))}`)
+		console.log(`  ${chalk.green(`$${parseFloat(summary.costUsd || '0').toFixed(2)}`)}`)
 		console.log('')
 	} catch (error) {
 		printError('Failed to fetch usage summary')

@@ -13,11 +13,11 @@ export async function redeployBuildCommand(buildId: string): Promise<void> {
 			process.exit(1)
 		}
 
-	const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-		uidToken: session.uidToken,
-		ssk: session.ssk,
-		userId: session.userId,
-	})
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 
 		printInfo(`Redeploying build ${buildId}...`)
 		const response = (await api.redeploy(buildId)) as { build_id: string; status?: string }
@@ -35,11 +35,11 @@ export async function redeployBuildCommand(buildId: string): Promise<void> {
 		// The error object might not have errorJson attached due to bundling/transpilation issues
 		// So we'll try multiple strategies to get the detailed message
 		let errorMessage: string = error?.message || String(error)
-		
+
 		// Strategy 1: Try to get the detailed message from errorJson if available
 		if (error?.errorJson?.message) {
 			errorMessage = error.errorJson.message
-		} 
+		}
 		// Strategy 2: Try to parse responseBody if available
 		else if (error?.responseBody) {
 			try {
@@ -56,9 +56,10 @@ export async function redeployBuildCommand(buildId: string): Promise<void> {
 		else if (errorMessage === 'Build artifacts not found') {
 			// The API returns: {"error": "Build artifacts not found", "message": "Cannot redeploy..."}
 			// Provide a helpful message when we detect this specific error
-			errorMessage = 'Cannot redeploy a failed build without artifacts. The build likely failed during the build phase. Please create a new build instead.'
+			errorMessage =
+				'Cannot redeploy a failed build without artifacts. The build likely failed during the build phase. Please create a new build instead.'
 		}
-		
+
 		printError(`Redeploy failed: ${errorMessage}`)
 		process.exit(1)
 	}

@@ -1,10 +1,10 @@
+import { exec } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
-import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
 import chalk from 'chalk'
-import { printError, printInfo, printSuccess, printWarning } from '../lib/output.ts'
 import { requireAuth } from '../lib/auth-guard.ts'
+import { printError, printInfo, printSuccess, printWarning } from '../lib/output.ts'
 import { whop } from '../lib/whop.ts'
 import { WhopshipAPI } from '../lib/whopship-api.ts'
 
@@ -59,7 +59,7 @@ async function getDeployedUrl(api: WhopshipAPI, appId: string): Promise<string |
 	try {
 		const apps = await api.getApps()
 		const app = apps.apps.find((a: any) => a.whop_app_id === appId)
-		if (app && app.subdomain) {
+		if (app?.subdomain) {
 			return `https://${app.subdomain}.whopship.app`
 		}
 	} catch {
@@ -73,10 +73,7 @@ type OpenTarget = 'app' | 'dashboard' | 'logs' | 'settings' | 'billing'
 /**
  * Open command - quick access to URLs
  */
-export async function openCommand(
-	target: OpenTarget = 'app',
-	path: string = '.',
-): Promise<void> {
+export async function openCommand(target: OpenTarget = 'app', path: string = '.'): Promise<void> {
 	const targetDir = resolve(process.cwd(), path)
 
 	console.log()
@@ -192,4 +189,3 @@ export async function openCommand(
 	}
 	console.log()
 }
-

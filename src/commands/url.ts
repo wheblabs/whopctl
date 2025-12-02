@@ -1,10 +1,10 @@
 import chalk from 'chalk'
+import { aliasManager } from '../lib/alias-manager.ts'
 import { requireAuth } from '../lib/auth-guard.ts'
-import { printError, printInfo, printSuccess, printWarning } from '../lib/output.ts'
+import { printError, printInfo } from '../lib/output.ts'
+import { createSpinner } from '../lib/progress.ts'
 import { whop } from '../lib/whop.ts'
 import { WhopshipAPI } from '../lib/whopship-api.ts'
-import { createSpinner } from '../lib/progress.ts'
-import { aliasManager } from '../lib/alias-manager.ts'
 
 /**
  * Check if a subdomain is available
@@ -24,10 +24,12 @@ export async function checkUrlCommand(subdomain: string): Promise<void> {
 			ssk: session.ssk,
 			userId: session.userId,
 		})
-		
+
 		// Validate subdomain format
 		if (!isValidSubdomain(subdomain)) {
-			printError('Invalid subdomain format. Use only letters, numbers, and hyphens (2-63 characters).')
+			printError(
+				'Invalid subdomain format. Use only letters, numbers, and hyphens (2-63 characters).',
+			)
 			process.exit(1)
 		}
 
@@ -36,7 +38,7 @@ export async function checkUrlCommand(subdomain: string): Promise<void> {
 
 		try {
 			const result = await api.checkSubdomainAvailability(subdomain)
-			
+
 			if (result.available) {
 				spinner.succeed(`✅ ${subdomain}.whopship.app is available!`)
 				console.log()
@@ -44,7 +46,7 @@ export async function checkUrlCommand(subdomain: string): Promise<void> {
 				console.log(chalk.dim(`  whopctl url reserve ${subdomain} <app-id-or-alias>`))
 			} else {
 				spinner.fail(`❌ ${subdomain}.whopship.app is not available`)
-				
+
 				if (result.suggestions && result.suggestions.length > 0) {
 					console.log()
 					console.log(chalk.yellow('💡 Suggested alternatives:'))
@@ -54,12 +56,10 @@ export async function checkUrlCommand(subdomain: string): Promise<void> {
 				}
 			}
 			console.log()
-
 		} catch (error) {
 			spinner.fail('Failed to check subdomain availability')
 			throw error
 		}
-
 	} catch (error) {
 		printError(`Failed to check URL: ${error}`)
 		process.exit(1)
@@ -69,7 +69,10 @@ export async function checkUrlCommand(subdomain: string): Promise<void> {
 /**
  * Reserve a custom subdomain for an app
  */
-export async function reserveUrlCommand(subdomain: string, projectIdentifier: string): Promise<void> {
+export async function reserveUrlCommand(
+	subdomain: string,
+	projectIdentifier: string,
+): Promise<void> {
 	requireAuth()
 
 	try {
@@ -84,10 +87,12 @@ export async function reserveUrlCommand(subdomain: string, projectIdentifier: st
 			ssk: session.ssk,
 			userId: session.userId,
 		})
-		
+
 		// Validate subdomain format
 		if (!isValidSubdomain(subdomain)) {
-			printError('Invalid subdomain format. Use only letters, numbers, and hyphens (2-63 characters).')
+			printError(
+				'Invalid subdomain format. Use only letters, numbers, and hyphens (2-63 characters).',
+			)
 			process.exit(1)
 		}
 
@@ -111,10 +116,10 @@ export async function reserveUrlCommand(subdomain: string, projectIdentifier: st
 
 		try {
 			const availability = await api.checkSubdomainAvailability(subdomain)
-			
+
 			if (!availability.available) {
 				checkSpinner.fail(`❌ ${subdomain}.whopship.app is not available`)
-				
+
 				if (availability.suggestions && availability.suggestions.length > 0) {
 					console.log()
 					console.log(chalk.yellow('💡 Try these alternatives:'))
@@ -149,8 +154,12 @@ export async function reserveUrlCommand(subdomain: string, projectIdentifier: st
 			console.log(`${chalk.cyan('Reserved:')}   ${new Date().toLocaleString()}`)
 			console.log()
 			console.log(chalk.bold('Next Steps:'))
-			console.log(`  ${chalk.green('1.')} Deploy your app: ${chalk.dim(`whopctl deploy ${projectIdentifier}`)}`)
-			console.log(`  ${chalk.green('2.')} Your app will be available at the custom URL after deployment`)
+			console.log(
+				`  ${chalk.green('1.')} Deploy your app: ${chalk.dim(`whopctl deploy ${projectIdentifier}`)}`,
+			)
+			console.log(
+				`  ${chalk.green('2.')} Your app will be available at the custom URL after deployment`,
+			)
 			console.log()
 
 			// Update alias with subdomain info if it exists
@@ -162,12 +171,10 @@ export async function reserveUrlCommand(subdomain: string, projectIdentifier: st
 			} catch {
 				// Ignore alias update errors
 			}
-
 		} catch (error) {
 			reserveSpinner.fail('Failed to reserve subdomain')
 			throw error
 		}
-
 	} catch (error) {
 		printError(`Failed to reserve URL: ${error}`)
 		process.exit(1)
@@ -192,7 +199,7 @@ export async function releaseUrlCommand(subdomain: string): Promise<void> {
 			ssk: session.ssk,
 			userId: session.userId,
 		})
-		
+
 		const spinner = createSpinner(`Releasing ${subdomain}.whopship.app...`)
 		spinner.start()
 
@@ -207,12 +214,10 @@ export async function releaseUrlCommand(subdomain: string): Promise<void> {
 			console.log(chalk.dim('💡 Your app will continue to work at its default URL:'))
 			console.log(chalk.dim('   https://app-<id>.whopship.app'))
 			console.log()
-
 		} catch (error) {
 			spinner.fail('Failed to release subdomain')
 			throw error
 		}
-
 	} catch (error) {
 		printError(`Failed to release URL: ${error}`)
 		process.exit(1)
@@ -237,15 +242,17 @@ export async function listUrlsCommand(): Promise<void> {
 			ssk: session.ssk,
 			userId: session.userId,
 		})
-		
+
 		const spinner = createSpinner('Fetching your reserved URLs...')
 		spinner.start()
 
 		try {
 			const result = await api.listUserSubdomains()
 			const subdomains = result.subdomains || []
-			
-			spinner.succeed(`Found ${subdomains.length} reserved URL${subdomains.length !== 1 ? 's' : ''}`)
+
+			spinner.succeed(
+				`Found ${subdomains.length} reserved URL${subdomains.length !== 1 ? 's' : ''}`,
+			)
 
 			if (subdomains.length === 0) {
 				console.log()
@@ -265,8 +272,8 @@ export async function listUrlsCommand(): Promise<void> {
 			// Table header
 			console.log(
 				chalk.bold(
-					`${'URL'.padEnd(30)} ${'App ID'.padEnd(25)} ${'App Name'.padEnd(20)} ${'Reserved'.padEnd(12)}`
-				)
+					`${'URL'.padEnd(30)} ${'App ID'.padEnd(25)} ${'App Name'.padEnd(20)} ${'Reserved'.padEnd(12)}`,
+				),
 			)
 			console.log(chalk.gray('─'.repeat(80)))
 
@@ -280,14 +287,14 @@ export async function listUrlsCommand(): Promise<void> {
 			}
 
 			console.log()
-			console.log(chalk.dim(`Total: ${subdomains.length} reserved URL${subdomains.length !== 1 ? 's' : ''}`))
+			console.log(
+				chalk.dim(`Total: ${subdomains.length} reserved URL${subdomains.length !== 1 ? 's' : ''}`),
+			)
 			console.log()
-
 		} catch (error) {
 			spinner.fail('Failed to fetch reserved URLs')
 			throw error
 		}
-
 	} catch (error) {
 		printError(`Failed to list URLs: ${error}`)
 		process.exit(1)
@@ -312,10 +319,10 @@ export async function suggestUrlCommand(baseName: string): Promise<void> {
 			ssk: session.ssk,
 			userId: session.userId,
 		})
-		
+
 		// Generate variations of the base name
 		const variations = generateSubdomainVariations(baseName)
-		
+
 		console.log()
 		console.log(chalk.bold(`🔍 Checking availability for "${baseName}"...`))
 		console.log(chalk.gray('─'.repeat(50)))
@@ -340,9 +347,13 @@ export async function suggestUrlCommand(baseName: string): Promise<void> {
 		}
 
 		console.log()
-		
+
 		if (available.length > 0) {
-			console.log(chalk.bold.green(`🎉 ${available.length} available option${available.length !== 1 ? 's' : ''}:`))
+			console.log(
+				chalk.bold.green(
+					`🎉 ${available.length} available option${available.length !== 1 ? 's' : ''}:`,
+				),
+			)
 			console.log()
 			for (const subdomain of available.slice(0, 5)) {
 				console.log(chalk.dim(`  whopctl url reserve ${subdomain} <app-id-or-alias>`))
@@ -354,7 +365,6 @@ export async function suggestUrlCommand(baseName: string): Promise<void> {
 			console.log(chalk.yellow('😔 No variations available. Try a different base name.'))
 		}
 		console.log()
-
 	} catch (error) {
 		printError(`Failed to suggest URLs: ${error}`)
 		process.exit(1)
@@ -366,19 +376,25 @@ export async function suggestUrlCommand(baseName: string): Promise<void> {
  */
 function isValidSubdomain(subdomain: string): boolean {
 	// RFC 1123 hostname rules
-	return /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(subdomain) && 
-		   subdomain.length >= 2 && 
-		   subdomain.length <= 63 &&
-		   !subdomain.startsWith('-') &&
-		   !subdomain.endsWith('-')
+	return (
+		/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(subdomain) &&
+		subdomain.length >= 2 &&
+		subdomain.length <= 63 &&
+		!subdomain.startsWith('-') &&
+		!subdomain.endsWith('-')
+	)
 }
 
 /**
  * Generate subdomain variations
  */
 function generateSubdomainVariations(baseName: string): string[] {
-	const clean = baseName.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
-	
+	const clean = baseName
+		.toLowerCase()
+		.replace(/[^a-z0-9-]/g, '-')
+		.replace(/-+/g, '-')
+		.replace(/^-|-$/g, '')
+
 	const variations = [
 		clean,
 		`${clean}-app`,
@@ -389,8 +405,8 @@ function generateSubdomainVariations(baseName: string): string[] {
 		`${clean}-2024`,
 		`${clean}-api`,
 		`${clean}-web`,
-		`${clean}-live`
-	].filter(v => isValidSubdomain(v))
+		`${clean}-live`,
+	].filter((v) => isValidSubdomain(v))
 
 	// Remove duplicates
 	return [...new Set(variations)]

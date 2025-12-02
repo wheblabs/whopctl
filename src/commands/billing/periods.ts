@@ -11,7 +11,7 @@ export async function billingPeriodsCommand(limit?: number): Promise<void> {
 	try {
 		printInfo('Fetching billing periods...')
 
-		const data = await whopshipApi.getBillingPeriods(limit || 12) as any
+		const data = (await whopshipApi.getBillingPeriods(limit || 12)) as any
 
 		if (!data.periods || data.periods.length === 0) {
 			printInfo('No billing periods found.')
@@ -27,7 +27,9 @@ export async function billingPeriodsCommand(limit?: number): Promise<void> {
 			console.log(`  Start: ${chalk.cyan(new Date(period.periodStart).toLocaleDateString())}`)
 			console.log(`  End: ${chalk.cyan(new Date(period.periodEnd).toLocaleDateString())}`)
 			console.log(`  Status: ${chalk.cyan(period.status)}`)
-			console.log(`  Total Cost: ${chalk.green('$' + parseFloat(period.totalCost || '0').toFixed(2))}`)
+			console.log(
+				`  Total Cost: ${chalk.green(`$${parseFloat(period.totalCost || '0').toFixed(2)}`)}`,
+			)
 			if (period.invoiceId) {
 				console.log(`  Invoice ID: ${chalk.dim(period.invoiceId)}`)
 			}

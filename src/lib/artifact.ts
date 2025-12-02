@@ -1,7 +1,7 @@
-import AdmZip from 'adm-zip'
 import { createHash, type Hash } from 'node:crypto'
 import { createReadStream, existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import AdmZip from 'adm-zip'
 
 /**
  * Metadata included in the deployment artifact.

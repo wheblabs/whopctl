@@ -1,11 +1,9 @@
-import { readFile, stat, access } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
-import { execSync } from 'node:child_process'
 import chalk from 'chalk'
-import { printError, printInfo, printSuccess, printWarning } from '../lib/output.ts'
+import { createSpinner } from '../lib/progress.ts'
 import { whop } from '../lib/whop.ts'
 import { WhopshipAPI } from '../lib/whopship-api.ts'
-import { createSpinner } from '../lib/progress.ts'
 
 interface DiagnosticResult {
 	name: string
@@ -23,7 +21,7 @@ async function runDiagnostics(dir: string): Promise<DiagnosticResult[]> {
 	// 1. Check Node.js version
 	try {
 		const nodeVersion = process.version
-		const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0])
+		const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0], 10)
 		if (majorVersion >= 18) {
 			results.push({
 				name: 'Node.js Version',
@@ -80,7 +78,7 @@ async function runDiagnostics(dir: string): Promise<DiagnosticResult[]> {
 					message: 'Connected to WhopShip API',
 				})
 			}
-		} catch (error) {
+		} catch (_error) {
 			results.push({
 				name: 'API Connection',
 				status: 'fail',
@@ -157,12 +155,15 @@ async function runDiagnostics(dir: string): Promise<DiagnosticResult[]> {
 			if (!trimmed || trimmed.startsWith('#')) continue
 			const [key, ...valueParts] = trimmed.split('=')
 			if (key && valueParts.length > 0) {
-				envVars[key.trim()] = valueParts.join('=').trim().replace(/^["']|["']$/g, '')
+				envVars[key.trim()] = valueParts
+					.join('=')
+					.trim()
+					.replace(/^["']|["']$/g, '')
 			}
 		}
 
 		const requiredVars = ['NEXT_PUBLIC_WHOP_APP_ID', 'NEXT_PUBLIC_WHOP_COMPANY_ID']
-		const missing = requiredVars.filter(v => !envVars[v])
+		const missing = requiredVars.filter((v) => !envVars[v])
 
 		if (missing.length === 0) {
 			// Validate format
@@ -342,14 +343,14 @@ function displayResults(results: DiagnosticResult[]): void {
 		healthEmoji = '❌'
 	}
 
-	console.log(chalk.bold('Health Score: ') + healthColor(`${healthScore}%`) + ` ${healthEmoji}`)
+	console.log(`${chalk.bold('Health Score: ') + healthColor(`${healthScore}%`)} ${healthEmoji}`)
 	console.log()
 	console.log(
 		chalk.green(`${passCount} passed`) +
-		chalk.dim(' · ') +
-		chalk.yellow(`${warnCount} warnings`) +
-		chalk.dim(' · ') +
-		chalk.red(`${failCount} failed`)
+			chalk.dim(' · ') +
+			chalk.yellow(`${warnCount} warnings`) +
+			chalk.dim(' · ') +
+			chalk.red(`${failCount} failed`),
 	)
 	console.log()
 
@@ -393,4 +394,3 @@ export async function doctorCommand(path: string = '.'): Promise<void> {
 
 	displayResults(results)
 }
-

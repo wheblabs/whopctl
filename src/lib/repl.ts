@@ -2,8 +2,8 @@ import { join } from 'node:path'
 import repl from 'node:repl'
 import chalk from 'chalk'
 import { setReplMode } from './repl-context.ts'
-import { setReplServer } from './repl-state.ts'
 import { parseAndExecute, printReplHelp } from './repl-parser.ts'
+import { setReplServer } from './repl-state.ts'
 import { configDir } from './whop.ts'
 
 /**

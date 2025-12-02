@@ -47,14 +47,14 @@ interface FriendlyError {
 }
 
 const ERROR_TRANSLATIONS: Record<string, FriendlyError> = {
-	'ENOENT': {
+	ENOENT: {
 		message: 'File or directory not found',
 		whatToDo: [
-			'Make sure you\'re in the correct directory',
+			"Make sure you're in the correct directory",
 			'Run: whopctl init to set up your project',
 		],
 	},
-	'EACCES': {
+	EACCES: {
 		message: 'Permission denied',
 		whatToDo: [
 			'Check that you have permission to access this file',
@@ -72,7 +72,7 @@ const ERROR_TRANSLATIONS: Record<string, FriendlyError> = {
 		message: 'Access denied',
 		whatToDo: [
 			'Check that you have permission to access this resource',
-			'Make sure you\'re using the correct App ID and Company ID',
+			"Make sure you're using the correct App ID and Company ID",
 		],
 	},
 	'404': {
@@ -91,59 +91,38 @@ const ERROR_TRANSLATIONS: Record<string, FriendlyError> = {
 	},
 	'429': {
 		message: 'Too many requests - please slow down',
-		whatToDo: [
-			'Wait a few seconds and try again',
-			'Reduce the frequency of your requests',
-		],
+		whatToDo: ['Wait a few seconds and try again', 'Reduce the frequency of your requests'],
 	},
 	'500': {
 		message: 'Server error - this is on our end',
-		whatToDo: [
-			'Wait a few minutes and try again',
-			'Check status at: https://status.whopship.app',
-		],
+		whatToDo: ['Wait a few minutes and try again', 'Check status at: https://status.whopship.app'],
 	},
 	'502': {
 		message: 'Service temporarily unavailable',
-		whatToDo: [
-			'Wait a few minutes and try again',
-			'Check status at: https://status.whopship.app',
-		],
+		whatToDo: ['Wait a few minutes and try again', 'Check status at: https://status.whopship.app'],
 	},
 	'503': {
 		message: 'Service temporarily unavailable',
-		whatToDo: [
-			'Wait a few minutes and try again',
-			'Check status at: https://status.whopship.app',
-		],
+		whatToDo: ['Wait a few minutes and try again', 'Check status at: https://status.whopship.app'],
 	},
-	'ECONNREFUSED': {
+	ECONNREFUSED: {
 		message: 'Could not connect to the server',
-		whatToDo: [
-			'Check your internet connection',
-			'Run: whopctl doctor to diagnose issues',
-		],
+		whatToDo: ['Check your internet connection', 'Run: whopctl doctor to diagnose issues'],
 	},
-	'ETIMEDOUT': {
+	ETIMEDOUT: {
 		message: 'Connection timed out',
 		whatToDo: [
 			'Check your internet connection',
 			'The server might be busy, try again in a few seconds',
 		],
 	},
-	'ENOTFOUND': {
+	ENOTFOUND: {
 		message: 'Could not find the server',
-		whatToDo: [
-			'Check your internet connection',
-			'Make sure DNS is working correctly',
-		],
+		whatToDo: ['Check your internet connection', 'Make sure DNS is working correctly'],
 	},
 	'fetch failed': {
 		message: 'Network request failed',
-		whatToDo: [
-			'Check your internet connection',
-			'Run: whopctl doctor to diagnose issues',
-		],
+		whatToDo: ['Check your internet connection', 'Run: whopctl doctor to diagnose issues'],
 	},
 	'.env': {
 		message: 'Environment configuration issue',
@@ -155,7 +134,7 @@ const ERROR_TRANSLATIONS: Record<string, FriendlyError> = {
 	'package.json': {
 		message: 'Project configuration issue',
 		whatToDo: [
-			'Make sure you\'re in a valid project directory',
+			"Make sure you're in a valid project directory",
 			'Run: npm init or whopctl init to set up',
 		],
 	},

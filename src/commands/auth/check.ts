@@ -28,13 +28,13 @@ export async function checkAuthCommand(): Promise<void> {
 		}
 
 		// Create WhopshipAPI instance and fetch user info
-	const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-		uidToken: session.uidToken,
-		ssk: session.ssk,
-		userId: session.userId,
-	})
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 
-		const response = await api.getMe() as { user: any }
+		const response = (await api.getMe()) as { user: any }
 		const user = response.user
 
 		if (!user) {

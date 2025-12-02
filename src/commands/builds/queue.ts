@@ -1,5 +1,5 @@
-import { resolve } from 'node:path'
 import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import chalk from 'chalk'
 import { requireAuth } from '../../lib/auth-guard.ts'
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
@@ -129,4 +129,3 @@ export async function queueStatusCommand(path: string = '.', appId?: string): Pr
 		process.exit(1)
 	}
 }
-

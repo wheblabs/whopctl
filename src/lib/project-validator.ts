@@ -1,7 +1,7 @@
-import { readFile, stat, access } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import chalk from 'chalk'
-import { printError, printInfo, printSuccess, printWarning } from './output.ts'
+import { printError, printInfo, printSuccess } from './output.ts'
 
 export interface ValidationResult {
 	isValid: boolean
@@ -116,9 +116,11 @@ export class ProjectValidator {
 				// Check Next.js version
 				const nextVersion = packageJson.dependencies?.next || packageJson.devDependencies?.next
 				if (nextVersion) {
-					const majorVersion = parseInt(nextVersion.replace(/[^\d]/g, ''))
+					const majorVersion = parseInt(nextVersion.replace(/[^\d]/g, ''), 10)
 					if (majorVersion < 13) {
-						result.warnings.push(`Next.js version ${nextVersion} is outdated. Consider upgrading to v13+`)
+						result.warnings.push(
+							`Next.js version ${nextVersion} is outdated. Consider upgrading to v13+`,
+						)
 					}
 				}
 			}
@@ -173,7 +175,7 @@ export class ProjectValidator {
 
 			// Check required variables
 			const requiredVars = ['NEXT_PUBLIC_WHOP_APP_ID', 'NEXT_PUBLIC_WHOP_COMPANY_ID']
-			const missingVars = requiredVars.filter(varName => !envVars[varName])
+			const missingVars = requiredVars.filter((varName) => !envVars[varName])
 
 			if (missingVars.length > 0) {
 				result.errors.push(`Missing required environment variables: ${missingVars.join(', ')}`)
@@ -185,7 +187,10 @@ export class ProjectValidator {
 				result.warnings.push('NEXT_PUBLIC_WHOP_APP_ID should start with "app_"')
 			}
 
-			if (envVars.NEXT_PUBLIC_WHOP_COMPANY_ID && !envVars.NEXT_PUBLIC_WHOP_COMPANY_ID.startsWith('biz_')) {
+			if (
+				envVars.NEXT_PUBLIC_WHOP_COMPANY_ID &&
+				!envVars.NEXT_PUBLIC_WHOP_COMPANY_ID.startsWith('biz_')
+			) {
 				result.warnings.push('NEXT_PUBLIC_WHOP_COMPANY_ID should start with "biz_"')
 			}
 
@@ -231,7 +236,9 @@ export class ProjectValidator {
 			result.suggestions.push('Consider creating a next.config.js file for better control')
 		} else if (!hasStandaloneOutput) {
 			result.warnings.push('Next.js config missing standalone output')
-			result.suggestions.push('Add `output: "standalone"` to your Next.js config for optimal deployment')
+			result.suggestions.push(
+				'Add `output: "standalone"` to your Next.js config for optimal deployment',
+			)
 		}
 	}
 
@@ -283,7 +290,9 @@ export class ProjectValidator {
 					}
 				} catch {
 					result.warnings.push('No app/ or pages/ directory found')
-					result.suggestions.push('Create an app/ directory for App Router or pages/ for Pages Router')
+					result.suggestions.push(
+						'Create an app/ directory for App Router or pages/ for Pages Router',
+					)
 				}
 			}
 
@@ -341,7 +350,7 @@ export class ProjectValidator {
 
 export async function validateProject(
 	projectPath: string,
-	options?: ProjectValidatorOptions
+	options?: ProjectValidatorOptions,
 ): Promise<ValidationResult> {
 	const validator = new ProjectValidator(projectPath, options)
 	return validator.validate()
@@ -349,7 +358,7 @@ export async function validateProject(
 
 export async function validateAndPrint(
 	projectPath: string,
-	options?: ProjectValidatorOptions
+	options?: ProjectValidatorOptions,
 ): Promise<boolean> {
 	const validator = new ProjectValidator(projectPath, options)
 	const result = await validator.validate()

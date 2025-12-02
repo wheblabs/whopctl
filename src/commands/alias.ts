@@ -1,10 +1,10 @@
 import chalk from 'chalk'
+import { aliasManager } from '../lib/alias-manager.ts'
 import { requireAuth } from '../lib/auth-guard.ts'
-import { printError, printInfo, printSuccess, printWarning } from '../lib/output.ts'
+import { printError, printSuccess } from '../lib/output.ts'
+import { createSpinner } from '../lib/progress.ts'
 import { whop } from '../lib/whop.ts'
 import { WhopshipAPI } from '../lib/whopship-api.ts'
-import { aliasManager } from '../lib/alias-manager.ts'
-import { createSpinner } from '../lib/progress.ts'
 
 /**
  * Set a project alias
@@ -24,7 +24,7 @@ export async function setAliasCommand(name: string, appId: string): Promise<void
 			ssk: session.ssk,
 			userId: session.userId,
 		})
-		
+
 		// Validate that the app ID exists and get app info
 		const spinner = createSpinner(`Validating app ID: ${appId}`)
 		spinner.start()
@@ -35,7 +35,7 @@ export async function setAliasCommand(name: string, appId: string): Promise<void
 
 			// Set the alias with app metadata
 			await aliasManager.setAlias(name, appId, appInfo.whop_app_name)
-			
+
 			console.log()
 			printSuccess(`✅ Alias created: ${chalk.cyan(name)} → ${chalk.dim(appId)}`)
 			console.log(`   App: ${appInfo.whop_app_name}`)
@@ -45,7 +45,6 @@ export async function setAliasCommand(name: string, appId: string): Promise<void
 			console.log(chalk.dim(`  whopctl status ${name}`))
 			console.log(chalk.dim(`  whopctl logs ${name}`))
 			console.log()
-
 		} catch (error) {
 			spinner.fail(`App ID not found: ${appId}`)
 			printError(`${error}`)
@@ -53,7 +52,6 @@ export async function setAliasCommand(name: string, appId: string): Promise<void
 			console.log(chalk.dim('💡 Make sure the app ID is correct and you have access to it.'))
 			process.exit(1)
 		}
-
 	} catch (error) {
 		printError(`Failed to create alias: ${error}`)
 		process.exit(1)
@@ -66,14 +64,14 @@ export async function setAliasCommand(name: string, appId: string): Promise<void
 export async function removeAliasCommand(name: string): Promise<void> {
 	try {
 		const alias = await aliasManager.getAlias(name)
-		
+
 		if (!alias) {
 			printError(`Alias "${name}" not found.`)
 			process.exit(1)
 		}
 
 		const removed = await aliasManager.removeAlias(name)
-		
+
 		if (removed) {
 			printSuccess(`✅ Removed alias: ${chalk.cyan(name)}`)
 			console.log(`   Was pointing to: ${chalk.dim(alias.appId)}`)
@@ -81,7 +79,6 @@ export async function removeAliasCommand(name: string): Promise<void> {
 			printError(`Failed to remove alias "${name}".`)
 			process.exit(1)
 		}
-
 	} catch (error) {
 		printError(`Failed to remove alias: ${error}`)
 		process.exit(1)
@@ -106,7 +103,7 @@ export async function listAliasesCommand(): Promise<void> {
 export async function showAliasCommand(name: string): Promise<void> {
 	try {
 		const alias = await aliasManager.getAlias(name)
-		
+
 		if (!alias) {
 			printError(`Alias "${name}" not found.`)
 			console.log()
@@ -149,7 +146,6 @@ export async function showAliasCommand(name: string): Promise<void> {
 		console.log(chalk.dim(`  whopctl logs ${alias.name}`))
 		console.log(chalk.dim(`  whopctl usage ${alias.name}`))
 		console.log()
-
 	} catch (error) {
 		printError(`Failed to show alias: ${error}`)
 		process.exit(1)
@@ -178,7 +174,7 @@ export async function discoverAliasesCommand(): Promise<void> {
 		spinner.start()
 
 		const suggestions = await aliasManager.suggestAliases(api)
-		
+
 		if (suggestions.length === 0) {
 			spinner.info('No new apps found to create aliases for.')
 			console.log()
@@ -188,14 +184,16 @@ export async function discoverAliasesCommand(): Promise<void> {
 		}
 
 		spinner.succeed(`Found ${suggestions.length} apps`)
-		
+
 		console.log()
 		console.log(chalk.bold('🔍 Suggested Aliases'))
 		console.log(chalk.gray('─'.repeat(60)))
 		console.log()
 
 		for (const suggestion of suggestions) {
-			console.log(`${chalk.cyan(suggestion.name.padEnd(20))} → ${chalk.dim(suggestion.appId)} (${suggestion.appName})`)
+			console.log(
+				`${chalk.cyan(suggestion.name.padEnd(20))} → ${chalk.dim(suggestion.appId)} (${suggestion.appName})`,
+			)
 		}
 
 		console.log()
@@ -207,7 +205,6 @@ export async function discoverAliasesCommand(): Promise<void> {
 			console.log(chalk.dim(`  ... and ${suggestions.length - 3} more`))
 		}
 		console.log()
-
 	} catch (error) {
 		printError(`Failed to discover aliases: ${error}`)
 		process.exit(1)
