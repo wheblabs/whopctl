@@ -6,7 +6,7 @@
       "name": "whopctl",
       "dependencies": {
         "@aws-sdk/client-cloudwatch-logs": "^3.929.0",
-        "@whoplabs/whop-client": "^1.0.0",
+        "@whoplabs/whop-client": "^1.1.0",
         "adm-zip": "^0.5.16",
         "tar": "^7.5.1",
       },
@@ -306,7 +306,7 @@
 
     "@types/yargs-parser": ["@types/yargs-parser@21.0.3", "", {}, "sha512-I4q9QU9MQv4oEOz4tAHJtNz1cwuLxn2F3xcc2iV5WdqLPpUnj30aUuxt1mAxYTG+oe8CZMV/+6rU4S4gRDzqtQ=="],
 
-    "@whoplabs/whop-client": ["@whoplabs/whop-client@1.0.0", "", { "peerDependencies": { "typescript": ">=4.5.0" }, "optionalPeers": ["typescript"] }, "sha512-jdYNZ1WYx4nkJViHHgGwMqcsZWV/whucu14/ZQnY2/KwYDQwcpJ5fH1oKAL/wv6hfaxiAgqOGO0431+/jysVwA=="],
+    "@whoplabs/whop-client": ["@whoplabs/whop-client@1.1.0", "", { "peerDependencies": { "typescript": ">=4.5.0" }, "optionalPeers": ["typescript"] }, "sha512-SVZDR9yFFE4qUhC9i9G6b95aX8QV7Shhy6NXtKYmwfrk6hDTYCSmvKKGScjJQ8NMR78zkBy8CGNYSIpyI8G79A=="],
 
     "JSONStream": ["JSONStream@1.3.5", "", { "dependencies": { "jsonparse": "^1.2.0", "through": ">=2.2.7 <3" }, "bin": { "JSONStream": "./bin.js" } }, "sha512-E+iruNOY8VV9s4JEbe1aNEm6MiszPRr/UfcHMz0TQh1BXSxHK+ASV1R6W4HpjBhSeS+54PIsAMCBmwD06LLsqQ=="],
 
