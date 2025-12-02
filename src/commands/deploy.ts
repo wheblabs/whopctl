@@ -162,7 +162,6 @@ async function buildProject(dir: string, projectType: string): Promise<void> {
 
 	try {
 		const { spawn } = await import('node:child_process')
-		const { promisify } = await import('node:util')
 
 		let buildCommand: string
 		let buildArgs: string[]

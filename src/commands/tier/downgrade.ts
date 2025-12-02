@@ -4,19 +4,6 @@ import { printError, printInfo, printSuccess } from '../../lib/output.ts'
 import { whop } from '../../lib/whop.ts'
 import { WhopshipAPI } from '../../lib/whopship-api.ts'
 
-interface TierDowngradeResponse {
-	success: boolean
-	tier: 'free' | 'hobby' | 'pro'
-	tierInfo: {
-		name: string
-		monthlyPrice: number
-		limits: Record<string, unknown>
-		overageRates: Record<string, unknown>
-	}
-	previousTier: 'free' | 'hobby' | 'pro'
-	userId: number
-}
-
 /**
  * Handles the "tier downgrade" command.
  *
