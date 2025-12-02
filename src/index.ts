@@ -19,6 +19,7 @@ import { redeployBuildCommand } from './commands/builds/redeploy.ts'
 import { listBuildsCommand } from './commands/builds/list.ts'
 import { cancelBuildCommand } from './commands/builds/cancel.ts'
 import { queueStatusCommand } from './commands/builds/queue.ts'
+import { buildLogsCommand as structuredBuildLogsCommand } from './commands/builds/logs.ts'
 import { logsCommand } from './commands/logs.ts'
 import { analyticsUsageCommand } from './commands/analytics/usage.ts'
 import { analyticsSummaryCommand } from './commands/analytics/summary.ts'
@@ -34,6 +35,12 @@ import { tierCurrentCommand } from './commands/tier/current.ts'
 import { tierUpdateCommand } from './commands/tier/update.ts'
 import { tierUpgradeCommand } from './commands/tier/upgrade.ts'
 import { tierDowngradeCommand } from './commands/tier/downgrade.ts'
+import { initCommand } from './commands/init.ts'
+import { doctorCommand } from './commands/doctor.ts'
+import { openCommand } from './commands/open.ts'
+import { docsCommand } from './commands/docs.ts'
+import { checkFirstRun } from './lib/first-run.ts'
+import { showTip } from './lib/tips.ts'
 
 /**
  * Whopctl - CLI tool for managing Whop apps
@@ -58,6 +65,9 @@ const pkg = JSON.parse(await readFile(pkgPath, 'utf-8'))
 
 async function main() {
 	const argv = hideBin(process.argv)
+
+	// Check for first-time users
+	await checkFirstRun()
 
 	// If no command provided, start REPL
 	if (argv.length === 0) {
@@ -84,6 +94,71 @@ async function main() {
 		.command('logout', 'Clear authentication session', {}, async () => {
 			await logoutCommand()
 		})
+		// Setup and diagnostics
+		.command(
+			['init [path]', 'i [path]'],
+			'Set up a new WhopShip project',
+			(yargs) => {
+				return yargs.positional('path', {
+					describe: 'Path to initialize (defaults to current directory)',
+					type: 'string',
+					default: '.',
+				})
+			},
+			async (argv) => {
+				await initCommand(argv.path as string)
+			},
+		)
+		.command(
+			'doctor [path]',
+			'Diagnose common issues with your project setup',
+			(yargs) => {
+				return yargs.positional('path', {
+					describe: 'Path to check (defaults to current directory)',
+					type: 'string',
+					default: '.',
+				})
+			},
+			async (argv) => {
+				await doctorCommand(argv.path as string)
+			},
+		)
+		// Convenience commands
+		.command(
+			'open [target]',
+			'Open URLs in your browser',
+			(yargs) => {
+				return yargs
+					.positional('target', {
+						describe: 'What to open: app, dashboard, logs, settings, billing',
+						type: 'string',
+						default: 'app',
+						choices: ['app', 'dashboard', 'logs', 'settings', 'billing'],
+					})
+					.option('path', {
+						describe: 'Path to the app directory',
+						type: 'string',
+						default: '.',
+					})
+			},
+			async (argv) => {
+				await openCommand(argv.target as 'app' | 'dashboard' | 'logs' | 'settings' | 'billing', argv.path as string)
+			},
+		)
+		.command(
+			'docs [topic]',
+			'Open WhopShip documentation',
+			(yargs) => {
+				return yargs.positional('topic', {
+					describe: 'Documentation topic: deploy, errors, api, nextjs, env, billing, cli, quickstart',
+					type: 'string',
+					default: 'main',
+				})
+			},
+			async (argv) => {
+				await docsCommand(argv.topic as any)
+			},
+		)
 		.command('auth', 'Manage authentication', (yargs) => {
 			return yargs
 				.command('check', 'Check authentication status', {}, async () => {
@@ -367,7 +442,7 @@ async function main() {
 				.demandCommand(1, 'Please specify a URL command (check, reserve, release, list, suggest)')
 				.help()
 		})
-		.command('status', 'Check deployment status', (yargs) => {
+		.command(['status', 's'], 'Check deployment status', (yargs) => {
 			return yargs
 				.command(
 					'logs [path]',
@@ -518,6 +593,48 @@ async function main() {
 					},
 					async (argv) => {
 						await queueStatusCommand(argv.path as string, argv['app-id'] as string | undefined)
+					},
+				)
+				.command(
+					'logs [path]',
+					'View structured build logs with stage progress',
+					(yargs) => {
+						return yargs
+							.positional('path', {
+								describe: 'Path to the app directory',
+								type: 'string',
+								default: '.',
+							})
+							.option('build-id', {
+								describe: 'Build ID to view logs for',
+								type: 'string',
+							})
+							.option('lines', {
+								alias: 'n',
+								describe: 'Number of log lines to show',
+								type: 'number',
+								default: 50,
+							})
+							.option('follow', {
+								alias: 'f',
+								describe: 'Follow logs in real-time',
+								type: 'boolean',
+								default: false,
+							})
+							.option('verbose', {
+								alias: 'v',
+								describe: 'Show all logs without truncation',
+								type: 'boolean',
+								default: false,
+							})
+					},
+					async (argv) => {
+						await structuredBuildLogsCommand(argv.path as string, {
+							buildId: argv['build-id'] as string | undefined,
+							lines: argv.lines as number,
+							follow: argv.follow as boolean,
+							verbose: argv.verbose as boolean,
+						})
 					},
 				)
 				.command(
@@ -774,13 +891,14 @@ async function main() {
 		.alias('h', 'help')
 		.version(pkg.version)
 		.alias('v', 'version')
+		.example('whopctl init', 'Set up a new project')
 		.example('whopctl login', 'Authenticate with your Whop account')
-		.example('whopctl deploy', 'Deploy your Next.js app to WhopShip')
+		.example('whopctl d', 'Deploy your app (short for deploy)')
+		.example('whopctl s', 'Check status (short for status)')
 		.example('whopctl status --logs', 'Check deployment status with build logs')
-		.example('whopctl usage', 'View your app usage and analytics')
-		.example('whopctl history', 'See your deployment history')
-		.example('whopctl redeploy abc123', 'Redeploy a previous build')
-		.example('whopctl quick deploy', 'Deploy with progress tracking')
+		.example('whopctl open', 'Open your deployed app in browser')
+		.example('whopctl doctor', 'Diagnose setup issues')
+		.example('whopctl docs deploy', 'Open deployment documentation')
 		.strict()
 		.parse()
 }

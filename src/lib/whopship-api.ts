@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { homedir } from 'node:os'
 import { printError } from './output.ts'
 import { retryableRequest, createContextualError } from './retry.ts'
+import type { BuildLogsResponse, BuildStatusResponse } from '~/types/index.ts'
 
 const whoplabsDir = join(homedir(), '.whoplabs')
 const sessionPath = join(whoplabsDir, 'whop-session.json')
@@ -417,12 +418,12 @@ export class WhopshipAPI {
 		return response.builds[0]
 	}
 
-	async getBuildLogs(buildId: string) {
-		return this.request(`/api/deploy/builds/${buildId}/logs`)
+	async getBuildLogs(buildId: string): Promise<BuildLogsResponse> {
+		return this.request<BuildLogsResponse>(`/api/deploy/builds/${buildId}/logs`)
 	}
 
-	async getBuildStatus(buildId: string) {
-		return this.request(`/api/deploy/status/${buildId}`)
+	async getBuildStatus(buildId: string): Promise<BuildStatusResponse> {
+		return this.request<BuildStatusResponse>(`/api/deploy/status/${buildId}`)
 	}
 
 	async getAppByWhopId(whopAppId: string) {

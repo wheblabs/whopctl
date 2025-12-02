@@ -7,6 +7,13 @@ import { whop } from '../../lib/whop.ts'
 import { WhopshipAPI } from '../../lib/whopship-api.ts'
 import { createSpinner } from '../../lib/progress.ts'
 import { aliasManager } from '../../lib/alias-manager.ts'
+import type {
+	BuildStages,
+	BuildStage,
+	DeployStage,
+	QueueStage,
+	ErrorContext,
+} from '~/types/index.ts'
 
 /**
  * Simple .env reader
@@ -34,6 +41,50 @@ async function readEnvFile(dir: string): Promise<Record<string, string>> {
 	}
 
 	return env
+}
+
+// Stage display names
+const STAGE_NAMES = {
+	upload: 'Upload',
+	queue: 'Queue',
+	build: 'Build',
+	deploy: 'Deploy',
+}
+
+const BUILD_SUBSTAGE_NAMES: Record<string, string> = {
+	download: 'Download source',
+	extract: 'Extract archive',
+	install: 'Install dependencies',
+	openNextBuild: 'OpenNext build',
+	artifact: 'Create artifact',
+}
+
+const DEPLOY_SUBSTAGE_NAMES: Record<string, string> = {
+	roleSetup: 'Configure IAM',
+	lambdaCreate: 'Create Lambda',
+	staticAssets: 'Upload assets',
+	urlSetup: 'Configure URL',
+	subdomainMapping: 'Configure routing',
+}
+
+/**
+ * Format duration in human-readable format
+ */
+function formatDuration(ms: number): string {
+	if (ms < 1000) return `${ms}ms`
+	if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`
+	const mins = Math.floor(ms / 60000)
+	const secs = Math.floor((ms % 60000) / 1000)
+	return `${mins}m ${secs}s`
+}
+
+/**
+ * Format bytes in human-readable format
+ */
+function formatBytes(bytes: number): string {
+	if (bytes < 1024) return `${bytes} B`
+	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+	return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
 }
 
 /**
@@ -87,38 +138,152 @@ function getStatusIcon(status: string): string {
 }
 
 /**
- * Get estimated completion time
+ * Display stage timeline with sub-stages
  */
-function getEstimatedTime(status: string, createdAt: string): string {
-	const created = new Date(createdAt)
-	const now = new Date()
-	const elapsed = now.getTime() - created.getTime()
-	const elapsedMinutes = Math.floor(elapsed / (1000 * 60))
-
-	switch (status) {
-		case 'queued':
-			return 'Usually starts within 2-5 minutes'
-		case 'building':
-			const avgBuildTime = 8 // minutes
-			const remaining = Math.max(0, avgBuildTime - elapsedMinutes)
-			return remaining > 0 ? `~${remaining} minutes remaining` : 'Should complete soon'
-		case 'deploying':
-			return 'Usually completes within 1-2 minutes'
-		case 'built':
-		case 'completed':
-			return `Completed in ${elapsedMinutes} minutes`
-		case 'failed':
-			return `Failed after ${elapsedMinutes} minutes`
-		default:
-			return ''
+function displayStageTimeline(stages: BuildStages, currentStage?: string): void {
+	console.log(chalk.bold('Build Pipeline:'))
+	console.log()
+	
+	// Define stage order
+	const stageOrder: Array<keyof BuildStages> = ['upload', 'queue', 'build', 'deploy']
+	
+	for (const stageName of stageOrder) {
+		const stage = stages[stageName]
+		const isCurrent = currentStage === stageName
+		const isComplete = stage?.completedAt !== undefined
+		const isActive = stage?.startedAt && !stage?.completedAt
+		
+		// Main stage line
+		const icon = isComplete ? chalk.green('✓') : (isActive || isCurrent) ? chalk.yellow('●') : chalk.dim('○')
+		const name = STAGE_NAMES[stageName]
+		const duration = stage?.durationMs ? formatDuration(stage.durationMs) : ''
+		
+		let info = ''
+		if (stageName === 'upload' && stage) {
+			const uploadStage = stage as typeof stages.upload
+			if (uploadStage?.sizeBytes) {
+				info = chalk.dim(` (${formatBytes(uploadStage.sizeBytes)})`)
+			}
+		} else if (stageName === 'queue' && stage) {
+			const queueStage = stage as QueueStage
+			if (queueStage?.position) {
+				info = chalk.dim(` Position ${queueStage.position}`)
+				if (queueStage.totalInQueue) {
+					info += chalk.dim(`/${queueStage.totalInQueue}`)
+				}
+				if (queueStage.estimatedWaitMinutes) {
+					info += chalk.dim(` (~${queueStage.estimatedWaitMinutes} min wait)`)
+				}
+			}
+		}
+		
+		const durationStr = duration ? chalk.dim(` ${duration}`) : ''
+		const status = isComplete ? chalk.green('complete') : isActive ? chalk.yellow('in progress') : chalk.dim('pending')
+		console.log(`  ${icon} ${chalk.bold(name)}${info}${durationStr} ${chalk.dim('–')} ${status}`)
+		
+		// Sub-stages for build
+		if (stageName === 'build' && stage) {
+			const buildStage = stage as BuildStage
+			if (buildStage.subStages) {
+				const subStageOrder: Array<keyof typeof buildStage.subStages> = ['download', 'extract', 'install', 'openNextBuild', 'artifact']
+				for (const subName of subStageOrder) {
+					const subStage = buildStage.subStages[subName]
+					if (subStage) {
+						const subComplete = subStage.completedAt !== undefined
+						const subActive = subStage.startedAt && !subStage.completedAt
+						const subIcon = subComplete ? chalk.green('✓') : subActive ? chalk.yellow('→') : chalk.dim('·')
+						const subLabel = BUILD_SUBSTAGE_NAMES[subName] || subName
+						const subDuration = subStage.durationMs ? chalk.dim(` ${formatDuration(subStage.durationMs)}`) : ''
+						
+						let subInfo = ''
+						if (subName === 'download' && subStage.sizeMb) {
+							subInfo = chalk.dim(` (${subStage.sizeMb} MB)`)
+						} else if (subName === 'extract' && subStage.fileCount) {
+							subInfo = chalk.dim(` (${subStage.fileCount} files)`)
+						} else if (subName === 'artifact' && subStage.sizeMb) {
+							subInfo = chalk.dim(` (${subStage.sizeMb} MB)`)
+						}
+						
+						console.log(`     ${subIcon} ${subLabel}${subInfo}${subDuration}`)
+					}
+				}
+			}
+		}
+		
+		// Sub-stages for deploy
+		if (stageName === 'deploy' && stage) {
+			const deployStage = stage as DeployStage
+			if (deployStage.subStages) {
+				const subStageOrder: Array<keyof typeof deployStage.subStages> = ['roleSetup', 'lambdaCreate', 'staticAssets', 'urlSetup', 'subdomainMapping']
+				for (const subName of subStageOrder) {
+					const subStage = deployStage.subStages[subName]
+					if (subStage) {
+						const subComplete = subStage.completedAt !== undefined
+						const subActive = subStage.startedAt && !subStage.completedAt
+						const subIcon = subComplete ? chalk.green('✓') : subActive ? chalk.yellow('→') : chalk.dim('·')
+						const subLabel = DEPLOY_SUBSTAGE_NAMES[subName] || subName
+						const subDuration = subStage.durationMs ? chalk.dim(` ${formatDuration(subStage.durationMs)}`) : ''
+						
+						let subInfo = ''
+						if (subName === 'staticAssets' && subStage.fileCount) {
+							subInfo = chalk.dim(` (${subStage.fileCount} files)`)
+						}
+						
+						console.log(`     ${subIcon} ${subLabel}${subInfo}${subDuration}`)
+					}
+				}
+			}
+		}
 	}
+	
+	console.log()
+}
+
+/**
+ * Display error context with debugging help
+ */
+function displayErrorContext(context: ErrorContext, errorMessage: string): void {
+	console.log(chalk.bold.red('❌ Build Failed'))
+	console.log(chalk.gray('─'.repeat(60)))
+	console.log()
+	
+	if (context.stage) {
+		const stageName = context.subStage 
+			? `${STAGE_NAMES[context.stage as keyof typeof STAGE_NAMES] || context.stage} → ${BUILD_SUBSTAGE_NAMES[context.subStage] || DEPLOY_SUBSTAGE_NAMES[context.subStage] || context.subStage}` 
+			: STAGE_NAMES[context.stage as keyof typeof STAGE_NAMES] || context.stage
+		console.log(chalk.red(`Failed at: ${stageName}`))
+	}
+	
+	if (context.exitCode !== undefined) {
+		console.log(chalk.dim(`Exit code: ${context.exitCode}`))
+	}
+	
+	console.log()
+	console.log(chalk.yellow(`Error: ${errorMessage}`))
+	
+	if (context.likelyCauses && context.likelyCauses.length > 0) {
+		console.log()
+		console.log(chalk.bold('Likely causes:'))
+		for (const cause of context.likelyCauses) {
+			console.log(chalk.yellow(`  • ${cause}`))
+		}
+	}
+	
+	if (context.debugSteps && context.debugSteps.length > 0) {
+		console.log()
+		console.log(chalk.bold('How to fix:'))
+		for (let i = 0; i < context.debugSteps.length; i++) {
+			console.log(chalk.cyan(`  ${i + 1}. ${context.debugSteps[i]}`))
+		}
+	}
+	
+	console.log()
 }
 
 /**
  * Format log line with colors
  */
 function formatLogLine(line: string): string {
-	// Check for common log patterns and colorize
 	const lowerLine = line.toLowerCase()
 
 	if (lowerLine.includes('error') || lowerLine.includes('failed') || lowerLine.includes('✗')) {
@@ -149,10 +314,7 @@ async function displayLogs(
 
 	const fetchAndDisplayLogs = async (): Promise<{ logs: string[]; status: string }> => {
 		try {
-			const logsResponse = (await api.getBuildLogs(buildId)) as {
-				logs: string[]
-				status: string
-			}
+			const logsResponse = await api.getBuildLogs(buildId)
 
 			if (logsResponse.logs && logsResponse.logs.length > 0) {
 				// Show only new logs if following
@@ -186,10 +348,9 @@ async function displayLogs(
 
 	// Follow mode: poll for updates
 	if (options.follow) {
-		const activeStatuses = ['init', 'uploading', 'uploaded', 'queued', 'building']
+		const activeStatuses = ['init', 'uploading', 'uploaded', 'queued', 'building', 'deploying']
 
 		if (!activeStatuses.includes(initialResult.status)) {
-			// Build is complete, no need to follow
 			return
 		}
 
@@ -197,7 +358,6 @@ async function displayLogs(
 		printInfo('Following logs... (Press Ctrl+C to stop)')
 		console.log()
 
-		// Handle Ctrl+C gracefully
 		let interrupted = false
 		const interruptHandler = () => {
 			interrupted = true
@@ -209,11 +369,10 @@ async function displayLogs(
 
 		try {
 			while (!interrupted) {
-				await new Promise((resolve) => setTimeout(resolve, 2500)) // Poll every 2.5 seconds
+				await new Promise((resolve) => setTimeout(resolve, 2500))
 
 				const result = await fetchAndDisplayLogs()
 
-				// Exit if build is complete
 				if (!activeStatuses.includes(result.status)) {
 					console.log()
 					printInfo(`Build status changed to ${result.status}. Stopping follow mode.`)
@@ -241,7 +400,6 @@ export async function statusCommand(
 		let appId: string
 
 		if (options.project) {
-			// Use provided project identifier
 			try {
 				const { appId: resolvedAppId } = await aliasManager.resolveProjectId(options.project)
 				appId = resolvedAppId
@@ -250,7 +408,6 @@ export async function statusCommand(
 				process.exit(1)
 			}
 		} else {
-			// Read from .env
 			const env = await readEnvFile(targetDir)
 			const envAppId = env.NEXT_PUBLIC_WHOP_APP_ID
 
@@ -273,11 +430,11 @@ export async function statusCommand(
 			process.exit(1)
 		}
 
-	const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-		uidToken: session.uidToken,
-		ssk: session.ssk,
-		userId: session.userId,
-	})
+		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
+			uidToken: session.uidToken,
+			ssk: session.ssk,
+			userId: session.userId,
+		})
 
 		// 3. Fetch latest build
 		const spinner = createSpinner(`Fetching latest build for app ${appId}...`)
@@ -301,12 +458,12 @@ export async function statusCommand(
 		console.log(`  ${chalk.cyan('Status:')}      ${formatStatus(build.status)}`)
 		console.log(`  ${chalk.cyan('Created:')}     ${new Date(build.created_at).toLocaleString()}`)
 		console.log(`  ${chalk.cyan('Updated:')}     ${new Date(build.updated_at).toLocaleString()}`)
-		
-		const estimatedTime = getEstimatedTime(build.status, build.created_at)
-		if (estimatedTime) {
-			console.log(`  ${chalk.cyan('Timeline:')}    ${chalk.dim(estimatedTime)}`)
-		}
 		console.log()
+
+		// Show stage timeline if available
+		if (build.progress?.stages && Object.keys(build.progress.stages).length > 0) {
+			displayStageTimeline(build.progress.stages, build.progress.current_stage)
+		}
 
 		// Show deployment URLs if built
 		if (build.status === 'built' || build.status === 'completed') {
@@ -333,7 +490,7 @@ export async function statusCommand(
 		}
 
 		// Show contextual actions based on status
-		if (build.status === 'building' || build.status === 'queued') {
+		if (build.status === 'building' || build.status === 'queued' || build.status === 'deploying') {
 			console.log(chalk.bold.yellow('⏳ Build in Progress'))
 			console.log(chalk.gray('─'.repeat(60)))
 			console.log()
@@ -345,14 +502,14 @@ export async function statusCommand(
 					const queueItem = queueStatus.queue?.find((item: any) => item.build_id === build.build_id)
 					if (queueItem && queueItem.position) {
 						console.log(chalk.yellow(`Queue Position: ${queueItem.position} of ${queueStatus.queued}`))
-						const estimatedWait = (queueItem.position - 1) * 3 // Rough estimate: 3 min per build
+						const estimatedWait = (queueItem.position - 1) * 3
 						if (estimatedWait > 0) {
 							console.log(chalk.dim(`Estimated wait: ~${estimatedWait} minutes`))
 						}
 						console.log()
 					}
 				} catch {
-					// Queue status unavailable, continue without it
+					// Queue status unavailable
 				}
 			}
 			
@@ -365,31 +522,30 @@ export async function statusCommand(
 			console.log(`  ${chalk.blue('•')} Check again: ${chalk.dim('whopctl status')}`)
 			console.log()
 		} else if (build.status === 'failed') {
-			console.log(chalk.bold.red('❌ Build Failed'))
-			console.log(chalk.gray('─'.repeat(60)))
-			console.log()
-			if (build.error_message) {
-				console.log(chalk.red(`Error: ${build.error_message}`))
+			// Show enhanced error context if available
+			if (build.progress?.error_context) {
+				displayErrorContext(build.progress.error_context, build.error_message || 'Unknown error')
+			} else {
+				console.log(chalk.bold.red('❌ Build Failed'))
+				console.log(chalk.gray('─'.repeat(60)))
+				console.log()
+				if (build.error_message) {
+					console.log(chalk.red(`Error: ${build.error_message}`))
+					console.log()
+				}
+				console.log(chalk.red('Your build encountered an error. Try these steps:'))
+				console.log(`  ${chalk.yellow('1.')} Check build logs: ${chalk.dim('whopctl status --logs')}`)
+				console.log(`  ${chalk.yellow('2.')} Test locally: ${chalk.dim('npm run build')}`)
+				console.log(`  ${chalk.yellow('3.')} Fix issues and redeploy: ${chalk.dim('whopctl deploy')}`)
 				console.log()
 			}
-			console.log(chalk.red('Your build encountered an error. Try these steps:'))
-			console.log(`  ${chalk.yellow('1.')} Check build logs: ${chalk.dim('whopctl status --logs')}`)
-			console.log(`  ${chalk.yellow('2.')} Test locally: ${chalk.dim('npm run build')}`)
-			console.log(`  ${chalk.yellow('3.')} Fix issues and redeploy: ${chalk.dim('whopctl deploy')}`)
-			console.log()
-		} else if (!options.showLogs && (build.status === 'building' || build.status === 'failed')) {
+		} else if (!options.showLogs && build.status === 'building') {
 			console.log(chalk.yellow('💡 Tip: Add --logs to see detailed build information'))
 			console.log()
 		}
 
-		if (build.build_log_url && !options.showLogs) {
-			printInfo(`Logs: ${build.build_log_url}`)
-		}
-
-		if (build.artifacts) {
-			printSuccess(
-				`✓ Artifacts available at: ${build.artifacts.s3_bucket}/${build.artifacts.s3_key}`,
-			)
+		if (build.artifacts?.available) {
+			printSuccess('✓ Build artifacts available')
 		}
 
 		// Display logs if requested

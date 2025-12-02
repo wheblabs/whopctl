@@ -38,6 +38,185 @@ export function printWarning(message: string): void {
 }
 
 /**
+ * Friendly error translations for common error patterns
+ */
+interface FriendlyError {
+	message: string
+	whatToDo: string[]
+	docsLink?: string
+}
+
+const ERROR_TRANSLATIONS: Record<string, FriendlyError> = {
+	'ENOENT': {
+		message: 'File or directory not found',
+		whatToDo: [
+			'Make sure you\'re in the correct directory',
+			'Run: whopctl init to set up your project',
+		],
+	},
+	'EACCES': {
+		message: 'Permission denied',
+		whatToDo: [
+			'Check that you have permission to access this file',
+			'Try running the command with appropriate permissions',
+		],
+	},
+	'401': {
+		message: 'Authentication required',
+		whatToDo: [
+			'Run: whopctl login',
+			'If already logged in, try: whopctl logout then whopctl login',
+		],
+	},
+	'403': {
+		message: 'Access denied',
+		whatToDo: [
+			'Check that you have permission to access this resource',
+			'Make sure you\'re using the correct App ID and Company ID',
+		],
+	},
+	'404': {
+		message: 'Resource not found',
+		whatToDo: [
+			'Check that your App ID and Company ID are correct',
+			'Verify the resource exists in your Whop dashboard',
+		],
+	},
+	'402': {
+		message: 'Payment or billing issue',
+		whatToDo: [
+			'Check your subscription status: whopctl billing current',
+			'Upgrade your plan if needed: whopctl billing subscribe',
+		],
+	},
+	'429': {
+		message: 'Too many requests - please slow down',
+		whatToDo: [
+			'Wait a few seconds and try again',
+			'Reduce the frequency of your requests',
+		],
+	},
+	'500': {
+		message: 'Server error - this is on our end',
+		whatToDo: [
+			'Wait a few minutes and try again',
+			'Check status at: https://status.whopship.app',
+		],
+	},
+	'502': {
+		message: 'Service temporarily unavailable',
+		whatToDo: [
+			'Wait a few minutes and try again',
+			'Check status at: https://status.whopship.app',
+		],
+	},
+	'503': {
+		message: 'Service temporarily unavailable',
+		whatToDo: [
+			'Wait a few minutes and try again',
+			'Check status at: https://status.whopship.app',
+		],
+	},
+	'ECONNREFUSED': {
+		message: 'Could not connect to the server',
+		whatToDo: [
+			'Check your internet connection',
+			'Run: whopctl doctor to diagnose issues',
+		],
+	},
+	'ETIMEDOUT': {
+		message: 'Connection timed out',
+		whatToDo: [
+			'Check your internet connection',
+			'The server might be busy, try again in a few seconds',
+		],
+	},
+	'ENOTFOUND': {
+		message: 'Could not find the server',
+		whatToDo: [
+			'Check your internet connection',
+			'Make sure DNS is working correctly',
+		],
+	},
+	'fetch failed': {
+		message: 'Network request failed',
+		whatToDo: [
+			'Check your internet connection',
+			'Run: whopctl doctor to diagnose issues',
+		],
+	},
+	'.env': {
+		message: 'Environment configuration issue',
+		whatToDo: [
+			'Run: whopctl init to set up your environment',
+			'Make sure .env file exists with required variables',
+		],
+	},
+	'package.json': {
+		message: 'Project configuration issue',
+		whatToDo: [
+			'Make sure you\'re in a valid project directory',
+			'Run: npm init or whopctl init to set up',
+		],
+	},
+	'Build failed': {
+		message: 'Your app failed to build',
+		whatToDo: [
+			'Test locally first: npm run build',
+			'Check the build logs: whopctl status --logs',
+			'Run: whopctl doctor to check your setup',
+		],
+	},
+}
+
+/**
+ * Translate technical error to friendly message
+ */
+function translateError(error: string): FriendlyError | null {
+	for (const [pattern, translation] of Object.entries(ERROR_TRANSLATIONS)) {
+		if (error.includes(pattern)) {
+			return translation
+		}
+	}
+	return null
+}
+
+/**
+ * Print a user-friendly error with guidance
+ */
+export function printFriendlyError(error: unknown): void {
+	const errorMessage = error instanceof Error ? error.message : String(error)
+	const translation = translateError(errorMessage)
+
+	console.log()
+	if (translation) {
+		console.log(chalk.red.bold('Something went wrong'))
+		console.log(chalk.red(`${translation.message}`))
+		console.log()
+		console.log(chalk.bold('What to do:'))
+		for (const step of translation.whatToDo) {
+			console.log(chalk.cyan(`  → ${step}`))
+		}
+		if (translation.docsLink) {
+			console.log()
+			console.log(chalk.dim(`Learn more: ${translation.docsLink}`))
+		}
+	} else {
+		// Fall back to showing the actual error
+		console.log(chalk.red.bold('An error occurred'))
+		console.log(chalk.red(errorMessage))
+		console.log()
+		console.log(chalk.bold('What to do:'))
+		console.log(chalk.cyan('  → Run: whopctl doctor to diagnose issues'))
+		console.log(chalk.cyan('  → Check the docs: whopctl docs'))
+	}
+	console.log()
+	console.log(chalk.dim('─'.repeat(50)))
+	console.log(chalk.dim('Still stuck? Visit: https://docs.whopship.app/help'))
+	console.log()
+}
+
+/**
  * Formats and prints a simple table from an array of objects.
  *
  * @param data Array of objects to display as a table
