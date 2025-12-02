@@ -4,7 +4,7 @@
 	"author": "Whop Labs",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/wheblabs/cli.git"
+		"url": "git+https://github.com/wheblabs/whopctl.git"
 	},
 	"main": "index.js",
 	"scripts": {
@@ -36,13 +36,13 @@
 		"whopctl": "./dist/index.js"
 	},
 	"bugs": {
-		"url": "https://github.com/wheblabs/cli/issues"
+		"url": "https://github.com/wheblabs/whopctl/issues"
 	},
 	"description": "Deploy, host and observe your whop apps",
 	"engines": {
 		"node": ">=22.0.0"
 	},
-	"homepage": "https://github.com/wheblabs/cli#readme",
+	"homepage": "https://github.com/wheblabs/whopctl#readme",
 	"license": "MIT",
 	"publishConfig": {
 		"access": "public"
