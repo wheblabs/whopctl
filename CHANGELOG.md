@@ -1,0 +1,7 @@
+## 1.0.0 (2025-12-02)
+
+### Bug Fixes
+
+* resolve lint errors breaking CI ([ecc9ef1](https://github.com/wheblabs/whopctl/commit/ecc9ef1f84ee251a6603bce597ba95265e9715e2))
+* resolve linting errors and update biome config ([60563b6](https://github.com/wheblabs/whopctl/commit/60563b6bb394c5010d32cd93d2536c9608b1c7d2))
+* update repo URLs after rename to whopctl and add gitattributes for line endings ([6043843](https://github.com/wheblabs/whopctl/commit/60438439a0d13e6cc97a8858f8e3bdc54a88d432))
