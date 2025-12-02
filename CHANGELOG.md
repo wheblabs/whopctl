@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/wheblabs/whopctl/compare/v1.0.0...v1.1.0) (2025-12-02)
+
+### Features
+
+* add smoke testing with Telegram notifications ([3515710](https://github.com/wheblabs/whopctl/commit/3515710bfabb3464928c3f8fd77d58269b543ae4))
+
 ## 1.0.0 (2025-12-02)
 
 ### Bug Fixes
