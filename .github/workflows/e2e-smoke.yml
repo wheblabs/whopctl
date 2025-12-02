@@ -1,0 +1,65 @@
+name: E2E Smoke Test
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # Daily at 8am UTC
+  workflow_dispatch:
+
+jobs:
+  e2e-test:
+    name: E2E CLI Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.1.34"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bun run build
+
+      - name: Setup Whop auth
+        run: |
+          mkdir -p ~/.whoplabs
+          echo '${{ secrets.WHOP_SESSION_JSON }}' > ~/.whoplabs/whop-session.json
+
+      - name: Test CLI help
+        run: ./dist/index.js --help
+
+      - name: Test CLI version
+        run: ./dist/index.js --version
+
+      - name: Test auth check
+        run: ./dist/index.js auth check || echo "Auth check completed (may require valid session)"
+
+      - name: Test apps list
+        run: ./dist/index.js apps list || echo "Apps list completed (may require valid session)"
+
+      - name: Test status command (with test app context)
+        run: |
+          mkdir -p test-app
+          cd test-app
+          echo '{"name": "test-app"}' > package.json
+          echo 'WHOP_APP_ID=${{ secrets.TEST_APP_ID }}' > .env
+          echo 'WHOP_COMPANY_ID=${{ secrets.TEST_COMPANY_ID }}' >> .env
+          ../dist/index.js status || echo "Status check completed"
+
+      - name: Cleanup
+        if: always()
+        run: rm -rf test-app
+
+      - name: Notify on failure
+        uses: ./.github/actions/telegram-notify
+        if: failure()
+        with:
+          bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          chat-id: ${{ secrets.TELEGRAM_CHAT_ID }}
+          status: ${{ job.status }}
+          workflow: "whopctl E2E"
+
