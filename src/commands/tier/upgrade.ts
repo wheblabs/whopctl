@@ -1,8 +1,7 @@
 import chalk from 'chalk'
 import { requireAuth } from '../../lib/auth-guard.ts'
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
-import { whop } from '../../lib/whop.ts'
-import { WhopshipAPI } from '../../lib/whopship-api.ts'
+import { whopshipClient } from '../../lib/whopship-client.ts'
 
 /**
  * Handles the "tier upgrade" command.
@@ -18,21 +17,9 @@ export async function tierUpgradeCommand(tier: 'free' | 'hobby' | 'pro'): Promis
 	}
 
 	try {
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
 		printInfo(`Subscribing to ${tier} tier...`)
 
-		const result = await api.createCheckoutSession(tier)
+		const result = await whopshipClient.createCheckoutSession(tier)
 
 		if (!result.requiresPayment) {
 			// Free tier - no payment needed

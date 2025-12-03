@@ -3,7 +3,7 @@ import { join, resolve } from 'node:path'
 import chalk from 'chalk'
 import { createSpinner } from '../lib/progress.ts'
 import { whop } from '../lib/whop.ts'
-import { WhopshipAPI } from '../lib/whopship-api.ts'
+import { whopshipClient } from '../lib/whopship-client.ts'
 
 interface DiagnosticResult {
 	name: string
@@ -64,20 +64,12 @@ async function runDiagnostics(dir: string): Promise<DiagnosticResult[]> {
 	// 3. Check API connectivity
 	if (whop.isAuthenticated()) {
 		try {
-			const session = whop.getTokens()
-			if (session) {
-				const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-					uidToken: session.uidToken,
-					ssk: session.ssk,
-					userId: session.userId,
-				})
-				await api.getMe()
-				results.push({
-					name: 'API Connection',
-					status: 'pass',
-					message: 'Connected to WhopShip API',
-				})
-			}
+			await whopshipClient.getMe()
+			results.push({
+				name: 'API Connection',
+				status: 'pass',
+				message: 'Connected to WhopShip API',
+			})
 		} catch (_error) {
 			results.push({
 				name: 'API Connection',

@@ -1,35 +1,9 @@
-import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import chalk from 'chalk'
-import { requireAuth } from '../../lib/auth-guard'
-import { printError, printInfo } from '../../lib/output'
-import { whop } from '../../lib/whop'
-import { WhopshipAPI } from '../../lib/whopship-api'
-
-async function readEnvFile(dir: string): Promise<Record<string, string>> {
-	const envPath = resolve(dir, '.env')
-	const content = await readFile(envPath, 'utf-8')
-	const env: Record<string, string> = {}
-
-	for (const line of content.split('\n')) {
-		const trimmed = line.trim()
-		if (!trimmed || trimmed.startsWith('#')) continue
-
-		const [key, ...valueParts] = trimmed.split('=')
-		if (key && valueParts.length > 0) {
-			let value = valueParts.join('=').trim()
-			if (
-				(value.startsWith('"') && value.endsWith('"')) ||
-				(value.startsWith("'") && value.endsWith("'"))
-			) {
-				value = value.slice(1, -1)
-			}
-			env[key.trim()] = value
-		}
-	}
-
-	return env
-}
+import { requireAuth } from '../../lib/auth-guard.ts'
+import { readEnvFile } from '../../lib/env.ts'
+import { printError, printInfo } from '../../lib/output.ts'
+import { type WhopshipClient, whopshipClient } from '../../lib/whopship-client.ts'
 
 /**
  * Format log line with colors
@@ -58,7 +32,7 @@ function formatLogLine(line: string): string {
  * Display build logs with follow support
  */
 async function displayLogs(
-	api: WhopshipAPI,
+	api: WhopshipClient,
 	buildId: string,
 	options: { lines: number; follow: boolean },
 ): Promise<void> {
@@ -160,26 +134,14 @@ export async function logsCommand(
 			process.exit(1)
 		}
 
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
 		printInfo(`Fetching logs for app ${appId}...`)
-		const build = await api.getLatestBuildForApp(appId)
+		const build = await whopshipClient.getLatestBuildForApp(appId)
 
 		console.log()
 		printInfo(`Build ${build.build_id} - ${build.status.toUpperCase()}`)
 		console.log()
 
-		await displayLogs(api, build.build_id, {
+		await displayLogs(whopshipClient, build.build_id, {
 			lines: options.lines || 30,
 			follow: options.follow || false,
 		})

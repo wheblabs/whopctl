@@ -1,88 +1,11 @@
-import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import chalk from 'chalk'
 import { requireAuth } from '../lib/auth-guard.ts'
+import { readEnvFile } from '../lib/env.ts'
+import { formatBuildStatusWithIcon, formatRelativeTime } from '../lib/format.ts'
 import { printError, printInfo } from '../lib/output.ts'
 import { createSpinner } from '../lib/progress.ts'
-import { whop } from '../lib/whop.ts'
-import { WhopshipAPI } from '../lib/whopship-api.ts'
-
-/**
- * Simple .env reader
- */
-async function readEnvFile(dir: string): Promise<Record<string, string>> {
-	const envPath = resolve(dir, '.env')
-	const content = await readFile(envPath, 'utf-8')
-	const env: Record<string, string> = {}
-
-	for (const line of content.split('\n')) {
-		const trimmed = line.trim()
-		if (!trimmed || trimmed.startsWith('#')) continue
-
-		const [key, ...valueParts] = trimmed.split('=')
-		if (key && valueParts.length > 0) {
-			let value = valueParts.join('=').trim()
-			if (
-				(value.startsWith('"') && value.endsWith('"')) ||
-				(value.startsWith("'") && value.endsWith("'"))
-			) {
-				value = value.slice(1, -1)
-			}
-			env[key.trim()] = value
-		}
-	}
-
-	return env
-}
-
-/**
- * Format status with color and icon
- */
-function formatStatus(status: string): string {
-	switch (status) {
-		case 'init':
-			return chalk.gray('🔄 init')
-		case 'uploaded':
-			return chalk.blue('📤 uploaded')
-		case 'queued':
-			return chalk.yellow('⏳ queued')
-		case 'building':
-			return chalk.yellow('🔨 building')
-		case 'built':
-		case 'completed':
-			return chalk.green('✅ live')
-		case 'deploying':
-			return chalk.cyan('🚀 deploying')
-		case 'failed':
-			return chalk.red('❌ failed')
-		default:
-			return chalk.gray(`📦 ${status}`)
-	}
-}
-
-/**
- * Format relative time
- */
-function formatRelativeTime(dateString: string): string {
-	const date = new Date(dateString)
-	const now = new Date()
-	const diffMs = now.getTime() - date.getTime()
-	const diffMinutes = Math.floor(diffMs / (1000 * 60))
-	const diffHours = Math.floor(diffMinutes / 60)
-	const diffDays = Math.floor(diffHours / 24)
-
-	if (diffMinutes < 1) {
-		return chalk.green('just now')
-	} else if (diffMinutes < 60) {
-		return chalk.green(`${diffMinutes}m ago`)
-	} else if (diffHours < 24) {
-		return chalk.yellow(`${diffHours}h ago`)
-	} else if (diffDays < 7) {
-		return chalk.dim(`${diffDays}d ago`)
-	} else {
-		return chalk.dim(date.toLocaleDateString())
-	}
-}
+import { whopshipClient } from '../lib/whopship-client.ts'
 
 /**
  * Display deployment history for the current app
@@ -104,25 +27,12 @@ export async function historyCommand(
 			process.exit(1)
 		}
 
-		// 2. Get session
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
-		// 3. Fetch build history
+		// 2. Fetch build history
 		const spinner = createSpinner(`Fetching deployment history for ${appId}...`)
 		spinner.start()
 
 		const limit = options.limit || (options.all ? 100 : 10)
-		const buildsResponse = await api.getBuilds(appId, limit)
+		const buildsResponse = await whopshipClient.getBuilds(appId, limit)
 		const builds = buildsResponse.builds || []
 
 		spinner.succeed(`Found ${builds.length} deployments`)
@@ -150,7 +60,7 @@ export async function historyCommand(
 
 		for (const build of builds) {
 			const buildId = `${build.build_id.substring(0, 8)}...`
-			const status = formatStatus(build.status)
+			const status = formatBuildStatusWithIcon(build.status)
 			const created = formatRelativeTime(build.created_at)
 
 			// Calculate duration

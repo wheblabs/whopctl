@@ -1,6 +1,6 @@
 import { requireAuth } from '../../lib/auth-guard.ts'
 import { printError, printInfo, printSuccess, printTable } from '../../lib/output.ts'
-import { whopshipApi } from '../../lib/whopship-api.ts'
+import { whopshipClient } from '../../lib/whopship-client.ts'
 
 interface TierInfo {
 	tier: 'free' | 'hobby' | 'pro'
@@ -35,7 +35,7 @@ export async function tierCurrentCommand(): Promise<void> {
 	try {
 		printInfo('Fetching current tier...')
 
-		const tierInfo = (await whopshipApi.getCurrentTier()) as TierInfo
+		const tierInfo = (await whopshipClient.getCurrentTier()) as TierInfo
 
 		console.log('')
 		printSuccess(`Current Tier: ${tierInfo.tierInfo.name}`)

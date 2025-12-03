@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
-import { whopshipApi } from '../../lib/whopship-api.ts'
+import { whopshipClient } from '../../lib/whopship-client.ts'
 
 /**
  * Handles the "analytics summary" command.
@@ -11,7 +11,7 @@ export async function analyticsSummaryCommand(appId?: number, month?: string): P
 	try {
 		printInfo('Fetching usage summary...')
 
-		const summary = (await whopshipApi.getUsageSummary({
+		const summary = (await whopshipClient.getUsageSummary({
 			appId,
 			month,
 		})) as any

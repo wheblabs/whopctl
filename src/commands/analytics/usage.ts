@@ -1,41 +1,7 @@
-import { readFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
 import chalk from 'chalk'
+import { readEnvFileSafe } from '../../lib/env.ts'
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
-import { whopshipApi } from '../../lib/whopship-api.ts'
-
-/**
- * Reads environment variables from .env file
- */
-async function readEnvFile(dir: string): Promise<Record<string, string>> {
-	const envPath = resolve(dir, '.env')
-
-	try {
-		const content = await readFile(envPath, 'utf-8')
-		const env: Record<string, string> = {}
-
-		for (const line of content.split('\n')) {
-			const trimmed = line.trim()
-			if (!trimmed || trimmed.startsWith('#')) continue
-
-			const [key, ...valueParts] = trimmed.split('=')
-			if (key && valueParts.length > 0) {
-				let value = valueParts.join('=').trim()
-				if (
-					(value.startsWith('"') && value.endsWith('"')) ||
-					(value.startsWith("'") && value.endsWith("'"))
-				) {
-					value = value.slice(1, -1)
-				}
-				env[key.trim()] = value
-			}
-		}
-
-		return env
-	} catch (_error) {
-		return {}
-	}
-}
+import { whopshipClient } from '../../lib/whopship-client.ts'
 
 /**
  * Handles the "analytics usage" command.
@@ -52,12 +18,12 @@ export async function analyticsUsageCommand(
 
 		// Try to infer App ID from .env if not provided
 		if (!targetAppId) {
-			const env = await readEnvFile(process.cwd())
+			const env = await readEnvFileSafe(process.cwd())
 			const whopAppId = env.NEXT_PUBLIC_WHOP_APP_ID
 
 			if (whopAppId) {
 				try {
-					const app = await whopshipApi.getAppByWhopId(whopAppId)
+					const app = await whopshipClient.getAppByWhopId(whopAppId)
 					targetAppId = app.id
 					printInfo(`Context: ${chalk.bold(app.whop_app_name)} (${whopAppId})`)
 				} catch {
@@ -68,7 +34,7 @@ export async function analyticsUsageCommand(
 
 		printInfo('Fetching usage analytics...')
 
-		const data = (await whopshipApi.getUsage({
+		const data = (await whopshipClient.getUsage({
 			appId: targetAppId,
 			startDate,
 			endDate,

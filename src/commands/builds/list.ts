@@ -1,49 +1,10 @@
-import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import chalk from 'chalk'
 import { requireAuth } from '../../lib/auth-guard.ts'
+import { readEnvFile } from '../../lib/env.ts'
+import { formatBuildStatus } from '../../lib/format.ts'
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
-import { whop } from '../../lib/whop.ts'
-import { type BuildStatus, WhopshipAPI } from '../../lib/whopship-api.ts'
-
-async function readEnvFile(dir: string): Promise<Record<string, string>> {
-	const envPath = resolve(dir, '.env')
-	const content = await readFile(envPath, 'utf-8')
-	const env: Record<string, string> = {}
-
-	for (const line of content.split('\n')) {
-		const trimmed = line.trim()
-		if (!trimmed || trimmed.startsWith('#')) continue
-
-		const [key, ...valueParts] = trimmed.split('=')
-		if (key && valueParts.length > 0) {
-			let value = valueParts.join('=').trim()
-			if (
-				(value.startsWith('"') && value.endsWith('"')) ||
-				(value.startsWith("'") && value.endsWith("'"))
-			) {
-				value = value.slice(1, -1)
-			}
-			env[key.trim()] = value
-		}
-	}
-
-	return env
-}
-
-function formatStatus(status: string): string {
-	const colors: Record<string, (text: string) => string> = {
-		init: chalk.gray,
-		uploading: chalk.blue,
-		uploaded: chalk.cyan,
-		queued: chalk.yellow,
-		building: chalk.yellow,
-		built: chalk.green,
-		failed: chalk.red,
-	}
-	const colorFn = colors[status] || chalk.white
-	return colorFn(status.toUpperCase())
-}
+import { type BuildStatus, whopshipClient } from '../../lib/whopship-client.ts'
 
 export async function listBuildsCommand(path: string = '.', limit: number = 10): Promise<void> {
 	requireAuth()
@@ -58,20 +19,8 @@ export async function listBuildsCommand(path: string = '.', limit: number = 10):
 			process.exit(1)
 		}
 
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
 		printInfo(`Fetching builds for app ${appId}...`)
-		const response = (await api.getBuilds(appId, limit)) as { builds: BuildStatus[] }
+		const response = (await whopshipClient.getBuilds(appId, limit)) as { builds: BuildStatus[] }
 
 		if (!response.builds || response.builds.length === 0) {
 			printInfo('No builds found for this app')
@@ -86,7 +35,7 @@ export async function listBuildsCommand(path: string = '.', limit: number = 10):
 			const hasArtifacts = build.artifacts ? '✓' : ' '
 			const date = new Date(build.created_at).toLocaleString()
 
-			console.log(`${hasArtifacts} ${formatStatus(build.status).padEnd(12)} ${date}`)
+			console.log(`${hasArtifacts} ${formatBuildStatus(build.status).padEnd(12)} ${date}`)
 			console.log(`  ID: ${build.build_id}`) // Full ID on its own line - easy to copy
 
 			if (build.error_message) {

@@ -4,7 +4,7 @@ import { homedir } from 'node:os'
 import { join } from 'node:path'
 import chalk from 'chalk'
 import { printInfo } from './output.ts'
-import { WhopshipAPI } from './whopship-api.ts'
+import { type WhopshipClient } from './whopship-client.ts'
 
 const whoplabsDir = join(homedir(), '.whoplabs')
 const aliasesPath = join(whoplabsDir, 'aliases.json')
@@ -190,7 +190,7 @@ export class AliasManager {
 	 * Auto-discover and suggest aliases for apps
 	 */
 	async suggestAliases(
-		_api: WhopshipAPI,
+		_api: WhopshipClient,
 	): Promise<{ name: string; appId: string; appName: string }[]> {
 		try {
 			// This would require an API endpoint to list user's apps

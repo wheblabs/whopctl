@@ -3,8 +3,7 @@ import { aliasManager } from '../lib/alias-manager.ts'
 import { requireAuth } from '../lib/auth-guard.ts'
 import { printError, printSuccess } from '../lib/output.ts'
 import { createSpinner } from '../lib/progress.ts'
-import { whop } from '../lib/whop.ts'
-import { WhopshipAPI } from '../lib/whopship-api.ts'
+import { whopshipClient } from '../lib/whopship-client.ts'
 
 /**
  * Set a project alias
@@ -13,24 +12,12 @@ export async function setAliasCommand(name: string, appId: string): Promise<void
 	requireAuth()
 
 	try {
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
 		// Validate that the app ID exists and get app info
 		const spinner = createSpinner(`Validating app ID: ${appId}`)
 		spinner.start()
 
 		try {
-			const appInfo = await api.getAppByWhopId(appId)
+			const appInfo = await whopshipClient.getAppByWhopId(appId)
 			spinner.succeed(`Found app: ${appInfo.whop_app_name}`)
 
 			// Set the alias with app metadata
@@ -159,21 +146,10 @@ export async function discoverAliasesCommand(): Promise<void> {
 	requireAuth()
 
 	try {
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
 		const spinner = createSpinner('Discovering your apps...')
 		spinner.start()
 
-		const suggestions = await aliasManager.suggestAliases(api)
+		const suggestions = await aliasManager.suggestAliases(whopshipClient)
 
 		if (suggestions.length === 0) {
 			spinner.info('No new apps found to create aliases for.')

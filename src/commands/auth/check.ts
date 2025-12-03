@@ -1,6 +1,6 @@
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
 import { whop } from '../../lib/whop.ts'
-import { WhopshipAPI } from '../../lib/whopship-api.ts'
+import { whopshipClient } from '../../lib/whopship-client.ts'
 
 /**
  * Checks authentication status and displays user information.
@@ -20,21 +20,7 @@ export async function checkAuthCommand(): Promise<void> {
 
 		printInfo('Checking authentication status...')
 
-		// Get session tokens
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		// Create WhopshipAPI instance and fetch user info
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
-		const response = (await api.getMe()) as { user: any }
+		const response = (await whopshipClient.getMe()) as { user: any }
 		const user = response.user
 
 		if (!user) {

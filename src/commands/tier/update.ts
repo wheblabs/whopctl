@@ -1,6 +1,6 @@
 import { requireAuth } from '../../lib/auth-guard.ts'
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
-import { whopshipApi } from '../../lib/whopship-api.ts'
+import { whopshipClient } from '../../lib/whopship-client.ts'
 
 interface TierUpdateResponse {
 	success: boolean
@@ -31,7 +31,7 @@ export async function tierUpdateCommand(tier: 'free' | 'hobby' | 'pro'): Promise
 	try {
 		printInfo(`Updating tier to ${tier}...`)
 
-		const response = (await whopshipApi.updateTier(tier)) as TierUpdateResponse
+		const response = (await whopshipClient.updateTier(tier)) as TierUpdateResponse
 
 		console.log('')
 		printSuccess(`Tier updated from ${response.previousTier} to ${response.tier}`)

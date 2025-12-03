@@ -5,8 +5,7 @@ import { promisify } from 'node:util'
 import chalk from 'chalk'
 import { requireAuth } from '../lib/auth-guard.ts'
 import { printError, printInfo, printSuccess, printWarning } from '../lib/output.ts'
-import { whop } from '../lib/whop.ts'
-import { WhopshipAPI } from '../lib/whopship-api.ts'
+import { type WhopshipClient, whopshipClient } from '../lib/whopship-client.ts'
 
 const execAsync = promisify(exec)
 
@@ -55,7 +54,7 @@ async function getAppIdFromEnv(dir: string): Promise<string | null> {
 /**
  * Get deployed app URL from WhopShip API
  */
-async function getDeployedUrl(api: WhopshipAPI, appId: string): Promise<string | null> {
+async function getDeployedUrl(api: WhopshipClient, appId: string): Promise<string | null> {
 	try {
 		const apps = await api.getApps()
 		const app = apps.apps.find((a: any) => a.whop_app_id === appId)
@@ -94,20 +93,9 @@ export async function openCommand(target: OpenTarget = 'app', path: string = '.'
 
 	if (target === 'billing') {
 		requireAuth()
-		const session = whop.getTokens()
-		if (!session) {
-			printError('Not logged in. Run: whopctl login')
-			return
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
 
 		try {
-			const billing = await api.getBillingInfo()
+			const billing = await whopshipClient.getBillingInfo()
 			const url = billing.manage_url || 'https://whop.com/settings/billing'
 			printInfo(`Opening billing portal...`)
 			const success = await openInBrowser(url)
@@ -137,23 +125,12 @@ export async function openCommand(target: OpenTarget = 'app', path: string = '.'
 	}
 
 	requireAuth()
-	const session = whop.getTokens()
-	if (!session) {
-		printError('Not logged in. Run: whopctl login')
-		return
-	}
-
-	const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-		uidToken: session.uidToken,
-		ssk: session.ssk,
-		userId: session.userId,
-	})
 
 	let url: string
 
 	switch (target) {
 		case 'app': {
-			const deployedUrl = await getDeployedUrl(api, appId)
+			const deployedUrl = await getDeployedUrl(whopshipClient, appId)
 			if (deployedUrl) {
 				url = deployedUrl
 				printInfo(`Opening your deployed app...`)

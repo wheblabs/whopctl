@@ -10,11 +10,11 @@ import { aliasManager } from '../lib/alias-manager.ts'
 import { requireAuth } from '../lib/auth-guard.ts'
 import { createBuildTracker } from '../lib/build-tracker.ts'
 import { printError, printInfo, printSuccess, printWarning } from '../lib/output.ts'
-import { createProgressBar, createSpinner } from '../lib/progress.ts'
+import { createSpinner } from '../lib/progress.ts'
 import { validateProject } from '../lib/project-validator.ts'
+import { readEnvFile } from '../lib/env.ts'
 import { createContextualError } from '../lib/retry.ts'
-import { whop } from '../lib/whop.ts'
-import { WhopshipAPI } from '../lib/whopship-api.ts'
+import { whopshipClient } from '../lib/whopship-client.ts'
 
 /**
  * Create tar.gz archive of the project
@@ -69,87 +69,49 @@ async function createArchive(dir: string): Promise<{ path: string; sha256: strin
 }
 
 /**
- * Upload archive to S3 with progress tracking
+ * Upload archive to S3 with spinner (fetch doesn't support upload progress)
  */
 async function uploadToS3(filePath: string, uploadUrl: string, _sha256: string): Promise<void> {
 	const fileBuffer = await readFile(filePath)
 	const totalSize = fileBuffer.length
-	const progressBar = createProgressBar({
-		total: totalSize,
-		format: 'Uploading [:bar] :percent (:current/:total bytes) :eta',
-	})
+	const sizeMB = (totalSize / 1024 / 1024).toFixed(2)
 
-	printInfo(`Uploading ${(totalSize / 1024 / 1024).toFixed(2)} MB to S3...`)
+	// Use a spinner instead of a fake progress bar
+	// (fetch API doesn't provide upload progress events)
+	const spinner = createSpinner(`Uploading ${sizeMB} MB...`)
+	spinner.start()
 
-	// Create a readable stream to track progress
-	const chunks: Buffer[] = []
-	const chunkSize = Math.max(1024 * 64, Math.floor(totalSize / 100)) // 64KB or 1% chunks
-
-	for (let i = 0; i < totalSize; i += chunkSize) {
-		const end = Math.min(i + chunkSize, totalSize)
-		chunks.push(fileBuffer.subarray(i, end))
-	}
-
-	const response = await fetch(uploadUrl, {
-		method: 'PUT',
-		body: fileBuffer,
-		headers: {
-			'Content-Type': 'application/octet-stream',
-		},
-	})
-
-	// Simulate progress for upload (since fetch doesn't provide upload progress)
-	let uploaded = 0
-	const progressInterval = setInterval(() => {
-		uploaded = Math.min(uploaded + chunkSize, totalSize)
-		progressBar.update(uploaded)
-		if (uploaded >= totalSize) {
-			clearInterval(progressInterval)
-		}
-	}, 50)
-
-	if (!response.ok) {
-		clearInterval(progressInterval)
-		throw new Error(`Upload failed: ${response.status} ${await response.text()}`)
-	}
-
-	clearInterval(progressInterval)
-	progressBar.complete()
-	printSuccess('✓ Upload complete')
-}
-
-/**
- * Reads environment variables from .env file
- */
-async function readEnvFile(dir: string): Promise<Record<string, string>> {
-	const envPath = resolve(dir, '.env')
+	// Use 5 minute timeout for large file uploads
+	const uploadTimeout = 5 * 60 * 1000
+	const controller = new AbortController()
+	const timeoutId = setTimeout(() => controller.abort(), uploadTimeout)
 
 	try {
-		const content = await readFile(envPath, 'utf-8')
-		const env: Record<string, string> = {}
+		const response = await fetch(uploadUrl, {
+			method: 'PUT',
+			body: fileBuffer,
+			headers: {
+				'Content-Type': 'application/octet-stream',
+			},
+			signal: controller.signal,
+		})
 
-		for (const line of content.split('\n')) {
-			const trimmed = line.trim()
-			// Skip comments and empty lines
-			if (!trimmed || trimmed.startsWith('#')) continue
+		clearTimeout(timeoutId)
 
-			const [key, ...valueParts] = trimmed.split('=')
-			if (key && valueParts.length > 0) {
-				// Remove quotes if present
-				let value = valueParts.join('=').trim()
-				if (
-					(value.startsWith('"') && value.endsWith('"')) ||
-					(value.startsWith("'") && value.endsWith("'"))
-				) {
-					value = value.slice(1, -1)
-				}
-				env[key.trim()] = value
-			}
+		if (!response.ok) {
+			spinner.fail('Upload failed')
+			throw new Error(`Upload failed: ${response.status} ${await response.text()}`)
 		}
 
-		return env
+		spinner.succeed(`Uploaded ${sizeMB} MB`)
 	} catch (error) {
-		throw new Error(`Failed to read .env file at ${envPath}: ${error}`)
+		clearTimeout(timeoutId)
+		if (error instanceof Error && error.name === 'AbortError') {
+			spinner.fail(`Upload timed out after ${uploadTimeout / 1000}s`)
+			throw new Error(`Upload timed out after ${uploadTimeout / 1000} seconds`)
+		}
+		spinner.fail('Upload failed')
+		throw error
 	}
 }
 
@@ -397,23 +359,11 @@ export async function deployCommand(
 		printInfo(`  Source SHA256: ${sha256}`)
 
 		// 5. Check billing status and show onboarding for free tier
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
 		// Check subscription status
 		printInfo('Checking subscription status...')
 		let subscriptionStatus
 		try {
-			subscriptionStatus = await api.getSubscriptionStatus()
+			subscriptionStatus = await whopshipClient.getSubscriptionStatus()
 
 			// Show free tier onboarding if on free tier
 			if (subscriptionStatus.tier === 'free' && subscriptionStatus.subscriptionStatus === 'free') {
@@ -451,7 +401,7 @@ export async function deployCommand(
 		printInfo('\nInitializing deployment...')
 		let response
 		try {
-			response = await api.deployInit({
+			response = await whopshipClient.deployInit({
 				whop_app_id: appId,
 				whop_app_company_id: companyId,
 				source_sha256: sha256,
@@ -526,7 +476,7 @@ export async function deployCommand(
 		const spinner = createSpinner('Finalizing deployment...')
 		spinner.start()
 
-		const completeResponse = await api.deployComplete(response.build_id)
+		const completeResponse = await whopshipClient.deployComplete(response.build_id)
 		spinner.succeed(`Build queued as ${completeResponse.status}`)
 
 		// Check for billing warnings in complete response
@@ -575,7 +525,7 @@ export async function deployCommand(
 		)
 		console.log()
 
-		const buildTracker = createBuildTracker(api, response.build_id, {
+		const buildTracker = createBuildTracker(whopshipClient, response.build_id, {
 			showLogs: true,
 			pollInterval: 3000,
 		})

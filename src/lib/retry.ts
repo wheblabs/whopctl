@@ -1,12 +1,20 @@
 import { printInfo, printWarning } from './output.ts'
 
+/**
+ * Error with HTTP status code
+ */
+export interface HttpError extends Error {
+	status?: number
+	code?: string
+}
+
 export interface RetryOptions {
 	maxAttempts?: number
 	baseDelay?: number
 	maxDelay?: number
 	backoffFactor?: number
-	retryCondition?: (error: any) => boolean
-	onRetry?: (error: any, attempt: number) => void
+	retryCondition?: (error: unknown) => boolean
+	onRetry?: (error: unknown, attempt: number) => void
 }
 
 export class RetryableError extends Error {
@@ -17,6 +25,40 @@ export class RetryableError extends Error {
 		super(message)
 		this.name = 'RetryableError'
 	}
+}
+
+/**
+ * Type guard to check if an error has an HTTP status property
+ */
+function hasHttpStatus(error: unknown): error is HttpError {
+	return (
+		typeof error === 'object' &&
+		error !== null &&
+		'status' in error &&
+		typeof (error as HttpError).status === 'number'
+	)
+}
+
+/**
+ * Type guard to check if an error has a code property (Node.js system errors)
+ */
+function hasErrorCode(error: unknown): error is { code: string } {
+	return (
+		typeof error === 'object' &&
+		error !== null &&
+		'code' in error &&
+		typeof (error as { code: string }).code === 'string'
+	)
+}
+
+/**
+ * Get error message from an unknown error
+ */
+export function getErrorMessage(error: unknown): string {
+	if (error instanceof Error) {
+		return error.message
+	}
+	return String(error)
 }
 
 export async function withRetry<T>(
@@ -61,39 +103,44 @@ export async function withRetry<T>(
 	throw lastError!
 }
 
-export function isRetryableError(error: any): boolean {
+export function isRetryableError(error: unknown): boolean {
 	if (error instanceof RetryableError) {
 		return true
 	}
 
-	// Network errors
-	if (error.code === 'ECONNRESET' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT') {
-		return true
+	// Network errors (Node.js system errors)
+	if (hasErrorCode(error)) {
+		const retryableCodes = ['ECONNRESET', 'ENOTFOUND', 'ETIMEDOUT', 'ECONNREFUSED']
+		if (retryableCodes.includes(error.code)) {
+			return true
+		}
 	}
 
 	// HTTP errors that are typically retryable
-	if (error.status) {
+	if (hasHttpStatus(error)) {
 		const status = error.status
-		return status === 408 || status === 429 || (status >= 500 && status < 600)
+		return status === 408 || status === 429 || (status !== undefined && status >= 500 && status < 600)
 	}
 
 	// Fetch errors
-	if (error.name === 'TypeError' && error.message.includes('fetch')) {
+	if (error instanceof TypeError && error.message.includes('fetch')) {
 		return true
 	}
 
 	return false
 }
 
-export function createContextualError(error: any, context: string): Error {
+export function createContextualError(error: unknown, context: string): Error {
 	const contextualMessage = getContextualErrorMessage(error, context)
 	const newError = new Error(contextualMessage)
-	newError.stack = error.stack
+	if (error instanceof Error) {
+		newError.stack = error.stack
+	}
 	return newError
 }
 
-export function getContextualErrorMessage(error: any, context: string): string {
-	const baseMessage = error.message || String(error)
+export function getContextualErrorMessage(error: unknown, context: string): string {
+	const baseMessage = getErrorMessage(error)
 
 	switch (context) {
 		case 'authentication':
@@ -155,14 +202,16 @@ export async function retryableRequest<T>(
 	return withRetry(requestFn, {
 		maxAttempts: 3,
 		baseDelay: 1000,
-		retryCondition: (error) => {
+		retryCondition: (error: unknown) => {
 			// Don't retry authentication errors
-			if (context === 'authentication' && (error.status === 401 || error.status === 403)) {
-				return false
+			if (context === 'authentication' && hasHttpStatus(error)) {
+				if (error.status === 401 || error.status === 403) {
+					return false
+				}
 			}
 			return isRetryableError(error)
 		},
-		onRetry: (error, attempt) => {
+		onRetry: (error: unknown, attempt: number) => {
 			const contextualMessage = getContextualErrorMessage(error, context)
 			printWarning(`${contextualMessage} (Attempt ${attempt}/3)`)
 			if (attempt === 2) {

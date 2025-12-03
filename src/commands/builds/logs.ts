@@ -1,40 +1,12 @@
-import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import chalk from 'chalk'
 import type { BuildStage, BuildStages, DeployStage, ErrorContext } from '~/types/index.ts'
 import { requireAuth } from '../../lib/auth-guard.ts'
+import { readEnvFile } from '../../lib/env.ts'
+import { formatDuration } from '../../lib/format.ts'
 import { printError, printInfo, printSuccess, printWarning } from '../../lib/output.ts'
 import { createSpinner } from '../../lib/progress.ts'
-import { whop } from '../../lib/whop.ts'
-import { WhopshipAPI } from '../../lib/whopship-api.ts'
-
-/**
- * Simple .env reader
- */
-async function readEnvFile(dir: string): Promise<Record<string, string>> {
-	const envPath = resolve(dir, '.env')
-	const content = await readFile(envPath, 'utf-8')
-	const env: Record<string, string> = {}
-
-	for (const line of content.split('\n')) {
-		const trimmed = line.trim()
-		if (!trimmed || trimmed.startsWith('#')) continue
-
-		const [key, ...valueParts] = trimmed.split('=')
-		if (key && valueParts.length > 0) {
-			let value = valueParts.join('=').trim()
-			if (
-				(value.startsWith('"') && value.endsWith('"')) ||
-				(value.startsWith("'") && value.endsWith("'"))
-			) {
-				value = value.slice(1, -1)
-			}
-			env[key.trim()] = value
-		}
-	}
-
-	return env
-}
+import { whopshipClient } from '../../lib/whopship-client.ts'
 
 // Stage display names
 const STAGE_NAMES: Record<string, string> = {
@@ -58,17 +30,6 @@ const DEPLOY_SUBSTAGE_NAMES: Record<string, string> = {
 	staticAssets: 'Upload assets',
 	urlSetup: 'Configure URL',
 	subdomainMapping: 'Configure routing',
-}
-
-/**
- * Format duration in human-readable format
- */
-function formatDuration(ms: number): string {
-	if (ms < 1000) return `${ms}ms`
-	if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`
-	const mins = Math.floor(ms / 60000)
-	const secs = Math.floor((ms % 60000) / 1000)
-	return `${mins}m ${secs}s`
 }
 
 /**
@@ -227,19 +188,6 @@ export async function buildLogsCommand(
 	const targetDir = resolve(process.cwd(), path)
 
 	try {
-		// Get session
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
 		let buildId = options.buildId
 
 		// If no build ID provided, get the latest
@@ -259,7 +207,7 @@ export async function buildLogsCommand(
 			spinner.start()
 
 			try {
-				const build = await api.getLatestBuildForApp(appId)
+				const build = await whopshipClient.getLatestBuildForApp(appId)
 				buildId = build.build_id
 				spinner.succeed(`Found build: ${buildId.substring(0, 8)}...`)
 			} catch (_error) {
@@ -273,7 +221,7 @@ export async function buildLogsCommand(
 		const spinner = createSpinner('Fetching build logs...')
 		spinner.start()
 
-		const logsResponse = await api.getBuildLogs(buildId)
+		const logsResponse = await whopshipClient.getBuildLogs(buildId)
 		spinner.succeed('Build logs retrieved')
 
 		console.log()

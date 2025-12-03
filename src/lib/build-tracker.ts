@@ -9,7 +9,7 @@ import type {
 import { printError, printWarning } from './output.ts'
 import { createSpinner } from './progress.ts'
 import { showTipSync } from './tips.ts'
-import { WhopshipAPI } from './whopship-api.ts'
+import { type WhopshipClient } from './whopship-client.ts'
 
 // Encouraging messages to show during long waits
 const ENCOURAGING_MESSAGES = [
@@ -80,13 +80,13 @@ const DEPLOY_SUBSTAGE_NAMES = {
 }
 
 export class BuildTracker {
-	private api: WhopshipAPI
+	private api: WhopshipClient
 	private buildId: string
 	private options: BuildTrackingOptions
 	private lastEncouragingMessage: number = 0
 	private shownTip: boolean = false
 
-	constructor(api: WhopshipAPI, buildId: string, options: BuildTrackingOptions = {}) {
+	constructor(api: WhopshipClient, buildId: string, options: BuildTrackingOptions = {}) {
 		this.api = api
 		this.buildId = buildId
 		this.options = {
@@ -578,7 +578,7 @@ export class BuildTracker {
 }
 
 export function createBuildTracker(
-	api: WhopshipAPI,
+	api: WhopshipClient,
 	buildId: string,
 	options?: BuildTrackingOptions,
 ): BuildTracker {

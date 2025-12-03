@@ -3,8 +3,7 @@ import { aliasManager } from '../lib/alias-manager.ts'
 import { requireAuth } from '../lib/auth-guard.ts'
 import { printError, printInfo } from '../lib/output.ts'
 import { createSpinner } from '../lib/progress.ts'
-import { whop } from '../lib/whop.ts'
-import { WhopshipAPI } from '../lib/whopship-api.ts'
+import { whopshipClient } from '../lib/whopship-client.ts'
 
 /**
  * Check if a subdomain is available
@@ -13,18 +12,6 @@ export async function checkUrlCommand(subdomain: string): Promise<void> {
 	requireAuth()
 
 	try {
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
 		// Validate subdomain format
 		if (!isValidSubdomain(subdomain)) {
 			printError(
@@ -37,7 +24,7 @@ export async function checkUrlCommand(subdomain: string): Promise<void> {
 		spinner.start()
 
 		try {
-			const result = await api.checkSubdomainAvailability(subdomain)
+			const result = await whopshipClient.checkSubdomainAvailability(subdomain)
 
 			if (result.available) {
 				spinner.succeed(`✅ ${subdomain}.whopship.app is available!`)
@@ -76,18 +63,6 @@ export async function reserveUrlCommand(
 	requireAuth()
 
 	try {
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
 		// Validate subdomain format
 		if (!isValidSubdomain(subdomain)) {
 			printError(
@@ -115,7 +90,7 @@ export async function reserveUrlCommand(
 		checkSpinner.start()
 
 		try {
-			const availability = await api.checkSubdomainAvailability(subdomain)
+			const availability = await whopshipClient.checkSubdomainAvailability(subdomain)
 
 			if (!availability.available) {
 				checkSpinner.fail(`❌ ${subdomain}.whopship.app is not available`)
@@ -142,7 +117,7 @@ export async function reserveUrlCommand(
 		reserveSpinner.start()
 
 		try {
-			await api.reserveSubdomain(subdomain, appId)
+			await whopshipClient.reserveSubdomain(subdomain, appId)
 			reserveSpinner.succeed(`🎉 Reserved ${subdomain}.whopship.app`)
 
 			console.log()
@@ -188,23 +163,11 @@ export async function releaseUrlCommand(subdomain: string): Promise<void> {
 	requireAuth()
 
 	try {
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
 		const spinner = createSpinner(`Releasing ${subdomain}.whopship.app...`)
 		spinner.start()
 
 		try {
-			await api.releaseSubdomain(subdomain)
+			await whopshipClient.releaseSubdomain(subdomain)
 			spinner.succeed(`✅ Released ${subdomain}.whopship.app`)
 
 			console.log()
@@ -231,23 +194,11 @@ export async function listUrlsCommand(): Promise<void> {
 	requireAuth()
 
 	try {
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
 		const spinner = createSpinner('Fetching your reserved URLs...')
 		spinner.start()
 
 		try {
-			const result = await api.listUserSubdomains()
+			const result = await whopshipClient.listUserSubdomains()
 			const subdomains = result.subdomains || []
 
 			spinner.succeed(
@@ -308,18 +259,6 @@ export async function suggestUrlCommand(baseName: string): Promise<void> {
 	requireAuth()
 
 	try {
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
 		// Generate variations of the base name
 		const variations = generateSubdomainVariations(baseName)
 
@@ -333,7 +272,7 @@ export async function suggestUrlCommand(baseName: string): Promise<void> {
 
 		for (const variation of variations) {
 			try {
-				const result = await api.checkSubdomainAvailability(variation)
+				const result = await whopshipClient.checkSubdomainAvailability(variation)
 				if (result.available) {
 					available.push(variation)
 					console.log(chalk.green(`✅ ${variation}.whopship.app`))

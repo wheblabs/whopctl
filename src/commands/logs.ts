@@ -1,45 +1,11 @@
-import { readFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
 import chalk from 'chalk'
 import { aliasManager } from '../lib/alias-manager.ts'
 import { requireAuth } from '../lib/auth-guard.ts'
 import { CloudWatchLogs } from '../lib/cloudwatch.ts'
+import { readEnvFileSafe } from '../lib/env.ts'
 import { printError, printInfo } from '../lib/output.ts'
 import { createSpinner } from '../lib/progress.ts'
-import { whop } from '../lib/whop.ts'
-import { WhopshipAPI } from '../lib/whopship-api.ts'
-
-/**
- * Simple .env reader
- */
-async function readEnvFile(dir: string): Promise<Record<string, string>> {
-	try {
-		const envPath = resolve(dir, '.env')
-		const content = await readFile(envPath, 'utf-8')
-		const env: Record<string, string> = {}
-
-		for (const line of content.split('\n')) {
-			const trimmed = line.trim()
-			if (!trimmed || trimmed.startsWith('#')) continue
-
-			const [key, ...valueParts] = trimmed.split('=')
-			if (key && valueParts.length > 0) {
-				let value = valueParts.join('=').trim()
-				if (
-					(value.startsWith('"') && value.endsWith('"')) ||
-					(value.startsWith("'") && value.endsWith("'"))
-				) {
-					value = value.slice(1, -1)
-				}
-				env[key.trim()] = value
-			}
-		}
-
-		return env
-	} catch {
-		return {}
-	}
-}
+import { type WhopshipClient, whopshipClient } from '../lib/whopship-client.ts'
 
 /**
  * Format log message with colors based on content
@@ -99,7 +65,7 @@ function formatLogMessage(message: string): string {
  */
 async function resolveAppId(
 	projectNameOrId: string,
-	api: WhopshipAPI,
+	api: WhopshipClient,
 ): Promise<{ appId: string; internalId: number }> {
 	try {
 		// Use alias manager to resolve project ID
@@ -125,17 +91,6 @@ export async function logsCommand(options: {
 	requireAuth()
 
 	try {
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
 		const cw = new CloudWatchLogs()
 		let logGroupName: string
 		let logDescription: string
@@ -156,7 +111,7 @@ export async function logsCommand(options: {
 
 			// Try to read from .env if not specified
 			if (!projectIdentifier) {
-				const env = await readEnvFile(process.cwd())
+				const env = await readEnvFileSafe(process.cwd())
 				if (env.NEXT_PUBLIC_WHOP_APP_ID) {
 					projectIdentifier = env.NEXT_PUBLIC_WHOP_APP_ID
 				}
@@ -173,7 +128,7 @@ export async function logsCommand(options: {
 			spinner.start()
 
 			try {
-				const { appId, internalId } = await resolveAppId(projectIdentifier, api)
+				const { appId, internalId } = await resolveAppId(projectIdentifier, whopshipClient)
 				spinner.succeed(`Found app: ${appId}`)
 
 				logGroupName = `/aws/lambda/whopship-app-${internalId}`

@@ -1,8 +1,7 @@
 import chalk from 'chalk'
 import { requireAuth } from '../../lib/auth-guard.ts'
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
-import { whop } from '../../lib/whop.ts'
-import { WhopshipAPI } from '../../lib/whopship-api.ts'
+import { whopshipClient } from '../../lib/whopship-client.ts'
 
 /**
  * Handles the "billing current" command.
@@ -13,25 +12,13 @@ export async function billingCurrentCommand(appId?: number): Promise<void> {
 	requireAuth()
 
 	try {
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
 		printInfo('Fetching billing information...')
 
 		// Get subscription status
-		const subscriptionStatus = await api.getSubscriptionStatus()
+		const subscriptionStatus = await whopshipClient.getSubscriptionStatus()
 
 		// Get usage
-		const usageData = (await api.getCurrentUsage(appId)) as any
+		const usageData = (await whopshipClient.getCurrentUsage(appId)) as any
 
 		console.log('')
 		printSuccess('Billing Status')

@@ -268,21 +268,26 @@ export async function parseAndExecute(input: string): Promise<void> {
 				console.log(chalk.dim('Usage: logs <app|deploy-runner|router> [--follow] [--level=info]'))
 			} else {
 				// Parse logs arguments
-				const logType = args[0]
-				const options: any = {}
+				const logType = args[0] as 'deploy-runner' | 'router' | 'app'
+				const options: {
+					type?: 'deploy-runner' | 'router' | 'app'
+					follow?: boolean
+					level?: 'error' | 'warn' | 'info' | 'debug'
+					filter?: string
+				} = { type: logType }
 
 				for (let i = 1; i < args.length; i++) {
 					const arg = args[i]
 					if (arg === '--follow' || arg === '-f') {
 						options.follow = true
 					} else if (arg.startsWith('--level=')) {
-						options.level = arg.split('=')[1]
+						options.level = arg.split('=')[1] as 'error' | 'warn' | 'info' | 'debug'
 					} else if (arg.startsWith('--filter=')) {
 						options.filter = arg.split('=')[1]
 					}
 				}
 
-				await logsCommand(logType, options)
+				await logsCommand(options)
 			}
 		} else if (command === 'alias') {
 			// Alias command: alias <subcommand> [args]

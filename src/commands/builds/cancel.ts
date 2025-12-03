@@ -1,38 +1,9 @@
-import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { requireAuth } from '../../lib/auth-guard.ts'
 import { printError, printInfo, printSuccess, printWarning } from '../../lib/output.ts'
 import { createSpinner } from '../../lib/progress.ts'
-import { whop } from '../../lib/whop.ts'
-import { WhopshipAPI } from '../../lib/whopship-api.ts'
-
-/**
- * Simple .env reader
- */
-async function _readEnvFile(dir: string): Promise<Record<string, string>> {
-	const envPath = resolve(dir, '.env')
-	const content = await readFile(envPath, 'utf-8')
-	const env: Record<string, string> = {}
-
-	for (const line of content.split('\n')) {
-		const trimmed = line.trim()
-		if (!trimmed || trimmed.startsWith('#')) continue
-
-		const [key, ...valueParts] = trimmed.split('=')
-		if (key && valueParts.length > 0) {
-			let value = valueParts.join('=').trim()
-			if (
-				(value.startsWith('"') && value.endsWith('"')) ||
-				(value.startsWith("'") && value.endsWith("'"))
-			) {
-				value = value.slice(1, -1)
-			}
-			env[key.trim()] = value
-		}
-	}
-
-	return env
-}
+import { getErrorMessage } from '../../lib/retry.ts'
+import { WhopshipApiError, whopshipClient } from '../../lib/whopship-client.ts'
 
 /**
  * Cancel a build by build ID
@@ -42,25 +13,13 @@ export async function cancelBuildCommand(buildId: string, path: string = '.'): P
 	const _targetDir = resolve(process.cwd(), path)
 
 	try {
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
 		// First, get build status to verify it exists and can be cancelled
 		printInfo(`Checking build status...`)
 		let buildStatus
 		try {
-			buildStatus = await api.getBuildStatus(buildId)
-		} catch (error: any) {
-			if (error.message?.includes('404') || error.message?.includes('not found')) {
+			buildStatus = await whopshipClient.getBuildStatus(buildId)
+		} catch (error) {
+			if (error instanceof WhopshipApiError && error.isNotFound) {
 				printError(`Build not found: ${buildId}`)
 				printInfo('Make sure you have the correct build ID and that you own this build.')
 				process.exit(1)
@@ -68,7 +27,7 @@ export async function cancelBuildCommand(buildId: string, path: string = '.'): P
 			throw error
 		}
 
-		const status = (buildStatus as any).status || buildStatus.status
+		const status = buildStatus.status
 
 		// Check if build can be cancelled
 		if (
@@ -97,43 +56,38 @@ export async function cancelBuildCommand(buildId: string, path: string = '.'): P
 		spinner.start()
 
 		try {
-			await api.cancelBuild(buildId)
+			await whopshipClient.cancelBuild(buildId)
 			spinner.succeed('Build cancelled successfully')
 			printSuccess(`✓ Build ${buildId} has been cancelled`)
-		} catch (error: any) {
+		} catch (error) {
 			spinner.fail('Failed to cancel build')
-			const errorMessage = error.message || String(error)
-			if (
-				error.status === 404 ||
-				errorMessage.includes('404') ||
-				errorMessage.includes('not found')
-			) {
-				printError(`Build not found: ${buildId}`)
-				printInfo('Make sure you have the correct build ID and that you own this build.')
-			} else if (
-				error.status === 400 ||
-				errorMessage.includes('cannot be cancelled') ||
-				errorMessage.includes('Cannot cancel')
-			) {
-				printError(`Build cannot be cancelled: ${errorMessage}`)
-				if (status === 'deploying') {
-					printInfo(
-						'Note: Builds in "deploying" status should be cancellable. This might be a temporary issue.',
-					)
-					printInfo(
-						'If the build is stuck, it may complete on its own or you may need to wait for the deployment to finish.',
-					)
+			const errorMessage = getErrorMessage(error)
+			
+			if (error instanceof WhopshipApiError) {
+				if (error.isNotFound) {
+					printError(`Build not found: ${buildId}`)
+					printInfo('Make sure you have the correct build ID and that you own this build.')
+				} else if (error.status === 400 || errorMessage.includes('cannot be cancelled')) {
+					printError(`Build cannot be cancelled: ${errorMessage}`)
+					if (status === 'deploying') {
+						printInfo(
+							'Note: Builds in "deploying" status should be cancellable. This might be a temporary issue.',
+						)
+						printInfo(
+							'If the build is stuck, it may complete on its own or you may need to wait for the deployment to finish.',
+						)
+					}
+				} else {
+					printError(`Failed to cancel build: ${errorMessage}`)
+					printInfo(`HTTP Status: ${error.status}`)
 				}
 			} else {
 				printError(`Failed to cancel build: ${errorMessage}`)
-				if (error.status) {
-					printInfo(`HTTP Status: ${error.status}`)
-				}
 			}
 			process.exit(1)
 		}
-	} catch (error: any) {
-		printError(`Failed to cancel build: ${error.message || error}`)
+	} catch (error) {
+		printError(`Failed to cancel build: ${getErrorMessage(error)}`)
 		process.exit(1)
 	}
 }

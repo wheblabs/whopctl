@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
-import { whopshipApi } from '../../lib/whopship-api.ts'
+import { whopshipClient } from '../../lib/whopship-client.ts'
 
 /**
  * Handles the "billing history" command.
@@ -11,7 +11,7 @@ export async function billingHistoryCommand(appId?: number, months?: number): Pr
 	try {
 		printInfo('Fetching billing history...')
 
-		const data = (await whopshipApi.getUsageHistory({
+		const data = (await whopshipClient.getUsageHistory({
 			appId,
 			months: months || 6,
 		})) as any

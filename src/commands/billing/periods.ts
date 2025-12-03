@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
-import { whopshipApi } from '../../lib/whopship-api.ts'
+import { whopshipClient } from '../../lib/whopship-client.ts'
 
 /**
  * Handles the "billing periods" command.
@@ -11,7 +11,7 @@ export async function billingPeriodsCommand(limit?: number): Promise<void> {
 	try {
 		printInfo('Fetching billing periods...')
 
-		const data = (await whopshipApi.getBillingPeriods(limit || 12)) as any
+		const data = (await whopshipClient.getBillingPeriods(limit || 12)) as any
 
 		if (!data.periods || data.periods.length === 0) {
 			printInfo('No billing periods found.')

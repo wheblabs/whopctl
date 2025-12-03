@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import chalk from 'chalk'
 import type {
@@ -10,38 +9,11 @@ import type {
 } from '~/types/index.ts'
 import { aliasManager } from '../../lib/alias-manager.ts'
 import { requireAuth } from '../../lib/auth-guard.ts'
+import { readEnvFile } from '../../lib/env.ts'
+import { formatBytes, formatDuration } from '../../lib/format.ts'
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
 import { createSpinner } from '../../lib/progress.ts'
-import { whop } from '../../lib/whop.ts'
-import { WhopshipAPI } from '../../lib/whopship-api.ts'
-
-/**
- * Simple .env reader
- */
-async function readEnvFile(dir: string): Promise<Record<string, string>> {
-	const envPath = resolve(dir, '.env')
-	const content = await readFile(envPath, 'utf-8')
-	const env: Record<string, string> = {}
-
-	for (const line of content.split('\n')) {
-		const trimmed = line.trim()
-		if (!trimmed || trimmed.startsWith('#')) continue
-
-		const [key, ...valueParts] = trimmed.split('=')
-		if (key && valueParts.length > 0) {
-			let value = valueParts.join('=').trim()
-			if (
-				(value.startsWith('"') && value.endsWith('"')) ||
-				(value.startsWith("'") && value.endsWith("'"))
-			) {
-				value = value.slice(1, -1)
-			}
-			env[key.trim()] = value
-		}
-	}
-
-	return env
-}
+import { type WhopshipClient, whopshipClient } from '../../lib/whopship-client.ts'
 
 // Stage display names
 const STAGE_NAMES = {
@@ -65,26 +37,6 @@ const DEPLOY_SUBSTAGE_NAMES: Record<string, string> = {
 	staticAssets: 'Upload assets',
 	urlSetup: 'Configure URL',
 	subdomainMapping: 'Configure routing',
-}
-
-/**
- * Format duration in human-readable format
- */
-function formatDuration(ms: number): string {
-	if (ms < 1000) return `${ms}ms`
-	if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`
-	const mins = Math.floor(ms / 60000)
-	const secs = Math.floor((ms % 60000) / 1000)
-	return `${mins}m ${secs}s`
-}
-
-/**
- * Format bytes in human-readable format
- */
-function formatBytes(bytes: number): string {
-	if (bytes < 1024) return `${bytes} B`
-	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-	return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
 }
 
 /**
@@ -338,7 +290,7 @@ function formatLogLine(line: string): string {
  * Display build logs
  */
 async function displayLogs(
-	api: WhopshipAPI,
+	api: WhopshipClient,
 	buildId: string,
 	options: { lines: number; follow: boolean },
 ): Promise<void> {
@@ -455,24 +407,11 @@ export async function statusCommand(
 			appId = envAppId
 		}
 
-		// 2. Get session
-		const session = whop.getTokens()
-		if (!session) {
-			printError('No session found. Please run "whopctl login" first.')
-			process.exit(1)
-		}
-
-		const api = new WhopshipAPI(session.accessToken, session.refreshToken, session.csrfToken, {
-			uidToken: session.uidToken,
-			ssk: session.ssk,
-			userId: session.userId,
-		})
-
-		// 3. Fetch latest build
+		// 2. Fetch latest build
 		const spinner = createSpinner(`Fetching latest build for app ${appId}...`)
 		spinner.start()
 
-		const build = await api.getLatestBuildForApp(appId)
+		const build = await whopshipClient.getLatestBuildForApp(appId)
 		spinner.succeed('Build information retrieved')
 
 		// 4. Display enhanced status
@@ -536,7 +475,7 @@ export async function statusCommand(
 			// Show queue information if queued
 			if (build.status === 'queued') {
 				try {
-					const queueStatus = await api.getQueueStatus(appId)
+					const queueStatus = await whopshipClient.getQueueStatus(appId)
 					const queueItem = queueStatus.queue?.find((item: any) => item.build_id === build.build_id)
 					if (queueItem?.position) {
 						console.log(
@@ -598,7 +537,7 @@ export async function statusCommand(
 			console.log()
 			printInfo('📋 Build Logs')
 			console.log()
-			await displayLogs(api, build.build_id, {
+			await displayLogs(whopshipClient, build.build_id, {
 				lines: options.lines || 30,
 				follow: options.follow || false,
 			})
