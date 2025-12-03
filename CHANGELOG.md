@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/wheblabs/whopctl/compare/v1.2.0...v1.3.0) (2025-12-03)
+
+### Features
+
+* refactors + cleanup ([dcc8385](https://github.com/wheblabs/whopctl/commit/dcc8385cd09f9e236c94530f53473e3794b2372f))
+
 ## [1.2.0](https://github.com/wheblabs/whopctl/compare/v1.1.0...v1.2.0) (2025-12-02)
 
 ### Features
