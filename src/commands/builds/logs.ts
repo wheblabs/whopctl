@@ -6,7 +6,7 @@ import { readEnvFile } from '../../lib/env.ts'
 import { formatDuration } from '../../lib/format.ts'
 import { printError, printInfo, printSuccess, printWarning } from '../../lib/output.ts'
 import { createSpinner } from '../../lib/progress.ts'
-import { whopshipClient } from '../../lib/whopship-client.ts'
+import { whopshipClient, type LogEntry } from '../../lib/whopship-client.ts'
 
 // Stage display names
 const STAGE_NAMES: Record<string, string> = {
@@ -169,6 +169,52 @@ function displayErrorContext(context: ErrorContext, errorMessage: string): void 
 	console.log()
 }
 
+/**
+ * Fallback polling mode for when SSE is unavailable
+ */
+async function pollForLogs(
+	buildId: string,
+	activeStatuses: string[],
+	interrupted: boolean,
+): Promise<void> {
+	let lastLogCount = 0
+
+	while (!interrupted) {
+		await new Promise((resolve) => setTimeout(resolve, 2500))
+
+		try {
+			const newLogs = await whopshipClient.getBuildLogs(buildId)
+
+			if (newLogs.logs && newLogs.logs.length > lastLogCount) {
+				const newLines = newLogs.logs.slice(lastLogCount)
+				for (const log of newLines) {
+					console.log(formatLogLine(log))
+				}
+				lastLogCount = newLogs.logs.length
+			}
+
+			if (!activeStatuses.includes(newLogs.status)) {
+				console.log()
+				if (newLogs.status === 'completed' || newLogs.status === 'built') {
+					printSuccess(`Build ${newLogs.status}!`)
+				} else if (newLogs.status === 'failed') {
+					printError(`Build failed`)
+					if (newLogs.error_context) {
+						displayErrorContext(newLogs.error_context, newLogs.error_message || 'Unknown error')
+					} else if (newLogs.error_message) {
+						console.log(chalk.red(`Error: ${newLogs.error_message}`))
+					}
+				} else {
+					printInfo(`Build status: ${newLogs.status}`)
+				}
+				break
+			}
+		} catch (_error) {
+			printWarning('Failed to fetch logs, retrying...')
+		}
+	}
+}
+
 export interface BuildLogsOptions {
 	buildId?: string
 	lines?: number
@@ -276,7 +322,7 @@ export async function buildLogsCommand(
 			}
 		}
 
-		// Follow mode
+		// Follow mode - use SSE streaming for real-time logs
 		if (options.follow) {
 			const activeStatuses = ['init', 'uploading', 'uploaded', 'queued', 'building', 'deploying']
 
@@ -287,14 +333,17 @@ export async function buildLogsCommand(
 			}
 
 			console.log()
-			printInfo('Following logs... (Press Ctrl+C to stop)')
+			printInfo('Following logs via SSE stream... (Press Ctrl+C to stop)')
 			console.log()
 
-			let lastLogCount = logs.length
 			let interrupted = false
+			let eventSource: ReturnType<typeof whopshipClient.streamBuildLogs> | null = null
 
 			const interruptHandler = () => {
 				interrupted = true
+				if (eventSource) {
+					eventSource.close()
+				}
 				console.log()
 				printInfo('Stopped following logs.')
 				process.exit(0)
@@ -302,45 +351,55 @@ export async function buildLogsCommand(
 			process.on('SIGINT', interruptHandler)
 
 			try {
-				while (!interrupted) {
-					await new Promise((resolve) => setTimeout(resolve, 2500))
-
-					try {
-						const newLogs = await api.getBuildLogs(buildId)
-
-						if (newLogs.logs && newLogs.logs.length > lastLogCount) {
-							const newLines = newLogs.logs.slice(lastLogCount)
-							for (const log of newLines) {
-								console.log(formatLogLine(log))
+				// Use SSE streaming for real-time logs
+				eventSource = whopshipClient.streamBuildLogs(
+					buildId,
+					(log: LogEntry) => {
+						console.log(formatLogLine(log.message))
+					},
+					(status: string, errorMessage?: string) => {
+						// Build completed or failed
+						console.log()
+						if (status === 'completed' || status === 'built') {
+							printSuccess(`Build ${status}!`)
+						} else if (status === 'failed') {
+							printError(`Build failed`)
+							if (errorMessage) {
+								console.log(chalk.red(`Error: ${errorMessage}`))
 							}
-							lastLogCount = newLogs.logs.length
+						} else {
+							printInfo(`Build status: ${status}`)
 						}
+						if (eventSource) {
+							eventSource.close()
+						}
+					},
+					(error: Error) => {
+						// SSE connection error - fall back to polling
+						printWarning(`SSE connection error: ${error.message}. Falling back to polling...`)
+						if (eventSource) {
+							eventSource.close()
+							eventSource = null
+						}
+						// Fall back to polling mode
+						pollForLogs(buildId, activeStatuses, interrupted)
+					},
+				)
 
-						if (!activeStatuses.includes(newLogs.status)) {
-							console.log()
-							if (newLogs.status === 'completed' || newLogs.status === 'built') {
-								printSuccess(`Build ${newLogs.status}!`)
-							} else if (newLogs.status === 'failed') {
-								printError(`Build failed`)
-								if (newLogs.error_context) {
-									displayErrorContext(
-										newLogs.error_context,
-										newLogs.error_message || 'Unknown error',
-									)
-								} else if (newLogs.error_message) {
-									console.log(chalk.red(`Error: ${newLogs.error_message}`))
-								}
-							} else {
-								printInfo(`Build status: ${newLogs.status}`)
-							}
-							break
+				// Keep process alive while streaming
+				await new Promise<void>((resolve) => {
+					const checkInterval = setInterval(() => {
+						if (interrupted || !eventSource) {
+							clearInterval(checkInterval)
+							resolve()
 						}
-					} catch (_error) {
-						printWarning('Failed to fetch logs, retrying...')
-					}
-				}
+					}, 1000)
+				})
 			} finally {
 				process.removeListener('SIGINT', interruptHandler)
+				if (eventSource) {
+					eventSource.close()
+				}
 			}
 		}
 

@@ -30,6 +30,8 @@ import { redeployBuildCommand } from './commands/builds/redeploy.ts'
 import { deployCommand } from './commands/deploy.ts'
 import { docsCommand } from './commands/docs.ts'
 import { doctorCommand } from './commands/doctor.ts'
+import { domainsCommands } from './commands/domains.ts'
+import { envCommands } from './commands/env.ts'
 import { historyCommand } from './commands/history.ts'
 import { initCommand } from './commands/init.ts'
 import { loginCommand } from './commands/login.ts'
@@ -37,6 +39,7 @@ import { logoutCommand } from './commands/logout.ts'
 import { logsCommand } from './commands/logs.ts'
 import { openCommand } from './commands/open.ts'
 import { quickCheckCommand, quickDeployCommand, quickStatusCommand } from './commands/quick.ts'
+import { rollbackCommand } from './commands/rollback.ts'
 import { logsCommand as buildLogsCommand } from './commands/status/logs.ts'
 import { statusCommand } from './commands/status/status.ts'
 import { tierCurrentCommand } from './commands/tier/current.ts'
@@ -969,6 +972,12 @@ async function main() {
 				.demandCommand(1, 'Please specify a subcommand (current, update, upgrade, downgrade)')
 				.help()
 		})
+		// Rollback command
+		.command(rollbackCommand)
+		// Environment variables commands
+		.command('env', 'Manage environment variables', envCommands)
+		// Custom domains commands
+		.command('domains', 'Manage custom domains', domainsCommands)
 		.demandCommand(1, 'Please specify a command or run without arguments for interactive mode')
 		.help()
 		.alias('h', 'help')

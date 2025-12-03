@@ -193,6 +193,141 @@ export interface UserSubdomainsResponse {
 	}>
 }
 
+// =============================================================================
+// Rollback Types
+// =============================================================================
+
+/**
+ * Rollback target (previous successful build)
+ */
+export interface RollbackTarget {
+	id: string
+	createdAt: string
+	status: string
+	commitHash?: string
+	commitMessage?: string
+	metadata?: Record<string, unknown>
+}
+
+/**
+ * Rollback response
+ */
+export interface RollbackResponse {
+	message: string
+	new_build_id: string
+	target_build_id: string
+}
+
+// =============================================================================
+// Environment Variables Types
+// =============================================================================
+
+/**
+ * Environment variable entry
+ */
+export interface EnvVar {
+	key: string
+	value: string
+	exposeToBuild: boolean
+	isSensitive: boolean
+	createdAt: string
+	updatedAt: string
+}
+
+/**
+ * Create environment variable request
+ */
+export interface CreateEnvVarRequest {
+	key: string
+	value: string
+	exposeToBuild?: boolean
+	isSensitive?: boolean
+}
+
+/**
+ * Update environment variable request
+ */
+export interface UpdateEnvVarRequest {
+	key?: string
+	value?: string
+	exposeToBuild?: boolean
+	isSensitive?: boolean
+}
+
+/**
+ * Bulk set environment variables result
+ */
+export interface BulkEnvVarResult {
+	message: string
+	processed: number
+	results: Array<{
+		key: string
+		status: 'created' | 'updated' | 'failed'
+		message?: string
+	}>
+}
+
+// =============================================================================
+// Custom Domains Types
+// =============================================================================
+
+/**
+ * Custom domain entry
+ */
+export interface CustomDomain {
+	domain: string
+	status: 'pending_verification' | 'verifying' | 'active' | 'failed' | 'deleting'
+	certificateArn?: string
+	validationRecords?: Array<{
+		name: string
+		type: string
+		value: string
+	}>
+	createdAt: string
+	updatedAt: string
+	expiresAt?: string
+}
+
+/**
+ * Domain verification result
+ */
+export interface DomainVerification {
+	domain: string
+	status: string
+	dnsVerified: boolean
+	sslStatus: string
+	validationRecords?: Array<{
+		name: string
+		type: string
+		value: string
+		verified: boolean
+	}>
+}
+
+// =============================================================================
+// Log Streaming Types
+// =============================================================================
+
+/**
+ * Log entry from SSE stream
+ */
+export interface LogEntry {
+	index: number
+	timestamp: string
+	message: string
+	level: 'info' | 'error' | 'warn' | 'debug'
+}
+
+/**
+ * SSE connection options
+ */
+export interface SSEOptions {
+	onLog: (log: LogEntry) => void
+	onComplete?: (status: string) => void
+	onError?: (error: Error) => void
+	fromIndex?: number
+}
+
 /**
  * Subscription status response
  */
@@ -928,6 +1063,238 @@ export class WhopshipClient {
 		}
 
 		return await response.json()
+	}
+
+	// ============================================================================
+	// Rollback Methods
+	// ============================================================================
+
+	/**
+	 * List rollback targets (previous successful builds)
+	 */
+	async listRollbackTargets(appId: string, limit = 10): Promise<RollbackTarget[]> {
+		return this.request(`/api/apps/${appId}/builds?limit=${limit}`)
+	}
+
+	/**
+	 * Get the current deployment for an app
+	 */
+	async getCurrentDeployment(appId: string): Promise<RollbackTarget> {
+		return this.request(`/api/apps/${appId}/current`)
+	}
+
+	/**
+	 * Trigger a rollback to a previous build
+	 * @param appId - The app UUID
+	 * @param targetBuildId - Optional specific build ID to rollback to (defaults to previous successful)
+	 */
+	async triggerRollback(appId: string, targetBuildId?: string): Promise<RollbackResponse> {
+		return this.request(`/api/apps/${appId}/rollback`, {
+			method: 'POST',
+			body: JSON.stringify(targetBuildId ? { target_build_id: targetBuildId } : {}),
+		})
+	}
+
+	// ============================================================================
+	// Environment Variables Methods
+	// ============================================================================
+
+	/**
+	 * List environment variables for an app
+	 */
+	async listEnvVars(appId: string): Promise<EnvVar[]> {
+		return this.request(`/api/apps/${appId}/env`)
+	}
+
+	/**
+	 * Create a new environment variable
+	 */
+	async createEnvVar(appId: string, data: CreateEnvVarRequest): Promise<EnvVar> {
+		return this.request(`/api/apps/${appId}/env`, {
+			method: 'POST',
+			body: JSON.stringify(data),
+		})
+	}
+
+	/**
+	 * Update an existing environment variable
+	 */
+	async updateEnvVar(appId: string, key: string, data: UpdateEnvVarRequest): Promise<EnvVar> {
+		return this.request(`/api/apps/${appId}/env/${encodeURIComponent(key)}`, {
+			method: 'PUT',
+			body: JSON.stringify(data),
+		})
+	}
+
+	/**
+	 * Delete an environment variable
+	 */
+	async deleteEnvVar(appId: string, key: string): Promise<void> {
+		await this.request(`/api/apps/${appId}/env/${encodeURIComponent(key)}`, {
+			method: 'DELETE',
+		})
+	}
+
+	/**
+	 * Bulk set environment variables (create or update)
+	 */
+	async bulkSetEnvVars(appId: string, variables: CreateEnvVarRequest[]): Promise<BulkEnvVarResult> {
+		return this.request(`/api/apps/${appId}/env/bulk`, {
+			method: 'POST',
+			body: JSON.stringify(variables),
+		})
+	}
+
+	// ============================================================================
+	// Custom Domains Methods
+	// ============================================================================
+
+	/**
+	 * List custom domains for an app
+	 */
+	async listDomains(appId: string): Promise<CustomDomain[]> {
+		return this.request(`/api/apps/${appId}/domains`)
+	}
+
+	/**
+	 * Add a custom domain to an app
+	 */
+	async addDomain(appId: string, domain: string): Promise<CustomDomain> {
+		return this.request(`/api/apps/${appId}/domains`, {
+			method: 'POST',
+			body: JSON.stringify({ domain }),
+		})
+	}
+
+	/**
+	 * Verify DNS for a custom domain
+	 */
+	async verifyDomain(appId: string, domain: string): Promise<DomainVerification> {
+		return this.request(`/api/apps/${appId}/domains/${encodeURIComponent(domain)}/verify`, {
+			method: 'POST',
+		})
+	}
+
+	/**
+	 * Remove a custom domain
+	 */
+	async removeDomain(appId: string, domain: string): Promise<void> {
+		await this.request(`/api/apps/${appId}/domains/${encodeURIComponent(domain)}`, {
+			method: 'DELETE',
+		})
+	}
+
+	// ============================================================================
+	// Log Streaming Methods (SSE)
+	// ============================================================================
+
+	/**
+	 * Stream build logs in real-time using Server-Sent Events
+	 * Note: This method is designed for Node.js environments and uses fetch with streaming.
+	 * 
+	 * @param buildId - The build UUID to stream logs for
+	 * @param options - Streaming options including callbacks
+	 * @returns AbortController to cancel the stream
+	 */
+	async streamBuildLogs(buildId: string, options: SSEOptions): Promise<AbortController> {
+		const session = await this.ensureSession()
+		const accessToken = session.accessToken || session.tokens?.accessToken
+		
+		if (!accessToken) {
+			throw new WhopshipApiError('No access token available. Please login again.', 401)
+		}
+
+		const controller = new AbortController()
+		const url = new URL(`/api/builds/${buildId}/stream`, this.apiUrl)
+		if (options.fromIndex !== undefined) {
+			url.searchParams.set('from_index', options.fromIndex.toString())
+		}
+
+		// Use native fetch for SSE streaming
+		const startStream = async () => {
+			try {
+				const response = await fetch(url.toString(), {
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+						Accept: 'text/event-stream',
+					},
+					signal: controller.signal,
+				})
+
+				if (!response.ok) {
+					const errorText = await response.text()
+					throw new WhopshipApiError(
+						`Failed to connect to log stream (${response.status}): ${errorText}`,
+						response.status,
+						errorText,
+					)
+				}
+
+				if (!response.body) {
+					throw new WhopshipApiError('No response body for SSE stream', 500)
+				}
+
+				const reader = response.body.getReader()
+				const decoder = new TextDecoder()
+				let buffer = ''
+
+				while (true) {
+					const { done, value } = await reader.read()
+					
+					if (done) {
+						break
+					}
+
+					buffer += decoder.decode(value, { stream: true })
+					const lines = buffer.split('\n')
+					buffer = lines.pop() || '' // Keep incomplete line in buffer
+
+					for (const line of lines) {
+						if (line.startsWith('data: ')) {
+							const data = line.slice(6)
+							try {
+								const parsed = JSON.parse(data)
+								
+								if (parsed.type === 'log' && parsed.data) {
+									options.onLog(parsed.data as LogEntry)
+								} else if (parsed.type === 'complete') {
+									options.onComplete?.(parsed.data?.status || 'unknown')
+									return
+								} else if (parsed.type === 'error') {
+									options.onError?.(new Error(parsed.data?.message || 'Unknown error'))
+									return
+								}
+							} catch {
+								// Ignore malformed JSON lines
+							}
+						}
+					}
+				}
+			} catch (error) {
+				if (error instanceof Error && error.name === 'AbortError') {
+					// Stream was intentionally aborted
+					return
+				}
+				options.onError?.(error instanceof Error ? error : new Error(String(error)))
+			}
+		}
+
+		// Start streaming in background
+		startStream()
+
+		return controller
+	}
+
+	/**
+	 * Poll for build logs (fallback when SSE is not available)
+	 * Fetches all logs from a starting index
+	 */
+	async pollBuildLogs(buildId: string, fromIndex = 0): Promise<{
+		logs: LogEntry[]
+		status: string
+		completed: boolean
+	}> {
+		return this.request(`/api/builds/${buildId}/logs?from_index=${fromIndex}`)
 	}
 }
 
