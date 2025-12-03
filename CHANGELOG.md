@@ -1,3 +1,13 @@
+## [1.4.0](https://github.com/wheblabs/whopctl/compare/v1.3.0...v1.4.0) (2025-12-03)
+
+### Features
+
+* add WhopShip integration commands (rollback, env, domains, SSE streaming) ([315393b](https://github.com/wheblabs/whopctl/commit/315393bd25ee5b31f2c307d6ec74a70923cdb582))
+
+### Bug Fixes
+
+* resolve build errors in new commands ([2fc6d09](https://github.com/wheblabs/whopctl/commit/2fc6d09a09fbd258b6202c5f9d6e49a8b8ce2f0b))
+
 ## [1.3.0](https://github.com/wheblabs/whopctl/compare/v1.2.0...v1.3.0) (2025-12-03)
 
 ### Features
