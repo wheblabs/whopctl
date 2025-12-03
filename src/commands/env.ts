@@ -11,13 +11,13 @@
  *   whopctl env pull [path]                 # Pull env vars to local .env
  */
 
+import { access, readFile, writeFile } from 'node:fs/promises'
+import { join, resolve } from 'node:path'
 import chalk from 'chalk'
-import ora from 'ora'
-import { readFile, writeFile, access } from 'node:fs/promises'
-import { join } from 'node:path'
-import type { CommandModule, Argv } from 'yargs'
-import { whopshipClient, type EnvVar, type CreateEnvVarRequest } from '~/lib/whopship-client.ts'
-import { loadAppConfig } from '~/lib/config.ts'
+import type { CommandModule } from 'yargs'
+import { readEnvFile } from '../lib/env.ts'
+import { createSpinner } from '../lib/progress.ts'
+import { type CreateEnvVarRequest, type EnvVar, whopshipClient } from '../lib/whopship-client.ts'
 
 // Parse .env file content
 function parseEnvFile(content: string): Record<string, string> {
@@ -36,7 +36,10 @@ function parseEnvFile(content: string): Record<string, string> {
 		let value = trimmed.slice(eqIndex + 1).trim()
 
 		// Remove surrounding quotes if present
-		if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+		if (
+			(value.startsWith('"') && value.endsWith('"')) ||
+			(value.startsWith("'") && value.endsWith("'"))
+		) {
 			value = value.slice(1, -1)
 		}
 
@@ -73,18 +76,20 @@ function generateEnvFile(vars: EnvVar[], existingContent?: string): string {
 		lines.push(`${v.key}=${value}`)
 	}
 
-	return lines.join('\n') + '\n'
+	return `${lines.join('\n')}\n`
 }
 
 async function getAppId(path: string): Promise<string> {
-	const config = await loadAppConfig(path)
-	if (!config) {
-		throw new Error('No whop.json found. Run this command in a Whop app directory.')
+	const targetDir = resolve(process.cwd(), path)
+	const env = await readEnvFile(targetDir)
+	const appId = env.NEXT_PUBLIC_WHOP_APP_ID
+
+	if (!appId) {
+		throw new Error(
+			'NEXT_PUBLIC_WHOP_APP_ID not found in .env file. Deploy your app first with `whopctl deploy`.',
+		)
 	}
-	if (!config.whopAppId) {
-		throw new Error('No app ID found in whop.json. Deploy your app first with `whopctl deploy`.')
-	}
-	return config.whopAppId
+	return appId
 }
 
 // List command
@@ -98,7 +103,8 @@ const listCommand: CommandModule<object, { path: string }> = {
 			default: '.',
 		}),
 	handler: async (args) => {
-		const spinner = ora('Fetching environment variables...').start()
+		const spinner = createSpinner('Fetching environment variables...')
+		spinner.start()
 
 		try {
 			const appId = await getAppId(args.path)
@@ -132,7 +138,10 @@ const listCommand: CommandModule<object, { path: string }> = {
 }
 
 // Set command
-const setCommand: CommandModule<object, { path: string; keyValue: string; build: boolean; sensitive: boolean }> = {
+const setCommand: CommandModule<
+	object,
+	{ path: string; keyValue: string; build: boolean; sensitive: boolean }
+> = {
 	command: 'set <keyValue> [path]',
 	describe: 'Set an environment variable (KEY=value)',
 	builder: (yargs) =>
@@ -174,7 +183,8 @@ const setCommand: CommandModule<object, { path: string; keyValue: string; build:
 			process.exit(1)
 		}
 
-		const spinner = ora(`Setting ${key}...`).start()
+		const spinner = createSpinner(`Setting ${key}...`)
+		spinner.start()
 
 		try {
 			const appId = await getAppId(args.path)
@@ -225,7 +235,8 @@ const deleteCommand: CommandModule<object, { path: string; key: string }> = {
 				default: '.',
 			}),
 	handler: async (args) => {
-		const spinner = ora(`Deleting ${args.key}...`).start()
+		const spinner = createSpinner(`Deleting ${args.key}...`)
+		spinner.start()
 
 		try {
 			const appId = await getAppId(args.path)
@@ -271,7 +282,8 @@ const pushCommand: CommandModule<object, { path: string; file: string; force: bo
 			process.exit(1)
 		}
 
-		const spinner = ora(`Reading ${args.file}...`).start()
+		const spinner = createSpinner(`Reading ${args.file}...`)
+		spinner.start()
 
 		try {
 			const content = await readFile(envPath, 'utf-8')
@@ -343,7 +355,8 @@ const pullCommand: CommandModule<object, { path: string; file: string; overwrite
 			}),
 	handler: async (args) => {
 		const envPath = join(args.path, args.file)
-		const spinner = ora('Fetching environment variables...').start()
+		const spinner = createSpinner('Fetching environment variables...')
+		spinner.start()
 
 		try {
 			const appId = await getAppId(args.path)
@@ -394,4 +407,3 @@ export const envCommands: CommandModule<object, object> = {
 }
 
 export default envCommands
-

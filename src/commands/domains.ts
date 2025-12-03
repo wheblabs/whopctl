@@ -9,21 +9,24 @@
  *   whopctl domains remove <domain> [path]   # Remove domain
  */
 
+import { resolve } from 'node:path'
 import chalk from 'chalk'
-import ora from 'ora'
 import type { CommandModule } from 'yargs'
-import { whopshipClient, type CustomDomain } from '~/lib/whopship-client.ts'
-import { loadAppConfig } from '~/lib/config.ts'
+import { readEnvFile } from '../lib/env.ts'
+import { createSpinner } from '../lib/progress.ts'
+import { type CustomDomain, whopshipClient } from '../lib/whopship-client.ts'
 
 async function getAppId(path: string): Promise<string> {
-	const config = await loadAppConfig(path)
-	if (!config) {
-		throw new Error('No whop.json found. Run this command in a Whop app directory.')
+	const targetDir = resolve(process.cwd(), path)
+	const env = await readEnvFile(targetDir)
+	const appId = env.NEXT_PUBLIC_WHOP_APP_ID
+
+	if (!appId) {
+		throw new Error(
+			'NEXT_PUBLIC_WHOP_APP_ID not found in .env file. Deploy your app first with `whopctl deploy`.',
+		)
 	}
-	if (!config.whopAppId) {
-		throw new Error('No app ID found in whop.json. Deploy your app first with `whopctl deploy`.')
-	}
-	return config.whopAppId
+	return appId
 }
 
 function formatDomainStatus(status: CustomDomain['status']): string {
@@ -54,7 +57,8 @@ const listCommand: CommandModule<object, { path: string }> = {
 			default: '.',
 		}),
 	handler: async (args) => {
-		const spinner = ora('Fetching domains...').start()
+		const spinner = createSpinner('Fetching domains...')
+		spinner.start()
 
 		try {
 			const appId = await getAppId(args.path)
@@ -108,7 +112,8 @@ const addCommand: CommandModule<object, { path: string; domain: string }> = {
 				default: '.',
 			}),
 	handler: async (args) => {
-		const spinner = ora(`Adding domain ${args.domain}...`).start()
+		const spinner = createSpinner(`Adding domain ${args.domain}...`)
+		spinner.start()
 
 		try {
 			const appId = await getAppId(args.path)
@@ -158,7 +163,8 @@ const verifyCommand: CommandModule<object, { path: string; domain: string }> = {
 				default: '.',
 			}),
 	handler: async (args) => {
-		const spinner = ora(`Verifying ${args.domain}...`).start()
+		const spinner = createSpinner(`Verifying ${args.domain}...`)
+		spinner.start()
 
 		try {
 			const appId = await getAppId(args.path)
@@ -235,7 +241,8 @@ const removeCommand: CommandModule<object, { path: string; domain: string; force
 			// For now, just proceed
 		}
 
-		const spinner = ora(`Removing ${args.domain}...`).start()
+		const spinner = createSpinner(`Removing ${args.domain}...`)
+		spinner.start()
 
 		try {
 			const appId = await getAppId(args.path)
@@ -266,4 +273,3 @@ export const domainsCommands: CommandModule<object, object> = {
 }
 
 export default domainsCommands
-

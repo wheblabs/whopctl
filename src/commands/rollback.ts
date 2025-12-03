@@ -8,11 +8,12 @@
  *   whopctl rollback --list              # List available rollback targets
  */
 
+import { resolve } from 'node:path'
 import chalk from 'chalk'
-import ora from 'ora'
 import type { CommandModule } from 'yargs'
-import { whopshipClient, type RollbackTarget } from '~/lib/whopship-client.ts'
-import { loadAppConfig, type WhopAppConfig } from '~/lib/config.ts'
+import { readEnvFile } from '../lib/env.ts'
+import { createSpinner } from '../lib/progress.ts'
+import { type RollbackTarget, whopshipClient } from '../lib/whopship-client.ts'
 
 interface RollbackArgs {
 	path?: string
@@ -57,22 +58,24 @@ export const rollbackCommand: CommandModule<object, RollbackArgs> = {
 
 	handler: async (args) => {
 		try {
-			// Load app config to get app ID
-			const config = await loadAppConfig(args.path || '.')
-			if (!config) {
-				console.error(chalk.red('Error: No whop.json found. Run this command in a Whop app directory.'))
-				process.exit(1)
-			}
+			// Load .env to get app ID
+			const targetDir = resolve(process.cwd(), args.path || '.')
+			const env = await readEnvFile(targetDir)
+			const appId = env.NEXT_PUBLIC_WHOP_APP_ID
 
-			const appId = config.whopAppId
 			if (!appId) {
-				console.error(chalk.red('Error: No app ID found in whop.json. Deploy your app first with `whopctl deploy`.'))
+				console.error(
+					chalk.red(
+						'Error: NEXT_PUBLIC_WHOP_APP_ID not found in .env file. Deploy your app first with `whopctl deploy`.',
+					),
+				)
 				process.exit(1)
 			}
 
 			// List mode: show available rollback targets
 			if (args.list) {
-				const spinner = ora('Fetching deployment history...').start()
+				const spinner = createSpinner('Fetching deployment history...')
+				spinner.start()
 
 				try {
 					const [current, builds] = await Promise.all([
@@ -107,11 +110,12 @@ export const rollbackCommand: CommandModule<object, RollbackArgs> = {
 			// Rollback mode
 			const targetBuildId = args.to
 
-			const spinner = ora(
+			const spinner = createSpinner(
 				targetBuildId
 					? `Rolling back to build ${targetBuildId.slice(0, 8)}...`
 					: 'Rolling back to previous deployment...',
-			).start()
+			)
+			spinner.start()
 
 			try {
 				const result = await whopshipClient.triggerRollback(appId, targetBuildId)
@@ -138,4 +142,3 @@ export const rollbackCommand: CommandModule<object, RollbackArgs> = {
 }
 
 export default rollbackCommand
-

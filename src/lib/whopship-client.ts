@@ -1191,7 +1191,7 @@ export class WhopshipClient {
 	/**
 	 * Stream build logs in real-time using Server-Sent Events
 	 * Note: This method is designed for Node.js environments and uses fetch with streaming.
-	 * 
+	 *
 	 * @param buildId - The build UUID to stream logs for
 	 * @param options - Streaming options including callbacks
 	 * @returns AbortController to cancel the stream
@@ -1199,7 +1199,7 @@ export class WhopshipClient {
 	async streamBuildLogs(buildId: string, options: SSEOptions): Promise<AbortController> {
 		const session = await this.ensureSession()
 		const accessToken = session.accessToken || session.tokens?.accessToken
-		
+
 		if (!accessToken) {
 			throw new WhopshipApiError('No access token available. Please login again.', 401)
 		}
@@ -1240,7 +1240,7 @@ export class WhopshipClient {
 
 				while (true) {
 					const { done, value } = await reader.read()
-					
+
 					if (done) {
 						break
 					}
@@ -1254,7 +1254,7 @@ export class WhopshipClient {
 							const data = line.slice(6)
 							try {
 								const parsed = JSON.parse(data)
-								
+
 								if (parsed.type === 'log' && parsed.data) {
 									options.onLog(parsed.data as LogEntry)
 								} else if (parsed.type === 'complete') {
@@ -1289,7 +1289,10 @@ export class WhopshipClient {
 	 * Poll for build logs (fallback when SSE is not available)
 	 * Fetches all logs from a starting index
 	 */
-	async pollBuildLogs(buildId: string, fromIndex = 0): Promise<{
+	async pollBuildLogs(
+		buildId: string,
+		fromIndex = 0,
+	): Promise<{
 		logs: LogEntry[]
 		status: string
 		completed: boolean

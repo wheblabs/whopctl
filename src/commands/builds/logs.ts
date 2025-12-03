@@ -1,12 +1,12 @@
 import { resolve } from 'node:path'
 import chalk from 'chalk'
-import type { BuildStage, BuildStages, DeployStage, ErrorContext } from '~/types/index.ts'
 import { requireAuth } from '../../lib/auth-guard.ts'
 import { readEnvFile } from '../../lib/env.ts'
 import { formatDuration } from '../../lib/format.ts'
 import { printError, printInfo, printSuccess, printWarning } from '../../lib/output.ts'
 import { createSpinner } from '../../lib/progress.ts'
-import { whopshipClient, type LogEntry } from '../../lib/whopship-client.ts'
+import { type LogEntry, whopshipClient } from '../../lib/whopship-client.ts'
+import type { BuildStage, BuildStages, DeployStage, ErrorContext } from '../../types/index.ts'
 
 // Stage display names
 const STAGE_NAMES: Record<string, string> = {
