@@ -62,7 +62,7 @@ export async function cancelBuildCommand(buildId: string, path: string = '.'): P
 		} catch (error) {
 			spinner.fail('Failed to cancel build')
 			const errorMessage = getErrorMessage(error)
-			
+
 			if (error instanceof WhopshipApiError) {
 				if (error.isNotFound) {
 					printError(`Build not found: ${buildId}`)

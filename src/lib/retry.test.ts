@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 import {
-	RetryableError,
 	getContextualErrorMessage,
 	getErrorMessage,
 	isRetryableError,
+	RetryableError,
 	withRetry,
 } from './retry.ts'
 import { WhopshipApiError } from './whopship-client.ts'
@@ -125,7 +125,9 @@ describe('withRetry', () => {
 			throw error
 		}
 
-		await expect(withRetry(operation, { maxAttempts: 3, baseDelay: 10 })).rejects.toThrow('Always fails')
+		await expect(withRetry(operation, { maxAttempts: 3, baseDelay: 10 })).rejects.toThrow(
+			'Always fails',
+		)
 		expect(attempts).toBe(3)
 	})
 
@@ -140,4 +142,3 @@ describe('withRetry', () => {
 		expect(attempts).toBe(1)
 	})
 })
-

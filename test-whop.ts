@@ -1,6 +1,6 @@
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 import { Whop } from '@whoplabs/whop-client'
-import { homedir } from 'os'
-import { join } from 'path'
 
 const sessionPath = join(homedir(), '.whoplabs', 'whop-session.json')
 const whop = new Whop({ sessionPath, autoLoad: true })

@@ -140,4 +140,3 @@ describe('truncate', () => {
 		expect(truncate('abcd', 3)).toBe('...')
 	})
 })
-

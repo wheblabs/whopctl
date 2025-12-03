@@ -119,7 +119,9 @@ export function isRetryableError(error: unknown): boolean {
 	// HTTP errors that are typically retryable
 	if (hasHttpStatus(error)) {
 		const status = error.status
-		return status === 408 || status === 429 || (status !== undefined && status >= 500 && status < 600)
+		return (
+			status === 408 || status === 429 || (status !== undefined && status >= 500 && status < 600)
+		)
 	}
 
 	// Fetch errors
