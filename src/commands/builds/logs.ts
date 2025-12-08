@@ -5,6 +5,7 @@ import { readEnvFile } from '../../lib/env.ts'
 import { formatDuration } from '../../lib/format.ts'
 import { printError, printInfo, printSuccess, printWarning } from '../../lib/output.ts'
 import { createSpinner } from '../../lib/progress.ts'
+import { banner, callout, divider } from '../../lib/ui.ts'
 import { type LogEntry, whopshipClient } from '../../lib/whopship-client.ts'
 import type { BuildStage, BuildStages, DeployStage, ErrorContext } from '../../types/index.ts'
 
@@ -271,15 +272,19 @@ export async function buildLogsCommand(
 		spinner.succeed('Build logs retrieved')
 
 		console.log()
-		console.log(chalk.bold(`📋 Build Logs - ${buildId.substring(0, 8)}...`))
-		console.log(chalk.gray('─'.repeat(60)))
+		console.log(banner('📋 Build Logs', `${buildId.substring(0, 8)}…`, { tag: logsResponse.status }))
+		console.log(divider())
 		console.log()
 
 		// Display current stage
 		if (logsResponse.current_stage) {
 			console.log(
-				chalk.bold('Current Stage:'),
-				chalk.cyan(STAGE_NAMES[logsResponse.current_stage] || logsResponse.current_stage),
+				callout(
+					'info',
+					'Current Stage',
+					STAGE_NAMES[logsResponse.current_stage] || logsResponse.current_stage,
+					{ borderTitle: 'progress' },
+				),
 			)
 			console.log()
 		}
@@ -296,6 +301,20 @@ export async function buildLogsCommand(
 			console.log(chalk.red.bold('Error:'), chalk.red(logsResponse.error_message))
 			console.log()
 		}
+
+		if (logsResponse.status) {
+			const statusCallout =
+				logsResponse.status === 'failed'
+					? callout('error', 'Build failed', logsResponse.error_message || 'See logs below')
+					: logsResponse.status === 'completed' || logsResponse.status === 'built'
+						? callout('success', `Build ${logsResponse.status}`)
+						: callout('info', `Build ${logsResponse.status}`)
+			console.log(statusCallout)
+			console.log()
+		}
+
+		console.log(divider())
+		console.log()
 
 		// Display logs
 		const logs = logsResponse.logs || []

@@ -2,7 +2,9 @@ import chalk from 'chalk'
 import { requireAuth } from '../../lib/auth-guard.ts'
 import { BuildManager } from '../../lib/build.ts'
 import { printError, printInfo, printSuccess } from '../../lib/output.ts'
+import { createSpinner } from '../../lib/progress.ts'
 import { isInReplMode } from '../../lib/repl-context.ts'
+import { banner, divider, keyValues } from '../../lib/ui.ts'
 import { type DeploymentStatus, whopship } from '../../lib/whopship.ts'
 
 /**
@@ -25,53 +27,62 @@ export async function deployAppCommand(appId: string): Promise<void> {
 	const buildManager = new BuildManager()
 
 	try {
-		// Step 1: Build with OpenNext
-		printInfo('Building with OpenNext Cloudflare adapter...')
-		console.log(chalk.dim('Running: npx @opennextjs/cloudflare build\n'))
+		console.log(banner('🚀 WhopShip Deploy', `App ${appId}`, { tag: 'apps deploy' }))
+		console.log()
 
+		// Step 1: Build with OpenNext
+		const buildSpinner = createSpinner('Building with OpenNext Cloudflare adapter...').start()
+		console.log(chalk.dim('Running: npx @opennextjs/cloudflare build\n'))
 		await buildManager.buildOpenNext()
-		printSuccess('Build completed successfully')
+		buildSpinner.succeed('Build completed successfully')
 
 		// Step 2: Create artifact
-		printInfo('Creating deployment artifact...')
+		const artifactSpinner = createSpinner('Creating deployment artifact...').start()
 		const artifactPath = await buildManager.createArtifact()
 		const metadata = buildManager.getMetadata()
 		const checksum = buildManager.getChecksum()
 
-		printSuccess(`Artifact created: ${artifactPath}`)
-		if (metadata) {
-			console.log(chalk.dim(`  Next.js: ${metadata.nextVersion || 'unknown'}`))
-			console.log(chalk.dim(`  OpenNext: ${metadata.opennextVersion || 'unknown'}`))
-			console.log(chalk.dim(`  Build time: ${metadata.buildTime}ms`))
-		}
+		artifactSpinner.succeed(`Artifact created: ${artifactPath}`)
+		console.log(
+			keyValues(
+				[
+					{ label: 'Next.js', value: metadata?.nextVersion || 'unknown', dimValue: true },
+					{ label: 'OpenNext', value: metadata?.opennextVersion || 'unknown', dimValue: true },
+					{ label: 'Build time', value: `${metadata?.buildTime ?? '—'}ms`, dimValue: true },
+					{ label: 'Checksum', value: checksum || 'not generated', dimValue: true },
+				].filter((row) => row.value) as Array<{ label: string; value: string; dimValue: boolean }>,
+			),
+		)
+		console.log()
 
 		// Step 3: Create deployment
-		printInfo('Creating deployment on WhopShip...')
+		const createSpinnerInstance = createSpinner('Creating deployment on WhopShip...').start()
 		const deployment = await whopship.createDeployment({
 			whopAppId: appId,
 			metadata: metadata || undefined,
 			checksum: checksum || undefined,
 		})
 
-		printSuccess(`Deployment created: ${deployment.deployment.id}`)
+		createSpinnerInstance.succeed(`Deployment created: ${deployment.deployment.id}`)
 		console.log(chalk.dim(`  UUID: ${deployment.deployment.uuid}`))
 
 		// Step 4: Upload artifact
-		printInfo('Uploading artifact to R2...')
+		const uploadSpinner = createSpinner('Uploading artifact to R2...').start()
 		await whopship.uploadArtifact(deployment.uploadUrl, artifactPath)
-		printSuccess('Artifact uploaded successfully')
+		uploadSpinner.succeed('Artifact uploaded successfully')
 
 		// Step 5: Notify upload complete
 		await whopship.completeDeployment(deployment.deployment.id)
 
 		// Step 6: Trigger deployment
-		printInfo('Triggering deployment...')
+		const triggerSpinner = createSpinner('Triggering deployment...').start()
 		await whopship.triggerDeployment(deployment.deployment.id)
-		printSuccess('Deployment triggered')
+		triggerSpinner.succeed('Deployment triggered')
 
 		// Step 7: Monitor status and stream logs
 		printInfo('Monitoring deployment progress...')
 		console.log(chalk.dim('This may take a few minutes...\n'))
+		console.log(divider())
 
 		await monitorDeployment(deployment.deployment.id)
 	} catch (error) {

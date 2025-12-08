@@ -1,3 +1,4 @@
+import ora, { type Ora, type SpinnerName } from 'ora'
 import chalk from 'chalk'
 
 export interface ProgressOptions {
@@ -5,6 +6,14 @@ export interface ProgressOptions {
 	width?: number
 	format?: string
 	clear?: boolean
+}
+
+export interface TaskStep {
+	title: string
+	successText?: string
+	errorText?: string
+	action: () => Promise<void>
+	spinner?: SpinnerName
 }
 
 export class ProgressBar {
@@ -82,40 +91,41 @@ export class ProgressBar {
 }
 
 export class Spinner {
-	private frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
-	private interval: NodeJS.Timeout | null = null
-	private frameIndex = 0
+	private ora: Ora | null
 	private text: string
-	private stream = process.stdout
+	private isSilent: boolean
 
-	constructor(text = 'Loading...') {
+	constructor(text = 'Loading...', spinner: SpinnerName = 'dots') {
 		this.text = text
+		this.isSilent = !process.stdout.isTTY
+		this.ora = this.isSilent
+			? null
+			: ora({
+					text,
+					spinner,
+					color: 'cyan',
+			  })
 	}
 
 	start(): this {
-		if (this.interval) return this
-
-		this.interval = setInterval(() => {
-			const frame = this.frames[this.frameIndex]
-			this.stream.write(`\r${chalk.cyan(frame)} ${this.text}`)
-			this.frameIndex = (this.frameIndex + 1) % this.frames.length
-		}, 80)
-
+		if (this.ora) {
+			this.ora.start()
+		} else {
+			console.log(chalk.cyan(`… ${this.text}`))
+		}
 		return this
 	}
 
 	stop(symbol?: string, text?: string): this {
-		if (this.interval) {
-			clearInterval(this.interval)
-			this.interval = null
+		if (this.ora) {
+			if (symbol && text) {
+				this.ora.stopAndPersist({ symbol, text })
+			} else {
+				this.ora.stop()
+			}
+		} else if (symbol && text) {
+			console.log(`${symbol} ${text}`)
 		}
-
-		if (symbol && text) {
-			this.stream.write(`\r${symbol} ${text}\n`)
-		} else {
-			this.stream.write('\r\x1b[K')
-		}
-
 		return this
 	}
 
@@ -137,12 +147,28 @@ export class Spinner {
 
 	setText(text: string): this {
 		this.text = text
+		if (this.ora) {
+			this.ora.text = text
+		}
 		return this
 	}
 }
 
-export function createSpinner(text?: string): Spinner {
-	return new Spinner(text)
+export function createSpinner(text?: string, spinner?: SpinnerName): Spinner {
+	return new Spinner(text, spinner)
+}
+
+export async function runTasks(steps: TaskStep[]): Promise<void> {
+	for (const step of steps) {
+		const spinner = createSpinner(step.title, step.spinner).start()
+		try {
+			await step.action()
+			spinner.succeed(step.successText || step.title)
+		} catch (error) {
+			spinner.fail(step.errorText || step.title)
+			throw error
+		}
+	}
 }
 
 export function createProgressBar(options?: ProgressOptions): ProgressBar {

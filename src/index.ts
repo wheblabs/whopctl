@@ -55,6 +55,7 @@ import {
 } from './commands/url.ts'
 import { checkFirstRun } from './lib/first-run.ts'
 import { startRepl } from './lib/repl.ts'
+import { banner, divider } from './lib/ui.ts'
 
 /**
  * Whopctl - CLI tool for managing Whop apps
@@ -92,7 +93,10 @@ async function main() {
 	await yargs(argv)
 		.scriptName('whopctl')
 		.usage(
-			chalk.bold('WhopShip CLI - Deploy and manage your Whop apps\n\n') +
+			banner('WhopShip CLI', 'Deploy and manage your Whop apps', { tag: 'whopctl' }) +
+				'\n' +
+				divider() +
+				'\n' +
 				chalk.cyan('Usage: ') +
 				'$0 <command> [options]\n\n' +
 				chalk.bold('Quick Start:\n') +

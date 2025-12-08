@@ -5,6 +5,7 @@ import { analyticsUsageCommand } from './analytics/usage.ts'
 import { deployCommand } from './deploy.ts'
 import { historyCommand } from './history.ts'
 import { statusCommand } from './status/status.ts'
+import { banner, divider } from '../lib/ui.ts'
 
 /**
  * Quick deploy: validate, deploy, and show status
@@ -13,8 +14,8 @@ export async function quickDeployCommand(path: string = '.'): Promise<void> {
 	requireAuth()
 
 	try {
-		console.log(chalk.bold.cyan('🚀 Quick Deploy'))
-		console.log(chalk.gray('─'.repeat(50)))
+		console.log(banner('🚀 Quick Deploy', 'Deploy then show status', { tag: 'quick' }))
+		console.log(divider())
 		console.log()
 
 		// 1. Deploy
@@ -43,8 +44,8 @@ export async function quickStatusCommand(path: string = '.'): Promise<void> {
 	requireAuth()
 
 	try {
-		console.log(chalk.bold.cyan('📊 Quick Status Overview'))
-		console.log(chalk.gray('─'.repeat(50)))
+		console.log(banner('📊 Quick Status', 'Status · history · usage', { tag: 'quick' }))
+		console.log(divider())
 		console.log()
 
 		// 1. Current status
@@ -77,8 +78,8 @@ export async function quickCheckCommand(path: string = '.'): Promise<void> {
 	const { validateAndPrint } = await import('../lib/project-validator.ts')
 
 	try {
-		console.log(chalk.bold.cyan('🔍 Quick Project Check'))
-		console.log(chalk.gray('─'.repeat(50)))
+		console.log(banner('🔍 Quick Project Check', 'Validate readiness', { tag: 'quick' }))
+		console.log(divider())
 		console.log()
 
 		const isValid = await validateAndPrint(path, { verbose: true })

@@ -9,6 +9,17 @@ import {
 } from '@whoplabs/whop-client'
 import chalk from 'chalk'
 
+import {
+	banner,
+	bulletList,
+	callout,
+	divider as themedDivider,
+	keyValues,
+	renderTable,
+} from './ui.ts'
+
+export { banner, bulletList, callout, keyValues, renderTable, themedDivider as divider }
+
 /**
  * Prints an error message in red to stderr.
  */
@@ -169,28 +180,22 @@ export function printFriendlyError(error: unknown): void {
 
 	console.log()
 	if (translation) {
-		console.log(chalk.red.bold('Something went wrong'))
-		console.log(chalk.red(`${translation.message}`))
+		console.log(callout('error', 'Something went wrong', translation.message))
 		console.log()
-		console.log(chalk.bold('What to do:'))
-		for (const step of translation.whatToDo) {
-			console.log(chalk.cyan(`  → ${step}`))
-		}
+		console.log(chalk.bold('What to do next:'))
+		console.log(bulletList(translation.whatToDo.map((step) => `→ ${step}`)))
 		if (translation.docsLink) {
 			console.log()
-			console.log(chalk.dim(`Learn more: ${translation.docsLink}`))
+			console.log(chalk.dim(`Docs: ${translation.docsLink}`))
 		}
 	} else {
-		// Fall back to showing the actual error
-		console.log(chalk.red.bold('An error occurred'))
-		console.log(chalk.red(errorMessage))
+		console.log(callout('error', 'An error occurred', errorMessage))
 		console.log()
 		console.log(chalk.bold('What to do:'))
-		console.log(chalk.cyan('  → Run: whopctl doctor to diagnose issues'))
-		console.log(chalk.cyan('  → Check the docs: whopctl docs'))
+		console.log(bulletList(['Run: whopctl doctor', 'Check the docs: whopctl docs']))
 	}
 	console.log()
-	console.log(chalk.dim('─'.repeat(50)))
+	console.log(themedDivider())
 	console.log(chalk.dim('Still stuck? Visit: https://docs.whopship.app/help'))
 	console.log()
 }
@@ -211,43 +216,12 @@ export function printTable<T extends Record<string, unknown>>(
 	}
 
 	const cols = columns || (Object.keys(data[0] ?? {}) as (keyof T)[])
-	const colWidths = new Map<keyof T, number>()
-
-	// Calculate column widths
-	for (const col of cols) {
-		const headerWidth = String(col).length
-		const maxDataWidth = Math.max(...data.map((row) => String(row[col] ?? '').length))
-		colWidths.set(col, Math.max(headerWidth, maxDataWidth))
-	}
-
-	// Print header
-	const header = cols
-		.map((col) => {
-			const width = colWidths.get(col) ?? 0
-			return chalk.bold(String(col).padEnd(width))
-		})
-		.join('  ')
-	console.log(header)
-
-	// Print separator
-	const separator = cols
-		.map((col) => {
-			const width = colWidths.get(col) ?? 0
-			return '─'.repeat(width)
-		})
-		.join('  ')
-	console.log(chalk.dim(separator))
-
-	// Print rows
-	for (const row of data) {
-		const rowStr = cols
-			.map((col) => {
-				const width = colWidths.get(col) ?? 0
-				return String(row[col] ?? '').padEnd(width)
-			})
-			.join('  ')
-		console.log(rowStr)
-	}
+	const tableStr = renderTable(
+		data,
+		cols.map((col) => ({ key: col, label: String(col) })),
+		{ compact: true },
+	)
+	console.log(tableStr)
 }
 
 /**
