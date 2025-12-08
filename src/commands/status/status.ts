@@ -425,18 +425,22 @@ export async function statusCommand(
 			),
 		)
 		console.log()
-		console.log(keyValues([
-			{ label: 'Name', value: build.app.whop_app_name },
-			{ label: 'App ID', value: build.app.whop_app_id, dimValue: true },
-			{ label: 'Subdomain', value: build.app.subdomain, dimValue: true },
-		]))
+		console.log(
+			keyValues([
+				{ label: 'Name', value: build.app.whop_app_name },
+				{ label: 'App ID', value: build.app.whop_app_id, dimValue: true },
+				{ label: 'Subdomain', value: build.app.subdomain, dimValue: true },
+			]),
+		)
 		console.log()
-		console.log(keyValues([
-			{ label: 'Build ID', value: build.build_id, dimValue: true },
-			{ label: 'Status', value: formatStatus(build.status) },
-			{ label: 'Created', value: new Date(build.created_at).toLocaleString(), dimValue: true },
-			{ label: 'Updated', value: new Date(build.updated_at).toLocaleString(), dimValue: true },
-		]))
+		console.log(
+			keyValues([
+				{ label: 'Build ID', value: build.build_id, dimValue: true },
+				{ label: 'Status', value: formatStatus(build.status) },
+				{ label: 'Created', value: new Date(build.created_at).toLocaleString(), dimValue: true },
+				{ label: 'Updated', value: new Date(build.updated_at).toLocaleString(), dimValue: true },
+			]),
+		)
 		console.log()
 		console.log(divider())
 		console.log()

@@ -1,11 +1,11 @@
 import chalk from 'chalk'
 import { requireAuth } from '../lib/auth-guard.ts'
 import { printError, printInfo, printSuccess } from '../lib/output.ts'
+import { banner, divider } from '../lib/ui.ts'
 import { analyticsUsageCommand } from './analytics/usage.ts'
 import { deployCommand } from './deploy.ts'
 import { historyCommand } from './history.ts'
 import { statusCommand } from './status/status.ts'
-import { banner, divider } from '../lib/ui.ts'
 
 /**
  * Quick deploy: validate, deploy, and show status

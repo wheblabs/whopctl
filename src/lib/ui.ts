@@ -1,7 +1,7 @@
 import boxen, { type Options as BoxenOptions } from 'boxen'
 import chalk from 'chalk'
-import gradient from 'gradient-string'
 import Table from 'cli-table3'
+import gradient from 'gradient-string'
 
 type TableColumn<T> = {
 	key: keyof T
@@ -140,31 +140,18 @@ export function callout(
 	body?: string | string[],
 	options?: { borderTitle?: string },
 ): string {
-	const color =
-		kind === 'success'
-			? chalk.green
-			: kind === 'warn'
-				? chalk.yellow
-				: kind === 'error'
-					? chalk.red
-					: chalk.cyan
 	const icon = icons[kind]
 	const bodyLines = Array.isArray(body) ? body : body ? [body] : []
-	const content = [chalk.bold(`${icon} ${title}`), ...bodyLines.map((line) => chalk.white(line))].join(
-		'\n',
-	)
+	const content = [
+		chalk.bold(`${icon} ${title}`),
+		...bodyLines.map((line) => chalk.white(line)),
+	].join('\n')
 
 	return boxen(content, {
 		padding: { top: 0, right: 1, bottom: 0, left: 1 },
 		borderStyle: 'round',
 		borderColor:
-			kind === 'success'
-				? 'green'
-				: kind === 'warn'
-					? 'yellow'
-					: kind === 'error'
-						? 'red'
-						: 'cyan',
+			kind === 'success' ? 'green' : kind === 'warn' ? 'yellow' : kind === 'error' ? 'red' : 'cyan',
 		dimBorder: true,
 		title: options?.borderTitle,
 		titleAlignment: 'center',
@@ -174,4 +161,3 @@ export function callout(
 export function softDivider(): string {
 	return chalk.dim('·'.repeat(Math.max(20, Math.min(termWidth - 4, 60))))
 }
-

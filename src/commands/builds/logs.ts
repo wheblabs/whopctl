@@ -272,7 +272,9 @@ export async function buildLogsCommand(
 		spinner.succeed('Build logs retrieved')
 
 		console.log()
-		console.log(banner('📋 Build Logs', `${buildId.substring(0, 8)}…`, { tag: logsResponse.status }))
+		console.log(
+			banner('📋 Build Logs', `${buildId.substring(0, 8)}…`, { tag: logsResponse.status }),
+		)
 		console.log(divider())
 		console.log()
 

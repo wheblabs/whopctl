@@ -1,5 +1,5 @@
-import ora, { type Ora, type SpinnerName } from 'ora'
 import chalk from 'chalk'
+import ora, { type Ora, type SpinnerName } from 'ora'
 
 export interface ProgressOptions {
 	total?: number
@@ -104,7 +104,7 @@ export class Spinner {
 					text,
 					spinner,
 					color: 'cyan',
-			  })
+				})
 	}
 
 	start(): this {

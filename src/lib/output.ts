@@ -13,9 +13,9 @@ import {
 	banner,
 	bulletList,
 	callout,
-	divider as themedDivider,
 	keyValues,
 	renderTable,
+	divider as themedDivider,
 } from './ui.ts'
 
 export { banner, bulletList, callout, keyValues, renderTable, themedDivider as divider }
